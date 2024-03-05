@@ -45,8 +45,12 @@ public final class HealthDatabase {
         try locationSamples.locationSampleCount(from: activity.startDate, to: activity.currentEndDate)
     }
 
-    func samples(for activity: HKWorkoutActivity) throws -> [Sample.DataType : [Sample]] {
-        try samples.samples(from: activity.startDate, to: activity.currentEndDate).reduce(into: [:]) {
+    func samples(for activity: HKWorkoutActivity) throws -> [SampleType : [Sample]] {
+        try samples(from: activity.startDate, to: activity.currentEndDate)
+    }
+
+    func samples(from start: Date, to end: Date) throws -> [SampleType : [Sample]] {
+        try samples.samples(from: start, to: end).reduce(into: [:]) {
             $0[$1.dataType] = ($0[$1.dataType] ?? []) + [$1]
         }
     }

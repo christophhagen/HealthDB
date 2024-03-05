@@ -75,7 +75,7 @@ struct SamplesTable {
         return try database.prepare(selection).map { row in
             let startDate = Date(timeIntervalSinceReferenceDate: row[startDate])
             let endDate = Date(timeIntervalSinceReferenceDate: row[endDate])
-            let dataType = Sample.DataType(rawValue: row[dataType])
+            let dataType = SampleType(rawValue: row[dataType])
             let quantity = row[quantitySamples.quantity]
             let original = row[quantitySamples.originalQuantity]
             let unit = row[unitStrings.unitString]
