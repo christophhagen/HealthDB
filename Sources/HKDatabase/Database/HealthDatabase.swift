@@ -11,15 +11,7 @@ public final class HealthDatabase {
 
     private let database: Connection
 
-    private let samples: SamplesTable
-
-    private let workoutsTable: WorkoutsTable
-
-    private let locationSamples: LocationSeriesDataTable
-
-    private let dataSeries: DataSeriesTable
-
-    private let keyValueSecure = KeyValueSecureTable()
+    private let tables: Tables
 
     public convenience init(fileUrl: URL) throws {
         let database = try Connection(fileUrl.path)
@@ -29,26 +21,23 @@ public final class HealthDatabase {
     init(fileUrl: URL, database: Connection) {
         self.fileUrl = fileUrl
         self.database = database
-        self.samples = .init(database: database)
-        self.workoutsTable = .init(database: database)
-        self.locationSamples = .init(database: database)
-        self.dataSeries = .init(database: database)
+        self.tables = .init(database: database)
     }
 
     func value<T>(for key: String) throws -> T? where T: Value {
-        try keyValueSecure.value(for: key, in: database)
+        try tables.value(for: key)
     }
 
     func readAllWorkouts() throws -> [Workout] {
-        try workoutsTable.workouts()
+        try tables.allWorkouts()
     }
 
     func locationSamples(for activity: HKWorkoutActivity) throws -> [LocationSample] {
-        try locationSamples.locationSamples(from: activity.startDate, to: activity.currentEndDate)
+        try tables.locationSamples(from: activity.startDate, to: activity.currentEndDate, in: database)
     }
 
     func locationSampleCount(for activity: HKWorkoutActivity) throws -> Int {
-        try locationSamples.locationSampleCount(from: activity.startDate, to: activity.currentEndDate)
+        try tables.locationSampleCount(from: activity.startDate, to: activity.currentEndDate, in: database)
     }
 
     func samples(for activity: HKWorkoutActivity) throws -> [SampleType : [Sample]] {
@@ -56,13 +45,17 @@ public final class HealthDatabase {
     }
 
     func samples(from start: Date, to end: Date) throws -> [SampleType : [Sample]] {
-        try samples.samples(from: start, to: end).reduce(into: [:]) {
+        try tables.samples(from: start, to: end).reduce(into: [:]) {
             $0[$1.dataType] = ($0[$1.dataType] ?? []) + [$1]
         }
     }
 
     func sampleCount(for activity: HKWorkoutActivity) throws -> Int {
-        try samples.sampleCount(from: activity.startDate, to: activity.currentEndDate)
+        try tables.sampleCount(from: activity.startDate, to: activity.currentEndDate)
+    }
+
+    func metadata(for objectId: Int) throws -> [Metadata.Key : Metadata.Value] {
+        try tables.metadata(for: objectId)
     }
 
     private func testActivityOverlap() throws {
@@ -85,7 +78,7 @@ public final class HealthDatabase {
     }
 
     func insert(workout: Workout) throws {
-        try workoutsTable.insert(workout)
+        try tables.insert(workout: workout)
     }
 
     func insert(workout: Workout, into store: HKHealthStore) async throws -> HKWorkout? {
@@ -104,12 +97,6 @@ public final class HealthDatabase {
             try await builder.addWorkoutActivity(activity)
         }
         return try await builder.finishWorkout()
-    }
-
-    func createTables() throws {
-        try samples.createAll()
-        try workoutsTable.createAll()
-        try locationSamples.create(references: dataSeries)
     }
 }
 

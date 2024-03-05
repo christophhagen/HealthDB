@@ -4,12 +4,6 @@ import HealthKit
 
 struct WorkoutEventsTable {
 
-    private let database: Connection
-
-    init(database: Connection) {
-        self.database = database
-    }
-
     let table = Table("workout_events")
 
     // INTEGER PRIMARY KEY AUTOINCREMENT
@@ -61,7 +55,7 @@ struct WorkoutEventsTable {
         return WorkoutEventsTable.decode(metadata: data)
     }
 
-    func create(referencing workouts: WorkoutsTable) throws {
+    func create(referencing workouts: WorkoutsTable, in database: Connection) throws {
         // try database.execute("CREATE TABLE workout_events (ROWID INTEGER PRIMARY KEY AUTOINCREMENT, owner_id INTEGER NOT NULL REFERENCES workouts (data_id) ON DELETE CASCADE, date REAL NOT NULL, type INTEGER NOT NULL, duration REAL NOT NULL, metadata BLOB, session_uuid BLOB, error BLOB)")
         try database.run(table.create { t in
             t.column(rowId, primaryKey: .autoincrement)
@@ -75,7 +69,7 @@ struct WorkoutEventsTable {
         })
     }
 
-    func insert(_ element: HKWorkoutEvent, dataId: Int) throws {
+    func insert(_ element: HKWorkoutEvent, dataId: Int, in database: Connection) throws {
         try database.run(table.insert(
             ownerId <- dataId,
             date <- element.dateInterval.start.timeIntervalSinceReferenceDate,

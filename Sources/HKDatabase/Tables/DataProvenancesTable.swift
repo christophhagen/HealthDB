@@ -4,13 +4,7 @@ import HealthKit
 
 struct DataProvenancesTable {
 
-    private let database: Connection
-
-    init(database: Connection) {
-        self.database = database
-    }
-
-    func create() throws {
+    func create(in database: Connection) throws {
         try database.execute("CREATE TABLE data_provenances (ROWID INTEGER PRIMARY KEY AUTOINCREMENT, sync_provenance INTEGER NOT NULL, origin_product_type TEXT NOT NULL, origin_build TEXT NOT NULL, local_product_type TEXT NOT NULL, local_build TEXT NOT NULL, source_id INTEGER NOT NULL, device_id INTEGER NOT NULL, contributor_id INTEGER NOT NULL, source_version TEXT NOT NULL, tz_name TEXT NOT NULL, origin_major_version INTEGER NOT NULL, origin_minor_version INTEGER NOT NULL, origin_patch_version INTEGER NOT NULL, sync_identity INTEGER NOT NULL, derived_flags INTEGER NOT NULL, UNIQUE(sync_provenance, origin_product_type, origin_build, local_product_type, local_build, source_id, device_id, contributor_id, source_version, tz_name, origin_major_version, origin_minor_version, origin_patch_version, sync_identity))")
     }
 
@@ -50,7 +44,7 @@ struct DataProvenancesTable {
 
     let derivedFlags = Expression<Int>("derived_flags")
 
-    func device(for rowId: Int) throws -> HKDevice? {
+    func device(for rowId: Int, in database: Connection) throws -> HKDevice? {
         try database.pluck(table.filter(self.rowId == rowId)).map { row in
             let productType = row[originProductType]
             return HKDevice(
@@ -65,7 +59,7 @@ struct DataProvenancesTable {
         }
     }
 
-    func timeZoneName(for rowId: Int) throws -> String? {
+    func timeZoneName(for rowId: Int, in database: Connection) throws -> String? {
         try database.pluck(table.filter(self.rowId == rowId)).map { $0[tzName] }
     }
 }

@@ -3,12 +3,6 @@ import SQLite
 
 struct MetadataValuesTable {
 
-    private let database: Connection
-
-    init(database: Connection) {
-        self.database = database
-    }
-
     let table = Table("metadata_values")
 
     let rowId = Expression<Int>("ROW_ID")
@@ -27,15 +21,15 @@ struct MetadataValuesTable {
 
     let dataValue = Expression<Data?>("data_value")
 
-    func all() throws -> [Metadata.Value] {
+    func all(in database: Connection) throws -> [Metadata.Value] {
         try database.prepare(table).map(from)
     }
 
-   func metadata(for workoutId: Int) throws -> [Metadata.Value] {
+   func metadata(for workoutId: Int, in database: Connection) throws -> [Metadata.Value] {
         try database.prepare(table.filter(objectId == workoutId)).map(from)
     }
 
-   func metadata(for workoutId: Int) throws -> [(keyId: Int, value: Metadata.Value)] {
+   func metadata(for workoutId: Int, in database: Connection) throws -> [(keyId: Int, value: Metadata.Value)] {
         try database.prepare(table.filter(objectId == workoutId)).compactMap { row in
             guard let keyId = row[keyId] else {
                 print("Found 'key_id == NULL' for metadata value of workout \(workoutId)")
@@ -61,7 +55,7 @@ struct MetadataValuesTable {
         }
     }
 
-   func create() throws {
+   func create(in database: Connection) throws {
         //try database.execute("CREATE TABLE metadata_values (ROWID INTEGER PRIMARY KEY AUTOINCREMENT, key_id INTEGER, object_id INTEGER, value_type INTEGER NOT NULL DEFAULT 0, string_value TEXT, numerical_value REAL, date_value REAL, data_value BLOB)")
         try database.run(table.create { table in
             table.column(rowId, primaryKey: .autoincrement)
@@ -75,8 +69,8 @@ struct MetadataValuesTable {
         })
     }
 
-   func insert(_ element: Metadata.Value, of workoutId: Int, for keyId: Int) throws {
-        try database.run(table.insert(
+    func insert(_ element: Metadata.Value, of workoutId: Int, for keyId: Int) -> Insert {
+        table.insert(
             self.keyId <- keyId,
             objectId <- workoutId,
             valueType <- element.valueType.rawValue,
@@ -84,7 +78,7 @@ struct MetadataValuesTable {
             numericalValue <- element.numericalValue,
             dateValue <- element.dateValue,
             dataValue <- element.dataValue
-        ))
+        )
     }
 }
 

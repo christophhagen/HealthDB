@@ -4,15 +4,6 @@ import HealthKit
 
 struct WorkoutActivitiesTable {
 
-    private let database: Connection
-
-    private let samples: SamplesTable
-
-    init(database: Connection) {
-        self.database = database
-        self.samples = .init(database: database)
-    }
-
     let table = Table("workout_activities")
 
     let rowId = Expression<Int>("ROWID")
@@ -39,7 +30,7 @@ struct WorkoutActivitiesTable {
 
     let metadata = Expression<Data?>("metadata")
 
-    func activities() throws -> [HKWorkoutActivity] {
+    func activities(in database: Connection) throws -> [HKWorkoutActivity] {
         try database.prepare(table).map(activity)
     }
 
@@ -69,30 +60,8 @@ struct WorkoutActivitiesTable {
             metadata: metadata)
     }
 
-    func activities(for workoutId: Int) throws -> [HKWorkoutActivity] {
+    func activities(for workoutId: Int, in database: Connection) throws -> [HKWorkoutActivity] {
         try database.prepare(table.filter(ownerId == workoutId)).map(activity)
-    }
-
-    func samples(for activityId: Int, from start: Date, to end: Date) throws -> [Sample] {
-        let selection = table
-            .select(samples.table[samples.dataType],
-                    samples.table[samples.startDate],
-                    samples.table[samples.endDate],
-                    samples.quantitySamples.table[samples.quantitySamples.quantity])
-            .filter(table[ownerId] == activityId)
-            .join(.leftOuter, samples.table, on: startDate <= samples.table[samples.startDate] && endDate >= samples.table[samples.endDate])
-
-        /*
-         SELECT samples.data_type, samples.start_date, samples.end_date,  quantity_series_data.timestamp, quantity_series_data.value, quantity_samples.quantity, quantity_samples.original_quantity, quantity_samples.original_unit
-         FROM workout_activities
-         LEFT OUTER JOIN samples ON workout_activities.start_date <= samples.start_date AND workout_activities.end_date >= samples.end_date
-         LEFT OUTER JOIN quantity_sample_series ON samples.data_id = quantity_sample_series.data_id
-         LEFT OUTER JOIN quantity_series_data ON quantity_sample_series.hfd_key = quantity_series_data.series_identifier
-         LEFT OUTER JOIN quantity_samples ON samples.data_id = quantity_samples.data_id
-         WHERE workout_activities.owner_id = 10794346
-         */
-
-        return []
     }
 
     private func testQuantity() -> HKQuantitySample {
@@ -136,7 +105,7 @@ struct WorkoutActivitiesTable {
             metadata: [String : Any]())
     }
 
-    func create(referencing workouts: WorkoutsTable) throws {
+    func create(referencing workouts: WorkoutsTable, in database: Connection) throws {
         try database.execute("CREATE TABLE workout_activities (ROWID INTEGER PRIMARY KEY AUTOINCREMENT, uuid BLOB UNIQUE NOT NULL, owner_id INTEGER NOT NULL REFERENCES workouts(data_id) ON DELETE CASCADE, is_primary_activity INTEGER NOT NULL, activity_type INTEGER NOT NULL, location_type INTEGER NOT NULL, swimming_location_type INTEGER NOT NULL, lap_length BLOB, start_date REAL NOT NULL, end_date REAL NOT NULL, duration REAL NOT NULL, metadata BLOB)")
         /*
          try database.run(table.create { t in
@@ -156,7 +125,7 @@ struct WorkoutActivitiesTable {
          */
     }
 
-    func insert(_ element: HKWorkoutActivity, isPrimaryActivity: Bool, dataId: Int) throws {
+    func insert(_ element: HKWorkoutActivity, isPrimaryActivity: Bool, dataId: Int, in database: Connection) throws {
         try database.run(table.insert(
             uuid <- (element.externalUUID ?? element.uuid).uuidString.data(using: .utf8)!,
             ownerId <- dataId,
