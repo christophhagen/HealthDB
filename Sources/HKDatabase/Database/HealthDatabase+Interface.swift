@@ -42,23 +42,34 @@ extension HealthDatabase: HKHealthStoreInterface {
     // MARK: - Reading characteristic data
 
     public func biologicalSex() throws -> HKBiologicalSex {
-        .notSet
+        try value(key: "sex", fallback: .notSet)
     }
 
     public func bloodType() throws -> HKBloodType {
-        .notSet
+        try value(key: "blood_type", fallback: .notSet)
     }
 
     public func dateOfBirthComponents() throws -> DateComponents {
-        .init()
+        guard let value: Double = try value(for:  "birthdate") else {
+            return .init()
+        }
+        let date = Date(timeIntervalSinceReferenceDate: value)
+        return Calendar.current.dateComponents([.day, .month, .year], from: date)
     }
 
     public func fitzpatrickSkinType() throws -> HKFitzpatrickSkinType {
-        .notSet
+        try value(key: "fitzpatrick_skin_type", fallback: .notSet)
     }
 
     public func wheelchairUse() throws -> HKWheelchairUse {
-        .notSet
+        try value(key: "wheelchair_use", fallback: .notSet)
+    }
+
+    private func value<T>(key: String, fallback: T) throws -> T where T: RawRepresentable, T.RawValue == Int {
+        guard let value: Int = try value(for: key) else {
+            return fallback
+        }
+        return .init(rawValue: value) ?? fallback
     }
 
     // MARK: - Working with HealthKit objects

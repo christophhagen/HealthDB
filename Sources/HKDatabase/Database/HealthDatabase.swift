@@ -18,7 +18,9 @@ public final class HealthDatabase {
     private let locationSamples: LocationSeriesDataTable
 
     private let dataSeries: DataSeriesTable
-    
+
+    private let keyValueSecure = KeyValueSecureTable()
+
     public convenience init(fileUrl: URL) throws {
         let database = try Connection(fileUrl.path)
         self.init(fileUrl: fileUrl, database: database)
@@ -31,6 +33,10 @@ public final class HealthDatabase {
         self.workoutsTable = .init(database: database)
         self.locationSamples = .init(database: database)
         self.dataSeries = .init(database: database)
+    }
+
+    func value<T>(for key: String) throws -> T? where T: Value {
+        try keyValueSecure.value(for: key, in: database)
     }
 
     func readAllWorkouts() throws -> [Workout] {
