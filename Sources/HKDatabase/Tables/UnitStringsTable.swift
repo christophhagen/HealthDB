@@ -1,0 +1,28 @@
+import Foundation
+import SQLite
+
+struct UnitStringsTable {
+
+    private let database: Connection
+
+    init(database: Connection) {
+        self.database = database
+    }
+
+    func create() throws {
+        try database.execute("CREATE TABLE unit_strings (ROWID INTEGER PRIMARY KEY AUTOINCREMENT, unit_string TEXT UNIQUE)")
+    }
+
+    let table = Table("unit_strings")
+
+    let rowId = Expression<Int>("ROWID")
+
+    let unitString = Expression<String?>("unit_string")
+
+    func unit(for id: Int) throws -> String? {
+        guard let row = try database.pluck(table.filter(rowId == id)) else {
+            return nil
+        }
+        return row[unitString]
+    }
+}
