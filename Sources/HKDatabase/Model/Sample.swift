@@ -2,6 +2,8 @@ import Foundation
 
 struct Sample {
 
+    let id: Int
+
     let startDate: Date
 
     let endDate: Date

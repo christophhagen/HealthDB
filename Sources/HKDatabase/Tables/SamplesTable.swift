@@ -45,18 +45,6 @@ struct SamplesTable {
 
     let dataType = Expression<Int>("data_type")
 
-    enum Column {
-        static let dataId = Expression<Int>("data_id")
-
-        // NOTE: Technically optional
-        static let startDate = Expression<Double>("start_date")
-
-        // NOTE: Technically optional
-        static let endDate = Expression<Double>("end_date")
-
-        static let dataType = Expression<Int>("data_type")
-    }
-
     func samples(from start: Date, to end: Date) throws -> [Sample] {
         let start = start.timeIntervalSinceReferenceDate
         let end = end.timeIntervalSinceReferenceDate
@@ -73,6 +61,7 @@ struct SamplesTable {
             .join(.leftOuter, unitStrings.table, on: quantitySamples.table[quantitySamples.originalUnit] == unitStrings.table[unitStrings.rowId])
 
         return try database.prepare(selection).map { row in
+            let id = row[table[dataId]]
             let startDate = Date(timeIntervalSinceReferenceDate: row[startDate])
             let endDate = Date(timeIntervalSinceReferenceDate: row[endDate])
             let dataType = SampleType(rawValue: row[dataType])
@@ -81,6 +70,7 @@ struct SamplesTable {
             let unit = row[unitStrings.unitString]
             let timeZone = row[dataProvenances.tzName].nonEmpty
             return .init(
+                id: id,
                 startDate: startDate,
                 endDate: endDate,
                 dataType: dataType,
