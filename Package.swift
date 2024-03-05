@@ -1,23 +1,28 @@
 // swift-tools-version: 5.9
-// The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
 
 let package = Package(
     name: "iOSHealthDBInterface",
+    platforms: [.iOS(.v16), .macOS(.v13)],
     products: [
-        // Products define the executables and libraries a package produces, making them visible to other packages.
         .library(
-            name: "iOSHealthDBInterface",
-            targets: ["iOSHealthDBInterface"]),
+            name: "HKDatabase",
+            targets: ["HKDatabase"]),
+    ],
+    dependencies: [
+        .package(url: "https://github.com/stephencelis/SQLite.swift.git", from: "0.14.1"),
+        .package(url: "https://github.com/apple/swift-protobuf.git", from: "1.25.2"),
     ],
     targets: [
-        // Targets are the basic building blocks of a package, defining a module or a test suite.
-        // Targets can depend on other targets in this package and products from dependencies.
         .target(
-            name: "iOSHealthDBInterface"),
+            name: "HKDatabase",
+        dependencies: [
+            .product(name: "SQLite", package: "sqlite.swift"),
+            .product(name: "SwiftProtobuf", package: "swift-protobuf"),
+        ]),
         .testTarget(
-            name: "iOSHealthDBInterfaceTests",
-            dependencies: ["iOSHealthDBInterface"]),
+            name: "HKDatabaseTests",
+            dependencies: ["HKDatabase"]),
     ]
 )
