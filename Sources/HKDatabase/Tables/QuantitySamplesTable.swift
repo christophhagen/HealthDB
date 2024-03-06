@@ -18,7 +18,7 @@ struct QuantitySamplesTable {
     /// References `ROWID` on table `unit_strings`
     let originalUnit = Expression<Int?>("original_unit")
 
-    func quantity(for id: Int, in database: Database) throws -> (quantity: Double?, original: Double?, unit: Int?) {
+    func quantity(for id: Int, in database: Connection) throws -> (quantity: Double?, original: Double?, unit: Int?) {
         try database.prepare(table.filter(dataId == id).limit(1)).map {
             (quantity: $0[quantity], original: $0[originalQuantity], unit: $0[originalUnit])
         }.first ?? (nil, nil, nil)

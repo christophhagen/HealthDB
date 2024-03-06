@@ -1,71 +1,142 @@
 import Foundation
 import HealthKit
 
-struct HKNotSupportedError: Error {
+public struct HKNotSupportedError: Error {
 
+    public let message: String
+
+    public init(_ message: String) {
+        self.message = message
+    }
+}
+
+private struct InternalQuery {
+
+    let sampleType: HKSampleType
+
+    let predicate: NSPredicate?
+
+    let limit: Int?
+
+    let sortDescriptors: [NSSortDescriptor]?
+
+    let resultsHandler: (HKSampleQuery, [HKSample]?, Error?) -> Void
+
+    init(sampleType: HKSampleType, predicate: NSPredicate?, limit: Int, sortDescriptors: [NSSortDescriptor]?, resultsHandler: @escaping (HKSampleQuery, [HKSample]?, Error?) -> Void) {
+        self.sampleType = sampleType
+        self.predicate = predicate
+        self.limit = limit == HKObjectQueryNoLimit ? nil : limit
+        self.sortDescriptors = sortDescriptors
+        self.resultsHandler = resultsHandler
+    }
+
+    var sampleQuery: HKSampleQuery {
+        .init(sampleType: sampleType, predicate: predicate, limit: limit ?? HKObjectQueryNoLimit, sortDescriptors: sortDescriptors, resultsHandler: resultsHandler)
+    }
 }
 
 extension HealthDatabase {
 
     public func executeSampleQuery(sampleType: HKSampleType, predicate: NSPredicate?, limit: Int, sortDescriptors: [NSSortDescriptor]?, resultsHandler: @escaping (HKSampleQuery, [HKSample]?, Error?) -> Void) -> HKQuery {
-        let query = HKSampleQuery(sampleType: sampleType, predicate: predicate, limit: limit, sortDescriptors: sortDescriptors, resultsHandler: resultsHandler)
+        let query = HKSampleQuery(
+            sampleType: sampleType,
+            predicate: predicate,
+            limit: limit,
+            sortDescriptors: sortDescriptors,
+            resultsHandler: resultsHandler)
 
-        switch sampleType {
+        let limit = limit == HKObjectQueryNoLimit ? nil : limit
+
+        do {
+            let result = try collectSamples(type: sampleType)
+                .filtered(using: predicate)
+                .sorted(using: sortDescriptors)
+                .limit(limit)
+            resultsHandler(query, result, nil)
+        } catch {
+            resultsHandler(query, nil, error)
+        }
+        return query
+    }
+
+    private func collectSamples(type: HKSampleType) throws  -> [HKSample] {
+        switch type {
         case is HKWorkoutType:
-            workouts(predicate: predicate, limit: limit, sortDescriptors: sortDescriptors, resultsHandler: resultsHandler)
-            return query
+            return try workoutSamples()
         case is HKCorrelationType:
             // TODO: Implement
-            break
+            throw HKNotSupportedError("HKCorrelationType not supported")
         case is HKQuantityType:
             // TODO: Implement
-            break
+            throw HKNotSupportedError("HKQuantityType not supported")
         case is HKAudiogramSampleType:
             // TODO: Implement
-            break
+            throw HKNotSupportedError("HKAudiogramSampleType not supported")
         case is HKElectrocardiogramType:
             // TODO: Implement
-            break
+            throw HKNotSupportedError("HKElectrocardiogramType not supported")
         case is HKPrescriptionType:
             // TODO: Implement
-            break
+            throw HKNotSupportedError("HKPrescriptionType not supported")
         case is HKClinicalType:
             // TODO: Implement
-            break
-        case is HKCategoryType:
-            // TODO: Implement
-            break
+            throw HKNotSupportedError("HKClinicalType not supported")
+        case let categoryType as HKCategoryType:
+            let type = HKCategoryTypeIdentifier(rawValue: categoryType.identifier)
+            return try categorySamples(type: type)
         case is HKDocumentType:
             // TODO: Implement
-            break
+            throw HKNotSupportedError("HKDocumentType not supported")
         case is HKSeriesType:
             // TODO: Implement
-            break
+            throw HKNotSupportedError("HKSeriesType not supported")
         //case is HKCharacteristicType:
         //    break
         //case is HKActivitySummaryType:
         //    break
         default:
-            break
+            throw HKNotSupportedError("Unknown sample type not supported")
         }
-
-        resultsHandler(query, nil, HKNotSupportedError())
-        return query
-
-        //sampleType.isMinimumDurationRestricted
-        //sampleType.isMaximumDurationRestricted
-        //sampleType.maximumAllowedDuration
-        //sampleType.allowsRecalibrationForEstimates
     }
 
-    private func workouts(predicate: NSPredicate?, limit: Int, sortDescriptors: [NSSortDescriptor]?, resultsHandler: @escaping (HKSampleQuery, [HKSample]?, Error?) -> Void) {
+    private func workoutSamples() throws -> [HKSample] {
         #warning("Get workouts and filter them")
+        return []
+    }
+}
 
-        // let a: NSArray = [HKWorkoutEvent]() as NSArray
-        // a.filtered(using: predicate!)
+extension Array where Element: AnyObject {
 
-        // Example predicates
-        // HKQuery.predicateForWorkouts(with: .greaterThanOrEqualTo, duration: 1)
-        // HKQuery.predicateForWorkouts(with: HKWorkoutActivityType)
+    func limit(_ limit: Int?) -> [Element] {
+        guard let limit else {
+            return self
+        }
+        return Array(prefix(limit))
+    }
+
+    func sorted(using sortDescriptors: [NSSortDescriptor]?) -> [Element] {
+        guard let sortDescriptors else {
+            return self
+        }
+        return sorted {
+            for sortDescriptor in sortDescriptors {
+                switch sortDescriptor.compare($0, to: $1) {
+                case .orderedAscending: return true
+                case .orderedDescending: return false
+                case .orderedSame: continue
+                }
+            }
+            return false
+        }
+    }
+}
+
+extension Array where Element: AnyObject {
+
+    public func filtered(using predicate: NSPredicate?) -> [Element] {
+        guard let predicate else {
+            return self
+        }
+        return (self as NSArray).filtered(using: predicate) as! [Element]
     }
 }
