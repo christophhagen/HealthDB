@@ -5,8 +5,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/christophhagen/HealthKitExtensions",
       "state" : {
-        "revision" : "322fd68c25a7a0eda972b429009bf554f225e36e",
-        "version" : "0.2.0"
+        "revision" : "88625ad3480ceea974e47f61e1abb05a84896c73",
+        "version" : "0.3.0"
       }
     },
     {
