@@ -220,23 +220,21 @@ struct Tables {
 
     // MARK: Metadata
 
-    func metadata(for workoutId: Int) throws -> [Metadata.Key : Metadata.Value] {
-        // Keys: rowId -> String
-
+    func metadata(for dataId: Int) throws -> [String : Any] {
         let selection = metadataValues.table
             .select(metadataValues.table[*], metadataKeys.table[metadataKeys.key])
-            .filter(metadataValues.objectId == workoutId)
+            .filter(metadataValues.objectId == dataId)
             .join(.leftOuter, metadataKeys.table, on: metadataValues.table[metadataValues.keyId] == metadataKeys.table[metadataKeys.rowId])
 
         return try database.prepare(selection).reduce(into: [:]) { dict, row in
-            let key = Metadata.Key(rawValue: row[metadataKeys.key])
-            let value = metadataValues.from(row: row)
+            let key = row[metadataKeys.key]
+            let value = metadataValues.convert(row: row)
             dict[key] = value
         }
     }
 
-    func insert(_ value: Metadata.Value, for key: Metadata.Key, of workoutId: Int) throws {
-        let keyId = try hasKey(key) ?? insert(key: key)
+    private func insert(_ value: Any, for metadataKey: String, of workoutId: Int) throws {
+        let keyId = try hasMetadataKey(metadataKey) ?? insert(metadataKey: metadataKey)
         let insert = metadataValues.insert(value, of: workoutId, for: keyId)
         try database.run(insert)
     }
@@ -251,11 +249,11 @@ struct Tables {
         }
     }
 
-    private func hasKey(_ key: Metadata.Key) throws -> Int? {
-        try database.pluck(metadataKeys.table.filter(metadataKeys.key == key.rawValue)).map { $0[metadataKeys.rowId] }
+    private func hasMetadataKey(_ key: String) throws -> Int? {
+        try database.pluck(metadataKeys.table.filter(metadataKeys.key == key)).map { $0[metadataKeys.rowId] }
     }
 
-    private func insert(key: Metadata.Key) throws -> Int {
-        Int(try database.run(metadataKeys.table.insert(metadataKeys.key <- key.rawValue)))
+    private func insert(metadataKey: String) throws -> Int {
+        Int(try database.run(metadataKeys.table.insert(metadataKeys.key <- metadataKey)))
     }
 }

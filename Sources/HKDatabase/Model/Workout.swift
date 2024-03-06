@@ -26,7 +26,7 @@ struct Workout {
 
     let activities: [HKWorkoutActivity]
 
-    let metadata: [Metadata.Key : Metadata.Value]
+    let metadata: [String : Any]
 
     var firstActivityDate: Date? {
         activities.map { $0.startDate }.min()
@@ -51,7 +51,7 @@ struct Workout {
         activities.first?.workoutConfiguration.activityType.description ?? "Unknown activity"
     }
     
-    init(id: Int, totalDistance: Double? = nil, goalType: Int? = nil, goal: Double? = nil, condenserVersion: Int? = nil, condenserDate: Date? = nil, events: [HKWorkoutEvent] = [], activities: [HKWorkoutActivity] = [], metadata: [Metadata.Key : Metadata.Value] = [:]) {
+    init(id: Int, totalDistance: Double? = nil, goalType: Int? = nil, goal: Double? = nil, condenserVersion: Int? = nil, condenserDate: Date? = nil, events: [HKWorkoutEvent] = [], activities: [HKWorkoutActivity] = [], metadata: [String : Any] = [:]) {
         self.id = id
         self.totalDistance = totalDistance
         self.goal = .init(goalType: goalType, goal: goal)

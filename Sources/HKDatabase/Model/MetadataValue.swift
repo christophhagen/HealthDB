@@ -57,6 +57,24 @@ extension Metadata.Value {
             return value
         }
     }
+
+    init?(value: Any) {
+        switch value {
+        case let string as String:
+            self = .string(value: string)
+        case let number as NSNumber:
+            self = .number(value: number.doubleValue)
+        case let date as Date:
+            self = .date(value: date)
+        case let quantity as HKQuantity:
+            let parts = "\(quantity)".components(separatedBy: " ")
+            self = .numerical(value: Double(parts[0])!, unit: parts[1])
+        case let data as Data:
+            self = .data(value: data)
+        default:
+            return nil
+        }
+    }
 }
 
 extension Metadata.Value: CustomStringConvertible {

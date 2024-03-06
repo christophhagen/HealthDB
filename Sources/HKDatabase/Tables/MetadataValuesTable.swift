@@ -1,5 +1,6 @@
 import Foundation
 import SQLite
+import HealthKit
 
 struct MetadataValuesTable {
 
@@ -55,7 +56,23 @@ struct MetadataValuesTable {
         }
     }
 
-   func create(in database: Connection) throws {
+    func convert(row: Row) -> Any {
+        let valueType = Metadata.Value.ValueType(rawValue: row[valueType])!
+        switch valueType {
+        case .string:
+            return row[stringValue]!
+        case .number:
+            return row[numericalValue]! as NSNumber
+        case .date:
+            return Date(timeIntervalSinceReferenceDate: row[dateValue]!)
+        case .numerical:
+            return HKQuantity(unit: .init(from: row[stringValue]!), doubleValue: row[numericalValue]!)
+        case .data:
+            return row[dataValue]!
+        }
+    }
+
+    func create(in database: Connection) throws {
         //try database.execute("CREATE TABLE metadata_values (ROWID INTEGER PRIMARY KEY AUTOINCREMENT, key_id INTEGER, object_id INTEGER, value_type INTEGER NOT NULL DEFAULT 0, string_value TEXT, numerical_value REAL, date_value REAL, data_value BLOB)")
         try database.run(table.create { table in
             table.column(rowId, primaryKey: .autoincrement)
@@ -69,8 +86,9 @@ struct MetadataValuesTable {
         })
     }
 
-    func insert(_ element: Metadata.Value, of workoutId: Int, for keyId: Int) -> Insert {
-        table.insert(
+    func insert(_ value: Any, of workoutId: Int, for keyId: Int) -> Insert {
+        let element = Metadata.Value(value: value)!
+        return table.insert(
             self.keyId <- keyId,
             objectId <- workoutId,
             valueType <- element.valueType.rawValue,

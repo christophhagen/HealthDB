@@ -54,7 +54,7 @@ public final class HealthDatabase {
         try tables.sampleCount(from: activity.startDate, to: activity.currentEndDate)
     }
 
-    func metadata(for objectId: Int) throws -> [Metadata.Key : Metadata.Value] {
+    func metadata(for objectId: Int) throws -> [String : Any] {
         try tables.metadata(for: objectId)
     }
 
@@ -88,7 +88,7 @@ public final class HealthDatabase {
 
         let builder = HKWorkoutBuilder(healthStore: store, configuration: configuration, device: nil)
         let metadata = workout.metadata.reduce(into: [:]) { dict, element in
-            dict[element.key.rawValue] = element.value.value
+            dict[element.key] = element.value
         }
         try await builder.addMetadata(metadata)
         //try await builder.addSamples(<#T##samples: [HKSample]##[HKSample]#>)
