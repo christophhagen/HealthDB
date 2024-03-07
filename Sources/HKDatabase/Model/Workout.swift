@@ -51,7 +51,7 @@ public struct Workout {
         activities.first?.workoutConfiguration.activityType.description ?? "Unknown activity"
     }
     
-    init(id: Int, totalDistance: Double? = nil, goalType: Int? = nil, goal: Double? = nil, condenserVersion: Int? = nil, condenserDate: Date? = nil, events: [HKWorkoutEvent] = [], activities: [HKWorkoutActivity] = [], metadata: [String : Any] = [:]) {
+    public init(id: Int, totalDistance: Double? = nil, goalType: Int? = nil, goal: Double? = nil, condenserVersion: Int? = nil, condenserDate: Date? = nil, events: [HKWorkoutEvent] = [], activities: [HKWorkoutActivity] = [], metadata: [String : Any] = [:]) {
         self.id = id
         self.totalDistance = totalDistance
         self.goal = .init(goalType: goalType, goal: goal)
