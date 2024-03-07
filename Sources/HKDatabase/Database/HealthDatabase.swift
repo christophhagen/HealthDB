@@ -101,7 +101,7 @@ public final class HealthDatabase {
 
     // MARK: Samples
 
-    func allSamples<T>(ofType type: T.Type = T.self) throws -> [T] where T: HKCategorySampleContainer {
+    public func allSamples<T>(ofType type: T.Type = T.self) throws -> [T] where T: HKCategorySampleContainer {
         try categorySamples(type: T.categoryTypeIdentifier)
             .map { T.init(categorySample: $0) }
     }
@@ -110,8 +110,6 @@ public final class HealthDatabase {
         guard let dataType = type.sampleType?.rawValue else {
             throw HKNotSupportedError("Unsupported category type")
         }
-        // TODO: Add Device from dataProvenances
-        // TODO: Add UUID to sample from objects.uuid
         let selection = samples.table
             .select(samples.table[*],
                     objects.table[objects.provenance],
@@ -138,7 +136,41 @@ public final class HealthDatabase {
         }
     }
 
+    public func quantitySamples(type: HKQuantityTypeIdentifier) throws -> [HKQuantitySample] {
+        guard let dataType = type.sampleType?.rawValue else {
+            throw HKNotSupportedError("Unsupported category type")
+        }
+        let selection = samples.table
+            .select(samples.table[*],
+                    objects.table[objects.provenance],
+                    quantitySamples.table[*])
+            .filter(samples.dataType == dataType)
+            .join(.leftOuter, objects.table, on: samples.table[samples.dataId] == objects.table[objects.dataId])
+            .join(.leftOuter, quantitySamples.table, on: samples.table[samples.dataId] == quantitySamples.table[quantitySamples.dataId])
+
+        return try database.prepare(selection).map { row in
+            let dataId = row[samples.table[samples.dataId]]
+            let dataProvenance = row[objects.provenance]
+            
+            let device: HKDevice? = try dataProvenances.device(for: dataProvenance, in: database)
+            let metadata = try metadata(for: dataId)
+
+            let startDate = Date(timeIntervalSinceReferenceDate: row[samples.startDate])
+            let endDate = Date(timeIntervalSinceReferenceDate: row[samples.endDate])
+            let quantity = row[quantitySamples.quantity]!
+            let unit = row[unitStrings.unitString]!
+            return HKQuantitySample(
+                type: .init(type),
+                quantity: HKQuantity(unit: .init(from: unit), doubleValue: quantity),
+                start: startDate,
+                end: endDate,
+                device: device,
+                metadata: metadata)
+        }
+    }
+
     private func samples(for activityId: Int) throws -> [Sample] {
+        /*
         let selection = activities.table
             .select(samples.table[samples.dataId],
                     samples.table[samples.dataType],
@@ -148,7 +180,6 @@ public final class HealthDatabase {
             .filter(activities.table[activities.ownerId] == activityId)
             .join(.leftOuter, samples.table, on: activities.startDate <= samples.table[samples.startDate] && activities.endDate >= samples.table[samples.endDate])
 
-        /*
          SELECT samples.data_type, samples.start_date, samples.end_date,  quantity_series_data.timestamp, quantity_series_data.value, quantity_samples.quantity, quantity_samples.original_quantity, quantity_samples.original_unit
          FROM workout_activities
          LEFT OUTER JOIN samples ON workout_activities.start_date <= samples.start_date AND workout_activities.end_date >= samples.end_date
@@ -258,7 +289,7 @@ public final class HealthDatabase {
 
     // MARK: Workouts
 
-    func readAllWorkouts() throws -> [Workout] {
+    public func readAllWorkouts() throws -> [Workout] {
         return try database.prepare(workouts.table).map { row in
             let id = row[workouts.dataId]
 
@@ -336,7 +367,8 @@ public final class HealthDatabase {
         for activity in workout.activities {
             try await builder.addWorkoutActivity(activity)
         }
-        try await builder.endCollection(at: <#T##Date#>)
+        let endDate = workout.activities.compactMap { $0.endDate }.max() ?? Date()
+        try await builder.endCollection(at: endDate)
         return try await builder.finishWorkout()
     }
 }

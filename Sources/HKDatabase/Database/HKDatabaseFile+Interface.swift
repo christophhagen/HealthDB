@@ -62,13 +62,13 @@ extension HealthDatabase {
     private func collectSamples(type: HKSampleType) throws  -> [HKSample] {
         switch type {
         case is HKWorkoutType:
-            return try workoutSamples()
+            throw HKNotSupportedError("HKWorkoutType not supported")
         case is HKCorrelationType:
             // TODO: Implement
             throw HKNotSupportedError("HKCorrelationType not supported")
-        case is HKQuantityType:
-            // TODO: Implement
-            throw HKNotSupportedError("HKQuantityType not supported")
+        case let quantityType as HKQuantityType:
+            let type = HKQuantityTypeIdentifier(rawValue: quantityType.identifier)
+            return try quantitySamples(type: type)
         case is HKAudiogramSampleType:
             // TODO: Implement
             throw HKNotSupportedError("HKAudiogramSampleType not supported")
@@ -97,11 +97,6 @@ extension HealthDatabase {
         default:
             throw HKNotSupportedError("Unknown sample type not supported")
         }
-    }
-
-    private func workoutSamples() throws -> [HKSample] {
-        #warning("Get workouts and filter them")
-        return []
     }
 }
 

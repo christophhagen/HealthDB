@@ -58,7 +58,7 @@ enum SampleType: RawRepresentable {
     /// Active Energy
     ///
     /// Raw value: 10
-    case activeEnergy
+    case activeEnergyBurned
 
     /// Flights Climbed
     ///
@@ -363,7 +363,7 @@ enum SampleType: RawRepresentable {
     /// UV Exposure
     ///
     /// Raw value: 89
-    case uVExposure
+    case uvExposure
 
     /// Basal Body Temperature
     ///
@@ -763,7 +763,7 @@ enum SampleType: RawRepresentable {
         case 7: self = .stepCount
         case 8: self = .distance
         case 9: self = .restingEnergy
-        case 10: self = .activeEnergy
+        case 10: self = .activeEnergyBurned
         case 12: self = .flightsClimbed
         case 14: self = .oxygenSaturation
         case 15: self = .bloodGlucose
@@ -824,7 +824,7 @@ enum SampleType: RawRepresentable {
         case 79: self = .workout
         case 83: self = .distanceCycling
         case 87: self = .dietaryWater
-        case 89: self = .uVExposure
+        case 89: self = .uvExposure
         case 90: self = .basalBodyTemperature
         case 91: self = .cervicalMucusQuality
         case 92: self = .ovulationTestResult
@@ -923,7 +923,7 @@ enum SampleType: RawRepresentable {
         case .heartRate: return 5
         case .distance: return 8
         case .restingEnergy: return 9
-        case .activeEnergy: return 10
+        case .activeEnergyBurned: return 10
         case .flightsClimbed: return 12
         case .oxygenSaturation: return 14
         case .bloodGlucose: return 15
@@ -979,7 +979,7 @@ enum SampleType: RawRepresentable {
         case .dietaryCaffeine: return 78
         case .distanceCycling: return 83
         case .dietaryWater: return 87
-        case .uVExposure: return 89
+        case .uvExposure: return 89
         case .basalBodyTemperature: return 90
         case .cervicalMucusQuality: return 91
         case .ovulationTestResult: return 92
@@ -1083,7 +1083,7 @@ extension SampleType: CustomStringConvertible {
         case .stepCount: return "Step Count"
         case .distance: return "Distance"
         case .restingEnergy: return "Resting Energy"
-        case .activeEnergy: return "Active Energy"
+        case .activeEnergyBurned: return "Active Energy Burned"
         case .flightsClimbed: return "Flights Climbed"
         case .oxygenSaturation: return "Oxygen Saturation"
         case .bloodGlucose: return "Blood Glucose"
@@ -1144,7 +1144,7 @@ extension SampleType: CustomStringConvertible {
         case .workout: return "Workout"
         case .distanceCycling: return "Distance Cycling"
         case .dietaryWater: return "Dietary Water"
-        case .uVExposure: return "UV Exposure"
+        case .uvExposure: return "UV Exposure"
         case .basalBodyTemperature: return "Basal Body Temperature"
         case .cervicalMucusQuality: return "Cervical Mucus Quality"
         case .ovulationTestResult: return "Ovulation Test Result"

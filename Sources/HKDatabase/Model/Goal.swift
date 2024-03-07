@@ -1,6 +1,6 @@
 import Foundation
 
-enum Goal {
+public enum Goal {
 
     case time(TimeInterval)
 
@@ -37,7 +37,7 @@ enum Goal {
 
 extension Goal: CustomStringConvertible {
 
-    var description: String {
+    public var description: String {
         switch self {
         case .time(let seconds):
             return seconds.durationString

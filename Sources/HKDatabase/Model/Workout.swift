@@ -9,24 +9,24 @@ private let df: DateFormatter = {
     return df
 }()
 
-struct Workout {
-    
-    let id: Int
-    
+public struct Workout {
+
+    public let id: Int
+
     /// The distance in km (?)
-    let totalDistance: Double?
-    
-    let goal: Goal?
+    public let totalDistance: Double?
+
+    public let goal: Goal?
 
     let condenserVersion: Int?
-    
+
     let condenserDate: Date?
     
-    let events: [HKWorkoutEvent]
+    public let events: [HKWorkoutEvent]
 
-    let activities: [HKWorkoutActivity]
+    public let activities: [HKWorkoutActivity]
 
-    let metadata: [String : Any]
+    public let metadata: [String : Any]
 
     var firstActivityDate: Date? {
         activities.map { $0.startDate }.min()
@@ -66,14 +66,14 @@ struct Workout {
 extension Workout: Identifiable { }
 
 extension Workout: Equatable {
-    static func == (lhs: Workout, rhs: Workout) -> Bool {
+    public static func == (lhs: Workout, rhs: Workout) -> Bool {
         lhs.id == rhs.id
     }
 }
 
 extension Workout: Hashable {
     
-    func hash(into hasher: inout Hasher) {
+    public func hash(into hasher: inout Hasher) {
         hasher.combine(id)
     }
 }
