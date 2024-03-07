@@ -48,20 +48,6 @@ public final class HealthDatabase {
         self.database = database
     }
 
-    func createTables() throws {
-        try samples.create(in: database)
-        try unitStrings.create(in: database)
-        try quantitySamples.create(referencing: unitStrings, in: database)
-        try dataProvenances.create(in: database)
-        try objects.create(referencing: dataProvenances, in: database)
-        try workouts.create(in: database)
-        try events.create(referencing: workouts, in: database)
-        try activities.create(referencing: workouts, in: database)
-        try metadataValues.create(in: database)
-        try metadataKeys.create(in: database)
-        try locationSeriesData.create(references: dataSeries, in: database)
-    }
-
     // MARK: Key-Value
 
     func value<T>(for key: String) throws -> T? where T: Value {
@@ -70,11 +56,11 @@ public final class HealthDatabase {
 
     // MARK: Locations
 
-    func locationSamples(for activity: HKWorkoutActivity) throws -> [LocationSample] {
+    public func locationSamples(for activity: HKWorkoutActivity) throws -> [CLLocation] {
         try locationSamples(from: activity.startDate, to: activity.currentEndDate)
     }
 
-    private func locationSamples(for seriesId: Int) throws -> [LocationSample] {
+    private func locationSamples(for seriesId: Int) throws -> [CLLocation] {
         try database.prepare(locationSeriesData.table.filter(locationSeriesData.seriesIdentifier == seriesId)).map(locationSeriesData.location)
     }
 
@@ -82,7 +68,7 @@ public final class HealthDatabase {
         try database.scalar(locationSeriesData.table.filter(locationSeriesData.seriesIdentifier == seriesId).count)
     }
 
-    private func locationSamples(from start: Date, to end: Date) throws -> [LocationSample] {
+    public func locationSamples(from start: Date, to end: Date) throws -> [CLLocation] {
         let startTime = start.timeIntervalSinceReferenceDate
         let endTime = end.timeIntervalSinceReferenceDate
 
@@ -93,7 +79,7 @@ public final class HealthDatabase {
         return locations
     }
 
-    private func locationSampleCount(from start: Date, to end: Date) throws -> Int {
+    public func locationSampleCount(from start: Date, to end: Date) throws -> Int {
         let startTime = start.timeIntervalSinceReferenceDate
         let endTime = end.timeIntervalSinceReferenceDate
         return try database.scalar(locationSeriesData.table.filter(locationSeriesData.timestamp >= startTime && locationSeriesData.timestamp <= endTime).count)
@@ -309,7 +295,7 @@ public final class HealthDatabase {
         }
     }
 
-    func insert(workout: Workout) throws {
+    public func insert(workout: Workout) throws {
         let rowid = try database.run(workouts.table.insert(
             workouts.totalDistance <- workout.totalDistance,
             workouts.goalType <- workout.goal?.goalType,
@@ -333,9 +319,29 @@ public final class HealthDatabase {
 
     // MARK: Testing
 
-    convenience init(database: Connection) {
+    public convenience init(database: Connection) {
         self.init(fileUrl: .init(filePath: "/"), database: database)
     }
+
+    /**
+     Creates all tables.
+
+     Use this function only to create a new database for testing.
+     */
+    public func createTables() throws {
+        try samples.create(in: database)
+        try unitStrings.create(in: database)
+        try quantitySamples.create(referencing: unitStrings, in: database)
+        try dataProvenances.create(in: database)
+        try objects.create(referencing: dataProvenances, in: database)
+        try workouts.create(in: database)
+        try events.create(referencing: workouts, in: database)
+        try activities.create(referencing: workouts, in: database)
+        try metadataValues.create(in: database)
+        try metadataKeys.create(in: database)
+        try locationSeriesData.create(references: dataSeries, in: database)
+    }
+
 
     private func testActivityOverlap() throws {
         let workouts = try readAllWorkouts()

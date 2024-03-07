@@ -2,8 +2,6 @@ import Foundation
 import SQLite
 import CoreLocation
 
-typealias LocationSample = CLLocation
-
 struct LocationSeriesDataTable {
 
     let table = Table("location_series_data")
@@ -33,7 +31,7 @@ struct LocationSeriesDataTable {
 
     let signalEnvironment = Expression<Double>("signal_environment")
     
-    func location(row: Row) -> LocationSample {
+    func location(row: Row) -> CLLocation {
         .init(
             coordinate: .init(
                 latitude: row[latitude],
@@ -53,7 +51,7 @@ struct LocationSeriesDataTable {
         try database.execute("CREATE TABLE location_series_data (series_identifier INTEGER NOT NULL REFERENCES data_series(hfd_key) DEFERRABLE INITIALLY DEFERRED, timestamp REAL NOT NULL, longitude REAL NOT NULL, latitude REAL NOT NULL, altitude REAL NOT NULL, speed REAL NOT NULL, course REAL NOT NULL, horizontal_accuracy REAL NOT NULL, vertical_accuracy REAL NOT NULL, speed_accuracy REAL NOT NULL, course_accuracy REAL NOT NULL, signal_environment INTEGER NOT NULL, PRIMARY KEY (series_identifier, timestamp)) WITHOUT ROWID")
     }
 
-    func insert(_ sample: LocationSample, seriesId: Int, in database: Connection) throws {
+    func insert(_ sample: CLLocation, seriesId: Int, in database: Connection) throws {
         try database.run(table.insert(
             seriesIdentifier <- seriesId,
             timestamp <- sample.timestamp.timeIntervalSinceReferenceDate,
