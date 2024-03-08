@@ -259,9 +259,9 @@ public final class HealthDatabase {
         try database.pluck(metadataKeys.table.filter(metadataKeys.rowId == keyId)).map { $0[metadataKeys.key] }!
     }
 
-    private func allMetadataKeys() throws -> [Int : Metadata.Key] {
+    private func allMetadataKeys() throws -> [Int : String] {
         try database.prepare(metadataKeys.table).reduce(into: [:]) {  dict, row in
-            dict[row[metadataKeys.rowId]] = .init(rawValue: row[metadataKeys.key])
+            dict[row[metadataKeys.rowId]] = row[metadataKeys.key]
         }
     }
 

@@ -22,15 +22,15 @@ struct MetadataValuesTable {
 
     let dataValue = Expression<Data?>("data_value")
 
-    func all(in database: Connection) throws -> [Metadata.Value] {
+    func all(in database: Connection) throws -> [MetadataValue] {
         try database.prepare(table).map(from)
     }
 
-   func metadata(for workoutId: Int, in database: Connection) throws -> [Metadata.Value] {
+   func metadata(for workoutId: Int, in database: Connection) throws -> [MetadataValue] {
         try database.prepare(table.filter(objectId == workoutId)).map(from)
     }
 
-   func metadata(for workoutId: Int, in database: Connection) throws -> [(keyId: Int, value: Metadata.Value)] {
+   func metadata(for workoutId: Int, in database: Connection) throws -> [(keyId: Int, value: MetadataValue)] {
         try database.prepare(table.filter(objectId == workoutId)).compactMap { row in
             guard let keyId = row[keyId] else {
                 print("Found 'key_id == NULL' for metadata value of workout \(workoutId)")
@@ -40,8 +40,8 @@ struct MetadataValuesTable {
         }
     }
 
-    func from(row: Row) -> Metadata.Value {
-        let valueType = Metadata.Value.ValueType(rawValue: row[valueType])!
+    func from(row: Row) -> MetadataValue {
+        let valueType = MetadataValue.ValueType(rawValue: row[valueType])!
         switch valueType {
         case .string:
             return .string(value: row[stringValue]!)
@@ -57,7 +57,7 @@ struct MetadataValuesTable {
     }
 
     func convert(row: Row) -> Any {
-        let valueType = Metadata.Value.ValueType(rawValue: row[valueType])!
+        let valueType = MetadataValue.ValueType(rawValue: row[valueType])!
         switch valueType {
         case .string:
             return row[stringValue]!
@@ -87,7 +87,7 @@ struct MetadataValuesTable {
     }
 
     func insert(_ value: Any, of workoutId: Int, for keyId: Int) -> Insert {
-        let element = Metadata.Value(value: value)!
+        let element = MetadataValue(value: value)!
         return table.insert(
             self.keyId <- keyId,
             objectId <- workoutId,
@@ -100,7 +100,7 @@ struct MetadataValuesTable {
     }
 }
 
-private extension Metadata.Value {
+private extension MetadataValue {
 
     var stringValue: String? {
         if case let .string(value) = self {

@@ -1,47 +1,44 @@
 import Foundation
 import HealthKit
 
-extension Metadata {
+enum MetadataValue {
 
-    enum Value {
+    case string(value: String)
+    case number(value: Double)
+    case date(value: Date)
+    case numerical(value: Double, unit: String)
+    case data(value: Data)
 
-        case string(value: String)
-        case number(value: Double)
-        case date(value: Date)
-        case numerical(value: Double, unit: String)
-        case data(value: Data)
+    enum ValueType: Int {
 
-        enum ValueType: Int {
+        /// Uses only the `string_value` column
+        case string = 0
 
-            /// Uses only the `string_value` column
-            case string = 0
+        /// Uses only the `numerical_value` column
+        case number = 1
 
-            /// Uses only the `numerical_value` column
-            case number = 1
+        /// Uses only the `date_value` column
+        case date = 2
 
-            /// Uses only the `date_value` column
-            case date = 2
+        /// Uses the `string_value` column for the unit, and the `numerical_value` column for the number
+        case numerical = 3
 
-            /// Uses the `string_value` column for the unit, and the `numerical_value` column for the number
-            case numerical = 3
+        /// Uses only the `data_value` column
+        case data = 4
+    }
 
-            /// Uses only the `data_value` column
-            case data = 4
-        }
-
-        var valueType: ValueType {
-            switch self {
-            case .string: return .string
-            case .number: return .number
-            case .date: return .date
-            case .numerical: return .numerical
-            case .data: return .data
-            }
+    var valueType: ValueType {
+        switch self {
+        case .string: return .string
+        case .number: return .number
+        case .date: return .date
+        case .numerical: return .numerical
+        case .data: return .data
         }
     }
 }
 
-extension Metadata.Value {
+extension MetadataValue {
 
     var value: Any {
         switch self {
@@ -77,8 +74,8 @@ extension Metadata.Value {
     }
 }
 
-extension Metadata.Value: CustomStringConvertible {
-    
+extension MetadataValue: CustomStringConvertible {
+
     var description: String {
         switch self {
         case .string(let value):
