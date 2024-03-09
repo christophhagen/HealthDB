@@ -122,39 +122,64 @@ public final class HealthDatabase {
         }
     }
 
+    public func samples<T>(ofType type: T.Type = T.self) throws -> [T] where T: HKQuantitySampleContainer {
+        try quantitySamples(type: T.quantityTypeIdentifier)
+            .map { T.init(quantitySample: $0) }
+    }
+
+    public func samples<T>(ofType type: T.Type = T.self, from start: Date, to end: Date) throws -> [T] where T: HKQuantitySampleContainer {
+        try quantitySamples(type: T.quantityTypeIdentifier)
+            .map { T.init(quantitySample: $0) }
+    }
+
     public func quantitySamples(type: HKQuantityTypeIdentifier) throws -> [HKQuantitySample] {
+        let selection = try quantitySampleQuery(type: type)
+
+        return try database.prepare(selection).map { try convertRowToQuantity(row: $0, type: type) }
+    }
+
+    public func quantitySamples(type: HKQuantityTypeIdentifier, from start: Date, to end: Date) throws -> [HKQuantitySample] {
+        let selection = try quantitySampleQuery(type: type)
+            .filter(samples.table[samples.startDate] >= start.timeIntervalSinceReferenceDate)
+            .filter(samples.table[samples.endDate] <= end.timeIntervalSinceReferenceDate)
+
+        return try database.prepare(selection).map { try convertRowToQuantity(row: $0, type: type) }
+    }
+
+    private func quantitySampleQuery(type: HKQuantityTypeIdentifier) throws -> Table {
         guard let dataType = type.sampleType?.rawValue else {
             throw HKNotSupportedError("Unsupported category type")
         }
-        let selection = samples.table
+
+        return samples.table
             .select(samples.table[*],
                     objects.table[objects.provenance],
                     quantitySamples.table[*])
             .filter(samples.dataType == dataType)
             .join(.leftOuter, objects.table, on: samples.table[samples.dataId] == objects.table[objects.dataId])
             .join(.leftOuter, quantitySamples.table, on: samples.table[samples.dataId] == quantitySamples.table[quantitySamples.dataId])
-
-        return try database.prepare(selection).map { row in
-            let dataId = row[samples.table[samples.dataId]]
-            let dataProvenance = row[objects.provenance]
-            
-            let device: HKDevice? = try dataProvenances.device(for: dataProvenance, in: database)
-            let metadata = try metadata(for: dataId)
-
-            let startDate = Date(timeIntervalSinceReferenceDate: row[samples.startDate])
-            let endDate = Date(timeIntervalSinceReferenceDate: row[samples.endDate])
-            let quantity = row[quantitySamples.quantity]!
-            let unit = row[unitStrings.unitString]!
-            return HKQuantitySample(
-                type: .init(type),
-                quantity: HKQuantity(unit: .init(from: unit), doubleValue: quantity),
-                start: startDate,
-                end: endDate,
-                device: device,
-                metadata: metadata)
-        }
     }
 
+    private func convertRowToQuantity(row: Row, type: HKQuantityTypeIdentifier) throws -> HKQuantitySample {
+        let dataId = row[samples.table[samples.dataId]]
+        let dataProvenance = row[objects.provenance]
+
+        let device: HKDevice? = try dataProvenances.device(for: dataProvenance, in: database)
+        let metadata = try metadata(for: dataId)
+
+        let startDate = Date(timeIntervalSinceReferenceDate: row[samples.startDate])
+        let endDate = Date(timeIntervalSinceReferenceDate: row[samples.endDate])
+        let quantity = row[quantitySamples.quantity]!
+        let unit = row[unitStrings.unitString]!
+        return HKQuantitySample(
+            type: .init(type),
+            quantity: HKQuantity(unit: .init(from: unit), doubleValue: quantity),
+            start: startDate,
+            end: endDate,
+            device: device,
+            metadata: metadata)
+    }
+    
     private func samples(for activityId: Int) throws -> [Sample] {
         /*
         let selection = activities.table
