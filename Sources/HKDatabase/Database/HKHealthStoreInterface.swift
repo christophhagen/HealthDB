@@ -48,6 +48,7 @@ public protocol HKHealthStoreInterface {
 
      This method lets users switch their locale without losing their health records.
      */
+    @available(watchOS 10.0, *)
     func supportsHealthRecords() -> Bool
 
     /**

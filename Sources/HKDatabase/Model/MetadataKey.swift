@@ -168,7 +168,7 @@ public enum HKMetadataKey {
      - String value: `HKActivityType`
      - HealthKit Constant: ``HKMetadataKeyActivityType``
      */
-    @available(macOS 14.0, *)
+    @available(watchOS 10.0, iOS 17.0, macOS 14.0, *)
     public static let activityType = HKMetadataKeyActivityType
 
     /**
@@ -316,7 +316,7 @@ public enum HKMetadataKey {
      - String value: `HKMetadataKeyMaximumLightIntensity`
      - HealthKit Constant: ``HKMetadataKeyMaximumLightIntensity``
      */
-    @available(macOS 14.0, *)
+    @available(watchOS 10.0, iOS 17.0, macOS 14.0, *)
     public static let maximumLightIntensity = HKMetadataKeyMaximumLightIntensity
 
     /**
@@ -324,7 +324,7 @@ public enum HKMetadataKey {
      - String value: `HKPhysicalEffortEstimationType`
      - HealthKit Constant: ``HKMetadataKeyPhysicalEffortEstimationType``
      */
-    @available(macOS 14.0, *)
+    @available(watchOS 10.0, iOS 17.0, macOS 14.0, *)
     public static let physicalEffortEstimationType = HKMetadataKeyPhysicalEffortEstimationType
 
     /**
@@ -429,7 +429,7 @@ extension HKMetadataKey {
      Provide a nicer description of a metadata key.
      */
     public static func describe(key: String) -> String? {
-        if #available(macOS 14.0, *) {
+        if #available(watchOS 10.0, iOS 17.0, macOS 14.0, *) {
             switch key {
             case maximumLightIntensity: return "Maximum Light Intensity"
             case activityType: return "Activity Type"

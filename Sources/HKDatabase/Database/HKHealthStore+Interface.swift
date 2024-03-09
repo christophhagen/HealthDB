@@ -12,6 +12,16 @@ extension HKHealthStore: HKHealthStoreInterface {
         return query
     }
 
+#if os(watchOS)
+    public func supportsHealthRecords() -> Bool {
+        return false
+    }
+
+    public func handleAuthorizationForExtension() async throws {
+        throw HKNotSupportedError("handleAuthorizationForExtension() is unavailable for WatchOS")
+    }
+#endif
+
     public func biologicalSex() throws -> HKBiologicalSex {
         let object: HKBiologicalSexObject = try biologicalSex()
         return object.biologicalSex
