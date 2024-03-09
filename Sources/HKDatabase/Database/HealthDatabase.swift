@@ -154,10 +154,12 @@ public final class HealthDatabase {
         return samples.table
             .select(samples.table[*],
                     objects.table[objects.provenance],
-                    quantitySamples.table[*])
+                    quantitySamples.table[*],
+                    unitStrings.table[unitStrings.unitString])
             .filter(samples.dataType == dataType)
             .join(.leftOuter, objects.table, on: samples.table[samples.dataId] == objects.table[objects.dataId])
             .join(.leftOuter, quantitySamples.table, on: samples.table[samples.dataId] == quantitySamples.table[quantitySamples.dataId])
+            .join(.leftOuter, unitStrings.table, on: quantitySamples.table[quantitySamples.originalUnit] == unitStrings.table[unitStrings.rowId])
     }
 
     private func convertRowToQuantity(row: Row, type: HKQuantityTypeIdentifier) throws -> HKQuantitySample {
