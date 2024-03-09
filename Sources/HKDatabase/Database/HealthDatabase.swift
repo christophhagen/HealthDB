@@ -157,8 +157,7 @@ public final class HealthDatabase {
         return samples.table
             .select(samples.table[*],
                     objects.table[objects.provenance],
-                    quantitySamples.table[*],
-                    unitStrings.table[unitStrings.unitString])
+                    quantitySamples.table[*])
             .filter(samples.dataType == dataType)
             .join(.leftOuter, objects.table, on: samples.table[samples.dataId] == objects.table[objects.dataId])
             .join(.leftOuter, quantitySamples.table, on: samples.table[samples.dataId] == quantitySamples.table[quantitySamples.dataId])
