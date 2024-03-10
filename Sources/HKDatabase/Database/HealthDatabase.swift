@@ -38,6 +38,9 @@ public final class HealthDatabase {
 
     private let metadataKeys = MetadataKeysTable()
 
+    /**
+     Open a Health database at the given url.
+     */
     public convenience init(fileUrl: URL) throws {
         let database = try Connection(fileUrl.path)
         self.init(fileUrl: fileUrl, database: database)
@@ -100,39 +103,78 @@ public final class HealthDatabase {
 
     // MARK: Samples
 
-    public func allSamples<T>(ofType type: T.Type = T.self) throws -> [T] where T: HKCategorySampleContainer {
-        try categorySamples(type: T.categoryTypeIdentifier)
+    /**
+     Access category samples in a date interval.
+     */
+    public func samples<T>(ofType type: T.Type = T.self, from start: Date, to end: Date) throws -> [T] where T: HKCategorySampleContainer {
+        try samples(type: T.categoryTypeIdentifier, from: start, to: end)
             .map { T.init(categorySample: $0) }
     }
 
-    func categorySamples(type: HKCategoryTypeIdentifier) throws -> [HKCategorySample] {
-        guard let dataType = type.sampleType?.rawValue else {
+    /**
+     Access category samples in a date interval.
+     */
+    public func samples(type: HKCategoryTypeIdentifier, from start: Date, to end: Date) throws -> [HKCategorySample] {
+        let query = try categorySampleQuery(type: type)
+            .filter(samples.table[samples.startDate] >= start.timeIntervalSinceReferenceDate)
+            .filter(samples.table[samples.endDate] <= end.timeIntervalSinceReferenceDate)
+        return try database.prepare(query).map { try convertRowToCategory(row: $0, type: type) }
+    }
+
+    public func samples<T>(ofType type: T.Type = T.self) throws -> [T] where T: HKCategorySampleContainer {
+        try samples(type: T.categoryTypeIdentifier)
+            .map { T.init(categorySample: $0) }
+    }
+
+    /**
+     Attempt to extract category samples by specifying the sample type manually.
+     */
+    public func categorySamples(sampleType: SampleType, as type: HKCategoryTypeIdentifier, from start: Date, to end: Date) throws -> [HKCategorySample] {
+        let query = categorySampleQuery(type: sampleType)
+            .filter(samples.table[samples.startDate] >= start.timeIntervalSinceReferenceDate)
+            .filter(samples.table[samples.endDate] <= end.timeIntervalSinceReferenceDate)
+        return try database.prepare(query).map { try convertRowToCategory(row: $0, type: type) }
+    }
+
+
+
+    func samples(type: HKCategoryTypeIdentifier) throws -> [HKCategorySample] {
+        let query = try categorySampleQuery(type: type)
+        return try database.prepare(query).map { try convertRowToCategory(row: $0, type: type) }
+    }
+
+    private func categorySampleQuery(type: HKCategoryTypeIdentifier) throws -> Table {
+        guard let dataType = type.sampleType else {
             throw HKNotSupportedError("Unsupported category type")
         }
-        let selection = samples.table
+        return categorySampleQuery(type: dataType)
+    }
+
+    private func categorySampleQuery(type: SampleType) -> Table {
+        samples.table
             .select(samples.table[*],
                     objects.table[objects.provenance],
                     categorySamples.table[categorySamples.value])
-            .filter(samples.dataType == dataType)
+            .filter(samples.dataType == type.rawValue)
             .join(.leftOuter, objects.table, on: samples.table[samples.dataId] == objects.table[objects.dataId])
             .join(.leftOuter, categorySamples.table, on: samples.table[samples.dataId] == categorySamples.table[categorySamples.dataId])
+    }
 
-        return try database.prepare(selection).map { row in
-            let dataId = row[samples.table[samples.dataId]]
-            let startDate = Date(timeIntervalSinceReferenceDate: row[samples.startDate])
-            let endDate = Date(timeIntervalSinceReferenceDate: row[samples.endDate])
-            let dataProvenance = row[objects.provenance]
-            let value = row [categorySamples.value]
-            let device: HKDevice? = try dataProvenances.device(for: dataProvenance, in: database)
-            let metadata = try metadata(for: dataId)
-            return HKCategorySample(
-                type: .init(type),
-                value: value,
-                start: startDate,
-                end: endDate,
-                device: device,
-                metadata: metadata)
-        }
+    private func convertRowToCategory(row: Row, type: HKCategoryTypeIdentifier) throws -> HKCategorySample {
+        let dataId = row[samples.table[samples.dataId]]
+        let startDate = Date(timeIntervalSinceReferenceDate: row[samples.startDate])
+        let endDate = Date(timeIntervalSinceReferenceDate: row[samples.endDate])
+        let dataProvenance = row[objects.provenance]
+        let value = row [categorySamples.value]
+        let device: HKDevice? = try dataProvenances.device(for: dataProvenance, in: database)
+        let metadata = try metadata(for: dataId)
+        return HKCategorySample(
+            type: .init(type),
+            value: value,
+            start: startDate,
+            end: endDate,
+            device: device,
+            metadata: metadata)
     }
 
     public func samples<T>(ofType type: T.Type = T.self) throws -> [T] where T: HKQuantitySampleContainer {
