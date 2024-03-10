@@ -30,7 +30,26 @@ struct LocationSeriesDataTable {
     let courseAccuracy = Expression<Double>("course_accuracy")
 
     let signalEnvironment = Expression<Double>("signal_environment")
-    
+
+    func locations(for seriesId: Int, in database: Connection) throws -> [CLLocation] {
+        let query = table.filter(seriesIdentifier == seriesId)
+        return try database.prepare(query).map(location)
+    }
+
+    func locations(from start: Date, to end: Date, in database: Connection) throws -> [CLLocation] {
+        let startTime = start.timeIntervalSinceReferenceDate
+        let endTime = end.timeIntervalSinceReferenceDate
+        let query = table.filter(timestamp >= startTime && timestamp <= endTime)
+        return try database.prepare(query).map(location)
+    }
+
+    func locationCount(from start: Date, to end: Date, in database: Connection) throws -> Int {
+        let startTime = start.timeIntervalSinceReferenceDate
+        let endTime = end.timeIntervalSinceReferenceDate
+        let query = table.filter(timestamp >= startTime && timestamp <= endTime).count
+        return try database.scalar(query)
+    }
+
     func location(row: Row) -> CLLocation {
         .init(
             coordinate: .init(

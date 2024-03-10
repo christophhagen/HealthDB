@@ -72,36 +72,42 @@ public final class HealthDatabase {
 
     // MARK: Locations
 
-    public func locationSamples(for activity: HKWorkoutActivity) throws -> [CLLocation] {
-        try locationSamples(from: activity.startDate, to: activity.currentEndDate)
+    public func locations(from start: Date, to end: Date) throws -> [CLLocation] {
+        try locationSeriesData.locations(from: start, to: end, in: database)
     }
 
-    private func locationSamples(for seriesId: Int) throws -> [CLLocation] {
-        try database.prepare(locationSeriesData.table.filter(locationSeriesData.seriesIdentifier == seriesId)).map(locationSeriesData.location)
-    }
-
-    private func locationSampleCount(for seriesId: Int) throws -> Int {
-        try database.scalar(locationSeriesData.table.filter(locationSeriesData.seriesIdentifier == seriesId).count)
-    }
-
-    public func locationSamples(from start: Date, to end: Date) throws -> [CLLocation] {
-        let startTime = start.timeIntervalSinceReferenceDate
-        let endTime = end.timeIntervalSinceReferenceDate
-
-        var locations = [CLLocation]()
-        for row in try database.prepare(locationSeriesData.table.filter(locationSeriesData.timestamp >= startTime && locationSeriesData.timestamp <= endTime)) {
-            locations.append(locationSeriesData.location(row: row))
-        }
-        return locations
-    }
-
+    /**
+     Count the number of location samples in a date interval.
+     */
     public func locationSampleCount(from start: Date, to end: Date) throws -> Int {
-        let startTime = start.timeIntervalSinceReferenceDate
-        let endTime = end.timeIntervalSinceReferenceDate
-        return try database.scalar(locationSeriesData.table.filter(locationSeriesData.timestamp >= startTime && locationSeriesData.timestamp <= endTime).count)
+        try locationSeriesData.locationCount(from: start, to: end, in: database)
     }
 
-    // MARK: Samples
+    /**
+     Query location series overlapping a date interval.
+     */
+    public func locationSeries(from start: Date, to end: Date) throws -> [LocationSeries] {
+        let query = samples.locationSeriesQuery(from: start, to: end)
+        return try database.prepare(query).compactMap { row in
+            try dataSeries.select(dataId: row[samples.dataId], in: database)
+        }
+    }
+
+    /**
+     Get the locations associated with a location series.
+     */
+    public func locations(in series: LocationSeries) throws -> [CLLocation] {
+        try locationSeriesData.locations(for: series.hfdKey, in: database)
+    }
+
+    /**
+     Count the existing location samples for a location series.
+     */
+    func existingLocationSampleCount(for series: LocationSeries) throws -> Int {
+        try database.scalar(locationSeriesData.table.filter(locationSeriesData.seriesIdentifier == series.hfdKey).count)
+    }
+
+    // MARK: Category Samples
 
     /**
      Access category samples in a date interval.
@@ -174,6 +180,8 @@ public final class HealthDatabase {
             device: device,
             metadata: metadata)
     }
+
+    // MARK: Quantity Samples
 
     public func quantitySamples<T>(ofType type: T.Type = T.self) throws -> [T] where T: HKQuantitySampleContainer {
         let selection = try quantitySampleQuery(type: T.quantityTypeIdentifier)
@@ -445,12 +453,5 @@ public final class HealthDatabase {
         let endDate = workout.activities.compactMap { $0.endDate }.max() ?? Date()
         try await builder.endCollection(at: endDate)
         return try await builder.finishWorkout()
-    }
-}
-
-private extension HKWorkoutActivity {
-
-    var currentEndDate: Date {
-        endDate ?? Date()
     }
 }

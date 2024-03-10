@@ -1,6 +1,13 @@
 import Foundation
 import HealthKit
 
+extension HKWorkoutActivity {
+
+    var currentEndDate: Date {
+        endDate ?? Date()
+    }
+}
+
 extension HKWorkoutActivity: Comparable {
 
     public static func < (lhs: HKWorkoutActivity, rhs: HKWorkoutActivity) -> Bool {

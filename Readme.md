@@ -137,6 +137,34 @@ There are many sample tables in the database, and all appear to be linked by the
 `verifiable_clinical_record_samples`
 `workout_zones_samples`
 
+### Location data series
+
+Locations are grouped into data series, which can be selected based on a date range:
+
+```swift
+let locationSeries = try database.locationSeries(from: .distantPast, to: .now)
+```
+
+All series overlapping the provided date range are returned.
+The locations can then be accessed using the relevant series:
+
+```swift
+let series = locationSeries.first!
+let locations: [CLLocation] = try database.locations(in: series)
+```
+Location series data doesn't appear to be directly linked to workouts, so the `samples` table is searched for a data series with an overlapping date interval.
+It's also possible to directly select location samples based on a time interval.
+In this case, samples from different location series may be returned.
+
+```swift
+let locations = try database.locations(from: .distantPast, to: .now)
+```
+
+Data series are partially stored in the table `data_series`, but they also contain a sample in the `samples` table with `data_type == 102` and the same `data_id`.
+The `data_series` table seems to only contain location series.
+
+The column `hfd_key` links the data series to entries in the table `location_series_data` where `data_series.hfd_key == location_series_data.series_identifier`.
+
 ## Caveats
 
 Unfortunately, Apple makes it very difficult to work with Health Data outside the provided framework. Most problematically, a lot of `HealthKit` types don't expose properties publicly that would be needed/useful. For example, it's not possible to construct a full `HKWorkout` outside of the provided `HKHealthStore`. That's why this library uses it's own `Workout` type.
