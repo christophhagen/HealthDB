@@ -7,7 +7,7 @@ import Foundation
 
  In the SQLite database, it is stored as an integer.
  */
-enum SampleType: RawRepresentable {
+public enum SampleType {
 
 
     /// Body Mass Index
@@ -405,6 +405,11 @@ enum SampleType: RawRepresentable {
     /// Raw value: 101
     case pushCount
 
+    /// Data Series
+    ///
+    /// Raw value: 102
+    case dataSeries
+
     /// Swimming Distance
     ///
     /// Raw value: 110
@@ -430,6 +435,11 @@ enum SampleType: RawRepresentable {
     /// Raw value: 118
     case restingHeartRate
 
+    /// Binary Sample
+    ///
+    /// Raw value: 119
+    case binarySample
+
     /// VO2 Max
     ///
     /// Raw value: 124
@@ -449,6 +459,16 @@ enum SampleType: RawRepresentable {
     ///
     /// Raw value: 139
     case heartRateVariabilitySDNN
+
+    /// EGC Sample
+    ///
+    /// Raw value: 144
+    case ecgSample
+
+    /// Low Heart Rate Event
+    ///
+    /// Raw value: 147
+    case lowHeartRateEvent
 
     /// Abdominal Cramps
     ///
@@ -569,6 +589,13 @@ enum SampleType: RawRepresentable {
     ///
     /// Raw value: 196
     case stairDescentSpeed
+
+    /// Sleep Schedule Sample
+    ///
+    /// Samples reference the `sleep_schedule_samples` table.
+    ///
+    /// Raw value: 198
+    case sleepScheduleSample
 
     /// Rapid Pounding Or Fluttering Heartbeat
     ///
@@ -751,8 +778,11 @@ enum SampleType: RawRepresentable {
     case waterTemperature
 
     case unknown(Int)
+}
 
-    init(rawValue: Int) {
+extension SampleType: RawRepresentable {
+
+    public init(rawValue: Int) {
         switch rawValue {
         case 0: self = .bodyMassIndex
         case 1: self = .bodyFatPercentage
@@ -833,14 +863,18 @@ enum SampleType: RawRepresentable {
         case 97: self = .sexualActivity
         case 99: self = .mindfulSession
         case 101: self = .pushCount
+        case 102: self = .dataSeries
         case 110: self = .distanceSwimming
         case 111: self = .swimmingStrokeCount
         case 113: self = .distanceWheelchair
         case 114: self = .waistCircumference
         case 118: self = .restingHeartRate
+        case 119: self = .binarySample
         case 124: self = .vO2Max
         case 125: self = .insulinDelivery
         case 138: self = .distanceDownhillSnowSports
+        case 144: self = .ecgSample
+        case 147: self = .lowHeartRateEvent
         case 139: self = .heartRateVariabilitySDNN
         case 157: self = .abdominalCramps
         case 158: self = .breastPain
@@ -866,6 +900,7 @@ enum SampleType: RawRepresentable {
         case 193: self = .contraceptive
         case 195: self = .stairAscentSpeed
         case 196: self = .stairDescentSpeed
+        case 198: self = .sleepScheduleSample
         case 201: self = .rapidPoundingOrFlutteringHeartbeat
         case 202: self = .skippedHeartbeat
         case 203: self = .fever
@@ -907,7 +942,7 @@ enum SampleType: RawRepresentable {
         }
     }
 
-    var rawValue: Int {
+    public var rawValue: Int {
         switch self {
         case .stepCount: return 7
         case .weeklyCalorieGoal: return 67
@@ -988,15 +1023,19 @@ enum SampleType: RawRepresentable {
         case .sexualActivity: return 97
         case .mindfulSession: return 99
         case .pushCount: return 101
+        case .dataSeries: return 102
         case .distanceSwimming: return 110
         case .swimmingStrokeCount: return 111
         case .distanceWheelchair: return 113
         case .waistCircumference: return 114
         case .restingHeartRate: return 118
+        case .binarySample: return 119
         case .vO2Max: return 124
         case .insulinDelivery: return 125
         case .distanceDownhillSnowSports: return 138
         case .heartRateVariabilitySDNN: return 139
+        case .ecgSample: return 144
+        case .lowHeartRateEvent: return 147
         case .abdominalCramps: return 157
         case .breastPain: return 158
         case .bloating: return 159
@@ -1021,6 +1060,7 @@ enum SampleType: RawRepresentable {
         case .contraceptive: return 193
         case .stairAscentSpeed: return 195
         case .stairDescentSpeed: return 196
+        case .sleepScheduleSample: return 198
         case .rapidPoundingOrFlutteringHeartbeat: return 201
         case .skippedHeartbeat: return 202
         case .fever: return 203
@@ -1072,7 +1112,7 @@ extension SampleType: Hashable {
 
 extension SampleType: CustomStringConvertible {
 
-    var description: String {
+    public var description: String {
         switch self {
         case .bodyMassIndex: return "BodyMassIndex"
         case .bodyFatPercentage: return "BodyFatPercentage"
@@ -1153,15 +1193,19 @@ extension SampleType: CustomStringConvertible {
         case .sexualActivity: return "Sexual Activity"
         case .mindfulSession: return "Mindful Session"
         case .pushCount: return "Push Count"
+        case .dataSeries: return "Data Series"
         case .distanceSwimming: return "Distance Swimming"
         case .swimmingStrokeCount: return "Swimming Stroke Count"
         case .distanceWheelchair: return "Distance Wheelchair"
         case .waistCircumference: return "Waist Circumference"
         case .restingHeartRate: return "Resting Heart Rate"
+        case .binarySample: return "Binary Sample"
         case .vO2Max: return "VO2 Max"
         case .insulinDelivery: return "Insulin Delivery"
         case .distanceDownhillSnowSports: return "Distance Downhill Snow Sports"
         case .heartRateVariabilitySDNN: return "Heart Rate Variability SDNN"
+        case .ecgSample: return "ECG Sample"
+        case .lowHeartRateEvent: return "Low Heart Rate Event"
         case .abdominalCramps: return "Abdominal Cramps"
         case .breastPain: return "Breast Pain"
         case .bloating: return "Bloating"
@@ -1186,6 +1230,7 @@ extension SampleType: CustomStringConvertible {
         case .contraceptive: return "Contraceptive"
         case .stairAscentSpeed: return "Stair Ascent Speed"
         case .stairDescentSpeed: return "Stair Descent Speed"
+        case .sleepScheduleSample: return "Sleep Schedule Sample"
         case .rapidPoundingOrFlutteringHeartbeat: return "Rapid Pounding Or Fluttering Heartbeat"
         case .skippedHeartbeat: return "Skipped Heartbeat"
         case .fever: return "Fever"
