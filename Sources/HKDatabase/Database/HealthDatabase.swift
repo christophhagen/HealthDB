@@ -129,8 +129,8 @@ public final class HealthDatabase {
     /**
      Attempt to extract category samples by specifying the sample type manually.
      */
-    public func unknownCategorySamples(sampleType: SampleType, as type: HKCategoryTypeIdentifier, from start: Date, to end: Date) throws -> [HKCategorySample] {
-        let query = categorySampleQuery(type: sampleType)
+    public func unknownCategorySamples(rawDataType: Int, as type: HKCategoryTypeIdentifier, from start: Date, to end: Date) throws -> [HKCategorySample] {
+        let query = categorySampleQuery(rawDataType: rawDataType)
             .filter(samples.table[samples.startDate] >= start.timeIntervalSinceReferenceDate)
             .filter(samples.table[samples.endDate] <= end.timeIntervalSinceReferenceDate)
         return try database.prepare(query).map { try convertRowToCategory(row: $0, type: type) }
@@ -145,15 +145,15 @@ public final class HealthDatabase {
         guard let dataType = type.sampleType else {
             throw HKNotSupportedError("Unsupported category type")
         }
-        return categorySampleQuery(type: dataType)
+        return categorySampleQuery(rawDataType: dataType.rawValue)
     }
 
-    private func categorySampleQuery(type: SampleType) -> Table {
+    private func categorySampleQuery(rawDataType: Int) -> Table {
         samples.table
             .select(samples.table[*],
                     objects.table[objects.provenance],
                     categorySamples.table[categorySamples.value])
-            .filter(samples.dataType == type.rawValue)
+            .filter(samples.dataType == rawDataType)
             .join(.leftOuter, objects.table, on: samples.table[samples.dataId] == objects.table[objects.dataId])
             .join(.leftOuter, categorySamples.table, on: samples.table[samples.dataId] == categorySamples.table[categorySamples.dataId])
     }
@@ -202,8 +202,8 @@ public final class HealthDatabase {
         return try database.prepare(selection).map { try convertRowToQuantity(row: $0, type: type, unit: defaultUnit) }
     }
 
-    public func unknownQuantitySamples(sampleType: SampleType, as type: HKQuantityTypeIdentifier, unit: HKUnit, from start: Date, to end: Date) throws -> [HKQuantitySample] {
-        let selection = try quantitySampleQuery(type: type)
+    public func unknownQuantitySamples(rawDataType: Int, as type: HKQuantityTypeIdentifier, unit: HKUnit, from start: Date, to end: Date) throws -> [HKQuantitySample] {
+        let selection = quantitySampleQuery(rawType: rawDataType)
             .filter(samples.table[samples.startDate] >= start.timeIntervalSinceReferenceDate)
             .filter(samples.table[samples.endDate] <= end.timeIntervalSinceReferenceDate)
 
@@ -215,12 +215,15 @@ public final class HealthDatabase {
         guard let dataType = type.sampleType?.rawValue else {
             throw HKNotSupportedError("Unsupported category type")
         }
+        return quantitySampleQuery(rawType: dataType)
+    }
 
+    private func quantitySampleQuery(rawType: Int) -> Table {
         return samples.table
             .select(samples.table[*],
                     objects.table[objects.provenance],
                     quantitySamples.table[*])
-            .filter(samples.dataType == dataType)
+            .filter(samples.dataType == rawType)
             .join(.leftOuter, objects.table, on: samples.table[samples.dataId] == objects.table[objects.dataId])
             .join(.leftOuter, quantitySamples.table, on: samples.table[samples.dataId] == quantitySamples.table[quantitySamples.dataId])
     }
@@ -242,29 +245,6 @@ public final class HealthDatabase {
             end: endDate,
             device: device,
             metadata: metadata)
-    }
-    
-    private func samples(for activityId: Int) throws -> [Sample] {
-        /*
-        let selection = activities.table
-            .select(samples.table[samples.dataId],
-                    samples.table[samples.dataType],
-                    samples.table[samples.startDate],
-                    samples.table[samples.endDate],
-                    quantitySamples.table[quantitySamples.quantity])
-            .filter(activities.table[activities.ownerId] == activityId)
-            .join(.leftOuter, samples.table, on: activities.startDate <= samples.table[samples.startDate] && activities.endDate >= samples.table[samples.endDate])
-
-         SELECT samples.data_type, samples.start_date, samples.end_date,  quantity_series_data.timestamp, quantity_series_data.value, quantity_samples.quantity, quantity_samples.original_quantity, quantity_samples.original_unit
-         FROM workout_activities
-         LEFT OUTER JOIN samples ON workout_activities.start_date <= samples.start_date AND workout_activities.end_date >= samples.end_date
-         LEFT OUTER JOIN quantity_sample_series ON samples.data_id = quantity_sample_series.data_id
-         LEFT OUTER JOIN quantity_series_data ON quantity_sample_series.hfd_key = quantity_series_data.series_identifier
-         LEFT OUTER JOIN quantity_samples ON samples.data_id = quantity_samples.data_id
-         WHERE workout_activities.owner_id = 10794346
-         */
-
-        return []
     }
 
     func samples(from start: Date, to end: Date) throws -> [Sample] {
@@ -295,7 +275,7 @@ public final class HealthDatabase {
                 id: id,
                 startDate: startDate,
                 endDate: endDate,
-                dataType: dataType,
+                dataType: dataType!,
                 quantity: quantity,
                 originalQuantity: original,
                 originalUnit: unit,
