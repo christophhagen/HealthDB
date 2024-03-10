@@ -42,15 +42,15 @@ extension HealthDatabase: HKHealthStoreInterface {
     // MARK: - Reading characteristic data
 
     public func biologicalSex() throws -> HKBiologicalSex {
-        try value(key: "sex", fallback: .notSet)
+        try value(for: .biologicalSex, fallback: .notSet)
     }
 
     public func bloodType() throws -> HKBloodType {
-        try value(key: "blood_type", fallback: .notSet)
+        try value(for: .bloodType, fallback: .notSet)
     }
 
     public func dateOfBirthComponents() throws -> DateComponents {
-        guard let value: Double = try value(for:  "birthdate") else {
+        guard let value: Double = try value(for:  .dateOfBirth) else {
             return .init()
         }
         let date = Date(timeIntervalSinceReferenceDate: value)
@@ -58,14 +58,19 @@ extension HealthDatabase: HKHealthStoreInterface {
     }
 
     public func fitzpatrickSkinType() throws -> HKFitzpatrickSkinType {
-        try value(key: "fitzpatrick_skin_type", fallback: .notSet)
+        try value(for: .fitzpatrickSkinType, fallback: .notSet)
     }
 
     public func wheelchairUse() throws -> HKWheelchairUse {
-        try value(key: "wheelchair_use", fallback: .notSet)
+        try value(for: .wheelchairUse, fallback: .notSet)
     }
 
-    private func value<T>(key: String, fallback: T) throws -> T where T: RawRepresentable, T.RawValue == Int {
+    public func activityMoveMode() throws -> HKActivityMoveMode {
+        throw HKNotSupportedError("Unknown key for activity move mode in table 'key_value_secure'")
+        //try value(for: .activityMoveMode, fallback: .activeEnergy)
+    }
+
+    private func value<T>(for key: HKCharacteristicTypeIdentifier, fallback: T) throws -> T where T: RawRepresentable, T.RawValue == Int {
         guard let value: Int = try value(for: key) else {
             return fallback
         }

@@ -373,5 +373,9 @@ public protocol HKHealthStoreInterface {
 
     // MARK: - Accessing the move mode
 
+    /**
+     Returns the activity move mode for the current user.
+     */
+    func activityMoveMode() throws -> HKActivityMoveMode
 
 }

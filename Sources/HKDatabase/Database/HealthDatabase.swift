@@ -50,8 +50,21 @@ public final class HealthDatabase {
 
     // MARK: Key-Value
 
+    func value<T>(for key: HKCharacteristicTypeIdentifier) throws -> T? where T: Value {
+        try keyValueSecure.value(for: key.databaseKey!, in: database)
+    }
+
     func value<T>(for key: String) throws -> T? where T: Value {
         try keyValueSecure.value(for: key, in: database)
+    }
+
+    /**
+     A list of all key-value pairs.
+
+     Access all entries in the `key_value_secure` table.
+     */
+    public func keyValuePairs() throws -> [KeyValueEntry] {
+        try keyValueSecure.all(in: database)
     }
 
     // MARK: Locations

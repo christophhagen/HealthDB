@@ -41,4 +41,9 @@ extension HKHealthStore: HKHealthStoreInterface {
         let object: HKWheelchairUseObject = try wheelchairUse()
         return object.wheelchairUse
     }
+
+    public func activityMoveMode() throws -> HKActivityMoveMode {
+        let object: HKActivityMoveModeObject = try activityMoveMode()
+        return object.activityMoveMode
+    }
 }

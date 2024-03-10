@@ -29,4 +29,38 @@ struct KeyValueSecureTable {
             $0[Expression<T>("value")]
         }
     }
+
+    func all(in database: Connection) throws -> [KeyValueEntry] {
+        try database.prepare(table).map { row in
+                .init(
+                    category: row[category],
+                    domain: row[domain],
+                    key: row[key],
+                    value: value(in: row),
+                    provenance: row[provenance],
+                    modificationDate: Date(timeIntervalSinceReferenceDate: row[modificationDate]),
+                    syncIdentity: row[syncIdentity])
+        }
+    }
+
+    private func value(in row: Row) -> Any? {
+        if let int: Int = testType(in: row) {
+            return int
+        }
+        if let double: Double = testType(in: row) {
+            return double
+        }
+        if let string: String = testType(in: row) {
+            return string
+        }
+        if let data: Data = testType(in: row) {
+            return data
+        }
+        return nil
+    }
+
+    private func testType<T>(in row: Row) -> T? where T: Value {
+        row[Expression<T?>("value")]
+    }
+
 }
