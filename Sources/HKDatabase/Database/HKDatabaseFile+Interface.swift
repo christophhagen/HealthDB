@@ -83,7 +83,7 @@ extension HealthDatabase {
             throw HKNotSupportedError("HKClinicalType not supported")
         case let categoryType as HKCategoryType:
             let type = HKCategoryTypeIdentifier(rawValue: categoryType.identifier)
-            return try samples(type: type)
+            return try categorySamples(type: type)
         case is HKDocumentType:
             // TODO: Implement
             throw HKNotSupportedError("HKDocumentType not supported")

@@ -106,39 +106,37 @@ public final class HealthDatabase {
     /**
      Access category samples in a date interval.
      */
-    public func samples<T>(ofType type: T.Type = T.self, from start: Date, to end: Date) throws -> [T] where T: HKCategorySampleContainer {
-        try samples(type: T.categoryTypeIdentifier, from: start, to: end)
+    public func categorySamples<T>(ofType type: T.Type = T.self, from start: Date, to end: Date) throws -> [T] where T: HKCategorySampleContainer {
+        try categorySamples(type: T.categoryTypeIdentifier, from: start, to: end)
             .map { T.init(categorySample: $0) }
     }
 
     /**
      Access category samples in a date interval.
      */
-    public func samples(type: HKCategoryTypeIdentifier, from start: Date, to end: Date) throws -> [HKCategorySample] {
+    public func categorySamples(type: HKCategoryTypeIdentifier, from start: Date, to end: Date) throws -> [HKCategorySample] {
         let query = try categorySampleQuery(type: type)
             .filter(samples.table[samples.startDate] >= start.timeIntervalSinceReferenceDate)
             .filter(samples.table[samples.endDate] <= end.timeIntervalSinceReferenceDate)
         return try database.prepare(query).map { try convertRowToCategory(row: $0, type: type) }
     }
 
-    public func samples<T>(ofType type: T.Type = T.self) throws -> [T] where T: HKCategorySampleContainer {
-        try samples(type: T.categoryTypeIdentifier)
+    public func categorySamples<T>(ofType type: T.Type = T.self) throws -> [T] where T: HKCategorySampleContainer {
+        try categorySamples(type: T.categoryTypeIdentifier)
             .map { T.init(categorySample: $0) }
     }
 
     /**
      Attempt to extract category samples by specifying the sample type manually.
      */
-    public func categorySamples(sampleType: SampleType, as type: HKCategoryTypeIdentifier, from start: Date, to end: Date) throws -> [HKCategorySample] {
+    public func unknownCategorySamples(sampleType: SampleType, as type: HKCategoryTypeIdentifier, from start: Date, to end: Date) throws -> [HKCategorySample] {
         let query = categorySampleQuery(type: sampleType)
             .filter(samples.table[samples.startDate] >= start.timeIntervalSinceReferenceDate)
             .filter(samples.table[samples.endDate] <= end.timeIntervalSinceReferenceDate)
         return try database.prepare(query).map { try convertRowToCategory(row: $0, type: type) }
     }
 
-
-
-    func samples(type: HKCategoryTypeIdentifier) throws -> [HKCategorySample] {
+    func categorySamples(type: HKCategoryTypeIdentifier) throws -> [HKCategorySample] {
         let query = try categorySampleQuery(type: type)
         return try database.prepare(query).map { try convertRowToCategory(row: $0, type: type) }
     }
@@ -177,7 +175,7 @@ public final class HealthDatabase {
             metadata: metadata)
     }
 
-    public func samples<T>(ofType type: T.Type = T.self) throws -> [T] where T: HKQuantitySampleContainer {
+    public func quantitySamples<T>(ofType type: T.Type = T.self) throws -> [T] where T: HKQuantitySampleContainer {
         let selection = try quantitySampleQuery(type: T.quantityTypeIdentifier)
 
         return try database.prepare(selection)
@@ -185,7 +183,7 @@ public final class HealthDatabase {
             .map { T.init(quantitySample: $0) }
     }
 
-    public func samples<T>(ofType type: T.Type = T.self, from start: Date, to end: Date) throws -> [T] where T: HKQuantitySampleContainer {
+    public func quantitySamples<T>(ofType type: T.Type = T.self, from start: Date, to end: Date) throws -> [T] where T: HKQuantitySampleContainer {
         let selection = try quantitySampleQuery(type: T.quantityTypeIdentifier)
             .filter(samples.table[samples.startDate] >= start.timeIntervalSinceReferenceDate)
             .filter(samples.table[samples.endDate] <= end.timeIntervalSinceReferenceDate)
@@ -202,6 +200,15 @@ public final class HealthDatabase {
         let selection = try quantitySampleQuery(type: type)
 
         return try database.prepare(selection).map { try convertRowToQuantity(row: $0, type: type, unit: defaultUnit) }
+    }
+
+    public func unknownQuantitySamples(sampleType: SampleType, as type: HKQuantityTypeIdentifier, unit: HKUnit, from start: Date, to end: Date) throws -> [HKQuantitySample] {
+        let selection = try quantitySampleQuery(type: type)
+            .filter(samples.table[samples.startDate] >= start.timeIntervalSinceReferenceDate)
+            .filter(samples.table[samples.endDate] <= end.timeIntervalSinceReferenceDate)
+
+        return try database.prepare(selection)
+            .map { try convertRowToQuantity(row: $0, type: type, unit: unit) }
     }
 
     private func quantitySampleQuery(type: HKQuantityTypeIdentifier) throws -> Table {
