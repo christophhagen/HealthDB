@@ -179,6 +179,9 @@ let series = heartRateSeries.first!
 let samples: [HeartRate] = try db.quantities(in: series)
 ```
 
+**Note** The samples of the series have no `device` or `metadata` associated with it.
+Check the `sample` property of the data series to get those values.
+
 There are also functions to get simple `HKQuantitySample`s, and the possibility to manually select the raw sample type for unsupported quantity types.
 
 If you don't care about the series and just want all samples of a specific type, you can request the samples directly:
@@ -186,6 +189,8 @@ If you don't care about the series and just want all samples of a specific type,
 ```swift
 let samples: [HeartRate] = try db.quantitySamplesIncludingSeriesData(from: start, to: end)
 ```
+
+**Note**: If you select samples directly, then the `device` and `metadata` properties of the `HKQuantitySample`s will be set to the value of the data series sample.
 
 **Note**: It's more efficient to first select series and then request the samples, since each relevant sample must be compared against the `data_series` table, which can take a long time for large date intervals and databases with a lot of samples.
 
@@ -198,6 +203,35 @@ The `value` is scaled in the default unit of the sample type.
 It's not obvious from the entry in `samples`, if a data series is linked to it.
 
 For each data series, there is also an entry in `quantity_sample_statistics` where the `owner_id == samples.data_id`.
+
+### Workouts
+
+Workouts can be queried from the database similar to other samples:
+
+```swift
+let workouts = try db.workouts(from: .distantPast, to: .now)
+```
+
+`HealthKit` doesn't allow the creation of `HKWorkout`s outside of the `HKHealthStore`, so this framework uses it's own `Workout` type.
+The workouts have mostly similar fields, including the associated `workoutActivities` and `workoutEvents`.
+Statistics are not yet included.
+
+It's possible to insert `Workout`s into a proper `HKHealthStore`:
+
+```swift
+let heartRateSamples: [HKSample] = ...
+let routePoints: [CLLocation] = ...
+let savedWorkout: HKWorkout = try workout.insert(
+    into: HKHealthStore(), 
+    samples: heartRateSamples,
+    route: routePoints)
+```
+
+Workouts are entries in the `samples` table with `data_type == 79`. 
+There is a matching entry in `workouts` with `samples.data_id == workouts.data_id`.
+
+Workout activities are contained in `workout_activities` where `workouts.data_id == workout_activities.owner_id`.
+Similarly, workout events are contained in `workout_events` where `workouts.data_id == workout_events.owner_id`.
 
 ## Caveats
 

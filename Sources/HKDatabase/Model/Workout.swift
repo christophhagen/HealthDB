@@ -1,5 +1,6 @@
 import Foundation
 import HealthKit
+import CoreLocation
 
 private let df: DateFormatter = {
     let df = DateFormatter()
@@ -18,26 +19,28 @@ public struct Workout {
 
     public let goal: Goal?
 
-    let condenserVersion: Int?
+    public let startDate: Date
 
-    let condenserDate: Date?
-    
-    public let events: [HKWorkoutEvent]
+    public let endDate: Date
 
-    public let activities: [HKWorkoutActivity]
+    public let device: HKDevice?
 
     public let metadata: [String : Any]
+    
+    public let workoutEvents: [HKWorkoutEvent]
+
+    public let workoutActivities: [HKWorkoutActivity]
 
     var firstActivityDate: Date? {
-        activities.map { $0.startDate }.min()
+        workoutActivities.map { $0.startDate }.min()
     }
     
     var firstEventDate: Date? {
-        events.map { $0.dateInterval.start }.min()
+        workoutEvents.map { $0.dateInterval.start }.min()
     }
     
     var firstAvailableDate: Date? {
-        [condenserDate, firstEventDate, firstActivityDate].compactMap { $0 }.min()
+        [firstEventDate, firstActivityDate].compactMap { $0 }.min()
     }
     
     var dateString: String {
@@ -48,19 +51,55 @@ public struct Workout {
     }
     
     var typeString: String {
-        activities.first?.workoutConfiguration.activityType.description ?? "Unknown activity"
+        workoutActivities.first?.workoutConfiguration.activityType.description ?? "Unknown activity"
     }
     
-    public init(id: Int, totalDistance: Double? = nil, goalType: Int? = nil, goal: Double? = nil, condenserVersion: Int? = nil, condenserDate: Date? = nil, events: [HKWorkoutEvent] = [], activities: [HKWorkoutActivity] = [], metadata: [String : Any] = [:]) {
+    public init(id: Int, startDate: Date, endDate: Date, totalDistance: Double? = nil, goalType: Int? = nil, goal: Double? = nil, events: [HKWorkoutEvent] = [], activities: [HKWorkoutActivity] = [], metadata: [String : Any] = [:], device: HKDevice? = nil) {
         self.id = id
+        self.startDate = startDate
+        self.endDate = endDate
         self.totalDistance = totalDistance
         self.goal = .init(goalType: goalType, goal: goal)
-        self.condenserVersion = condenserVersion
-        self.condenserDate = condenserDate
-        self.events = events
-        self.activities = activities
+        self.workoutEvents = events
+        self.workoutActivities = activities
         self.metadata = metadata
+        self.device = device
     }
+
+    public func insert(into store: HKHealthStore, samples: [HKSample], route: [CLLocation]? = nil) async throws -> HKWorkout {
+        guard let configuration = workoutActivities.first?.workoutConfiguration else {
+            throw WorkoutInsertionError.noWorkoutActivity
+        }
+        let builder = HKWorkoutBuilder(healthStore: store, configuration: configuration, device: nil)
+        try await builder.addMetadata(metadata)
+        try await builder.addWorkoutEvents(workoutEvents)
+        try await builder.addSamples(samples)
+
+        for activity in workoutActivities {
+            try await builder.addWorkoutActivity(activity)
+        }
+
+        let endDate = workoutActivities.compactMap { $0.endDate }.max() ?? Date()
+        try await builder.endCollection(at: endDate)
+        guard let workout = try await builder.finishWorkout() else {
+            throw WorkoutInsertionError.failedToFinishWorkout
+        }
+
+        if let route, !route.isEmpty {
+            let routeBuilder = HKWorkoutRouteBuilder(healthStore: store, device: workout.device)
+            try await routeBuilder.insertRouteData(route)
+            try await routeBuilder.finishRoute(with: workout, metadata: nil)
+        }
+        return workout
+    }
+}
+
+public enum WorkoutInsertionError: Error {
+    /// No workout activity associated with the workout
+    case noWorkoutActivity
+
+    /// Failed to finish workout
+    case failedToFinishWorkout
 }
 
 extension Workout: Identifiable { }

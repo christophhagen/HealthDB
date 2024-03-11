@@ -469,41 +469,78 @@ public final class HealthDatabase {
 
     // MARK: Workouts
 
-    public func readAllWorkouts() throws -> [Workout] {
-        return try database.prepare(workouts.table).map { row in
-            let id = row[workouts.dataId]
+    public func workouts(from start: Date, to end: Date) throws -> [Workout] {
+        let startTime = end.timeIntervalSinceReferenceDate
+        let endTime = end.timeIntervalSinceReferenceDate
 
-            let events = try events.events(for: id, in: database)
-            let activities = try activities.activities(for: id, in: database)
-            let metadata = try metadata(for: id)
-            return .init(
-                id: id,
-                totalDistance: row[workouts.totalDistance],
-                goalType: row[workouts.goalType],
-                goal:  row[workouts.goal],
-                condenserVersion: row[workouts.condenserVersion],
-                condenserDate: row[workouts.condenserDate].map { Date.init(timeIntervalSinceReferenceDate: $0) },
-                events: events,
-                activities: activities,
-                metadata: metadata)
-        }
+        let query = workouts.table
+            .join(samples.table, on: workouts.table[workouts.dataId] == samples.table[samples.dataId])
+            .filter(samples.table[samples.startDate] >= endTime && samples.table[samples.endDate] >= startTime)
+        return try database.prepare(query).map(createWorkout)
+    }
+
+    public func workouts(type: HKWorkoutActivityType, from start: Date, to end: Date) throws -> [Workout] {
+        let startTime = end.timeIntervalSinceReferenceDate
+        let endTime = end.timeIntervalSinceReferenceDate
+        let typeId = Int(type.rawValue)
+
+        let query = workouts.table
+            .join(samples.table, on: workouts.table[workouts.dataId] == samples.table[samples.dataId])
+            .filter(samples.table[samples.startDate] >= endTime && samples.table[samples.endDate] >= startTime)
+        return try database.prepare(query)
+            .filter { row in
+                let dataId = row[workouts.table[workouts.dataId]]
+                let hasActivityTypeQuery = activities.table
+                    .filter(activities.ownerId == dataId)
+                    .filter(activities.activityType == typeId)
+                return try database.pluck(hasActivityTypeQuery) != nil
+            }
+            .map(createWorkout)
+    }
+
+    public func allWorkouts() throws -> [Workout] {
+        let query = workouts.table
+            .join(samples.table, on: workouts.table[workouts.dataId] == samples.table[samples.dataId])
+        return try database.prepare(query).map(createWorkout)
+    }
+
+    private func createWorkout(from row: Row) throws -> Workout {
+        let id = row[workouts.table[workouts.dataId]]
+        let start = Date(timeIntervalSinceReferenceDate: row[samples.startDate])
+        let end = Date(timeIntervalSinceReferenceDate: row[samples.endDate])
+
+        let events = try events.events(for: id, in: database)
+        let activities = try activities.activities(for: id, in: database)
+        let metadata = try metadata(for: id)
+        // TODO: Add workout statistics
+        return .init(
+            id: id,
+            startDate: start,
+            endDate: end,
+            totalDistance: row[workouts.totalDistance],
+            goalType: row[workouts.goalType],
+            goal:  row[workouts.goal],
+            events: events,
+            activities: activities,
+            metadata: metadata)
     }
 
     public func insert(workout: Workout) throws {
         let rowid = try database.run(workouts.table.insert(
             workouts.totalDistance <- workout.totalDistance,
             workouts.goalType <- workout.goal?.goalType,
-            workouts.goal <- workout.goal?.gaol,
-            workouts.condenserVersion <- workout.condenserVersion,
-            workouts.condenserDate <- workout.condenserDate?.timeIntervalSinceReferenceDate)
+            workouts.goal <- workout.goal?.goal)
         )
         let dataId = Int(rowid)
-        for event in workout.events {
+        for event in workout.workoutEvents {
             try events.insert(event, dataId: dataId, in: database)
         }
 
-        for activity in workout.activities {
+        if let activity = workout.workoutActivities.first {
             try activities.insert(activity, isPrimaryActivity: true, dataId: dataId, in: database)
+        }
+        for activity in workout.workoutActivities.dropFirst() {
+            try activities.insert(activity, isPrimaryActivity: false, dataId: dataId, in: database)
         }
 
         for (key, value) in workout.metadata {
@@ -536,10 +573,9 @@ public final class HealthDatabase {
         try locationSeriesData.create(references: dataSeries, in: database)
     }
 
-
     private func testActivityOverlap() throws {
-        let workouts = try readAllWorkouts()
-        let activities = workouts.map { $0.activities }.joined().sorted()
+        let workouts = try allWorkouts()
+        let activities = workouts.map { $0.workoutActivities }.joined().sorted()
         var current = activities.first!
         for next in activities.dropFirst() {
             let overlap = next.startDate.timeIntervalSince(current.currentEndDate)
@@ -553,7 +589,7 @@ public final class HealthDatabase {
     }
 
     func insert(workout: Workout, into store: HKHealthStore) async throws -> HKWorkout? {
-        guard let configuration = workout.activities.first?.workoutConfiguration else {
+        guard let configuration = workout.workoutActivities.first?.workoutConfiguration else {
             return nil
         }
 
@@ -562,12 +598,11 @@ public final class HealthDatabase {
             dict[element.key] = element.value
         }
         try await builder.addMetadata(metadata)
-        //try await builder.addSamples(<#T##samples: [HKSample]##[HKSample]#>)
-        try await builder.addWorkoutEvents(workout.events)
-        for activity in workout.activities {
+        try await builder.addWorkoutEvents(workout.workoutEvents)
+        for activity in workout.workoutActivities {
             try await builder.addWorkoutActivity(activity)
         }
-        let endDate = workout.activities.compactMap { $0.endDate }.max() ?? Date()
+        let endDate = workout.workoutActivities.compactMap { $0.endDate }.max() ?? Date()
         try await builder.endCollection(at: endDate)
         return try await builder.finishWorkout()
     }

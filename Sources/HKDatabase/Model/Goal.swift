@@ -21,7 +21,7 @@ public enum Goal {
         }
     }
 
-    var gaol: Double {
+    var goal: Double {
         switch self {
         case .time(let timeInterval):
             return timeInterval
