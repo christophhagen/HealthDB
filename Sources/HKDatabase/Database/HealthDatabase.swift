@@ -16,6 +16,10 @@ public final class HealthDatabase {
 
     private let quantitySamples = QuantitySamplesTable()
 
+    private let quantitySampleSeries = QuantitySampleSeriesTable()
+    
+    private let quantitySeriesData = QuantitySeriesDataTable()
+
     private let objects = ObjectsTable()
 
     private let dataProvenances = DataProvenancesTable()
@@ -87,7 +91,7 @@ public final class HealthDatabase {
      Query location series overlapping a date interval.
      */
     public func locationSeries(from start: Date, to end: Date) throws -> [LocationSeries] {
-        let query = samples.locationSeriesQuery(from: start, to: end)
+        let query = samples.query(type: .dataSeries, from: start, to: end)
         return try database.prepare(query).compactMap { row in
             try dataSeries.select(dataId: row[samples.dataId], in: database)
         }
@@ -122,8 +126,8 @@ public final class HealthDatabase {
      */
     public func categorySamples(type: HKCategoryTypeIdentifier, from start: Date, to end: Date) throws -> [HKCategorySample] {
         let query = try categorySampleQuery(type: type)
-            .filter(samples.table[samples.startDate] >= start.timeIntervalSinceReferenceDate)
-            .filter(samples.table[samples.endDate] <= end.timeIntervalSinceReferenceDate)
+            .filter(samples.table[samples.startDate] <= end.timeIntervalSinceReferenceDate)
+            .filter(samples.table[samples.endDate] >= start.timeIntervalSinceReferenceDate)
         return try database.prepare(query).map { try convertRowToCategory(row: $0, type: type) }
     }
 
@@ -137,8 +141,8 @@ public final class HealthDatabase {
      */
     public func unknownCategorySamples(rawDataType: Int, as type: HKCategoryTypeIdentifier, from start: Date, to end: Date) throws -> [HKCategorySample] {
         let query = categorySampleQuery(rawDataType: rawDataType)
-            .filter(samples.table[samples.startDate] >= start.timeIntervalSinceReferenceDate)
-            .filter(samples.table[samples.endDate] <= end.timeIntervalSinceReferenceDate)
+            .filter(samples.table[samples.startDate] <= end.timeIntervalSinceReferenceDate)
+            .filter(samples.table[samples.endDate] >= start.timeIntervalSinceReferenceDate)
         return try database.prepare(query).map { try convertRowToCategory(row: $0, type: type) }
     }
 
@@ -192,9 +196,7 @@ public final class HealthDatabase {
     }
 
     public func quantitySamples<T>(ofType type: T.Type = T.self, from start: Date, to end: Date) throws -> [T] where T: HKQuantitySampleContainer {
-        let selection = try quantitySampleQuery(type: T.quantityTypeIdentifier)
-            .filter(samples.table[samples.startDate] >= start.timeIntervalSinceReferenceDate)
-            .filter(samples.table[samples.endDate] <= end.timeIntervalSinceReferenceDate)
+        let selection = try quantitySampleQuery(type: T.quantityTypeIdentifier, from: start, to: end)
 
         return try database.prepare(selection)
             .map { try convertRowToQuantity(row: $0, type: T.quantityTypeIdentifier, unit: T.defaultUnit) }
@@ -211,9 +213,7 @@ public final class HealthDatabase {
     }
 
     public func unknownQuantitySamples(rawDataType: Int, as type: HKQuantityTypeIdentifier, unit: HKUnit, from start: Date, to end: Date) throws -> [HKQuantitySample] {
-        let selection = quantitySampleQuery(rawType: rawDataType)
-            .filter(samples.table[samples.startDate] >= start.timeIntervalSinceReferenceDate)
-            .filter(samples.table[samples.endDate] <= end.timeIntervalSinceReferenceDate)
+        let selection = quantitySampleQuery(rawType: rawDataType, from: start, to: end)
 
         return try database.prepare(selection)
             .map { try convertRowToQuantity(row: $0, type: type, unit: unit) }
@@ -226,6 +226,13 @@ public final class HealthDatabase {
         return quantitySampleQuery(rawType: dataType)
     }
 
+    private func quantitySampleQuery(type: HKQuantityTypeIdentifier, from start: Date, to end: Date) throws -> Table {
+        guard let dataType = type.sampleType?.rawValue else {
+            throw HKNotSupportedError("Unsupported category type")
+        }
+        return quantitySampleQuery(rawType: dataType, from: start, to: end)
+    }
+
     private func quantitySampleQuery(rawType: Int) -> Table {
         return samples.table
             .select(samples.table[*],
@@ -234,6 +241,11 @@ public final class HealthDatabase {
             .filter(samples.dataType == rawType)
             .join(.leftOuter, objects.table, on: samples.table[samples.dataId] == objects.table[objects.dataId])
             .join(.leftOuter, quantitySamples.table, on: samples.table[samples.dataId] == quantitySamples.table[quantitySamples.dataId])
+    }
+
+    private func quantitySampleQuery(rawType: Int, from start: Date, to end: Date) -> Table {
+        quantitySampleQuery(rawType: rawType)
+            .filter(samples.table[samples.startDate] <= end.timeIntervalSinceReferenceDate && samples.table[samples.endDate] >= start.timeIntervalSinceReferenceDate)
     }
 
     private func convertRowToQuantity(row: Row, type: HKQuantityTypeIdentifier, unit: HKUnit) throws -> HKQuantitySample {
@@ -255,56 +267,114 @@ public final class HealthDatabase {
             metadata: metadata)
     }
 
-    func samples(from start: Date, to end: Date) throws -> [Sample] {
-        let start = start.timeIntervalSinceReferenceDate
-        let end = end.timeIntervalSinceReferenceDate
+    // MARK: Quantity series
 
-        let selection = samples.table
-            .select(samples.table[*],
-                    quantitySamples.table[*],
-                    dataProvenances.table[dataProvenances.tzName],
-                    unitStrings.table[unitStrings.unitString])
-            .filter(samples.startDate >= start && samples.endDate <= end)
+    /**
+     Query quantity series overlapping a date interval.
+     */
+    public func quantitySampleSeries<T>(ofType type: T.Type = T.self, from start: Date, to end: Date) throws -> [TypedQuantitySeries<T>] where T: HKQuantitySampleContainer {
+        guard let dataType = type.quantityTypeIdentifier.sampleType else {
+            throw HKNotSupportedError("Unsupported category type")
+        }
+
+        let query = quantitySeriesQuery(dataType: dataType, from: start, to: end)
+        return try database.prepare(query)
+            .compactMap { row in
+                let dataId = row[samples.table[samples.dataId]]
+                let sample = try convertRowToQuantity(row: row, type: type.quantityTypeIdentifier, unit: T.defaultUnit)
+                return .init(
+                    dataId: dataId,
+                    sampleCount: row[quantitySampleSeries.count],
+                    insertionEra: row[quantitySampleSeries.insertionEra],
+                    hfdKey: row[quantitySampleSeries.hfdKey],
+                    seriesLocation: row[quantitySampleSeries.seriesLocation],
+                    sample: T.init(quantitySample: sample))
+            }
+    }
+
+    /**
+     Query quantity series overlapping a date interval.
+     */
+    public func quantitySampleSeries(type: HKQuantityTypeIdentifier, unit: HKUnit, from start: Date, to end: Date) throws -> [HKQuantitySeries] {
+        guard let dataType = type.sampleType else {
+            throw HKNotSupportedError("Unsupported category type")
+        }
+        let query = quantitySeriesQuery(dataType: dataType, from: start, to: end)
+        return try database.prepare(query).compactMap {
+            try createQuantitySeries(from: $0, type: type, unit: unit)
+        }
+    }
+
+    /**
+     Query quantity series with a raw data type.
+     */
+    public func unknownQuantitySamples(rawDataType: Int, as type: HKQuantityTypeIdentifier, unit: HKUnit, from start: Date, to end: Date) throws -> [HKQuantitySeries] {
+        let query = quantitySeriesQuery(rawType: rawDataType, from: start, to: end)
+        return try database.prepare(query).compactMap {
+            try createQuantitySeries(from: $0, type: type, unit: unit)
+        }
+    }
+
+    private func createQuantitySeries(from row: Row, type: HKQuantityTypeIdentifier, unit: HKUnit) throws -> HKQuantitySeries {
+        let dataId = row[samples.table[samples.dataId]]
+        let sample = try convertRowToQuantity(row: row, type: type, unit: unit)
+        return .init(
+            dataId: dataId,
+            sampleCount: row[quantitySampleSeries.count],
+            insertionEra: row[quantitySampleSeries.insertionEra],
+            hfdKey: row[quantitySampleSeries.hfdKey],
+            seriesLocation: row[quantitySampleSeries.seriesLocation],
+            sample: sample,
+            identifier: type,
+            unit: unit)
+    }
+
+    private func quantitySeriesQuery(dataType: SampleType, from start: Date, to end: Date) -> Table {
+        quantitySeriesQuery(rawType: dataType.rawValue, from: start, to: end)
+    }
+
+    private func quantitySeriesQuery(rawType: Int, from start: Date, to end: Date) -> Table {
+        // Select the data series and check if they are of the correct type
+        // and overlap with the date interval
+        // Then construct the sample and the series
+        quantitySampleSeries.table
+            .join(.leftOuter, samples.table, on: quantitySampleSeries.table[quantitySampleSeries.dataId] == samples.table[samples.dataId])
+            .filter(samples.table[samples.dataType] == rawType)
+            .filter(samples.table[samples.startDate] <= end.timeIntervalSinceReferenceDate
+                    && samples.table[samples.endDate] >= start.timeIntervalSinceReferenceDate)
             .join(.leftOuter, quantitySamples.table, on: samples.table[samples.dataId] == quantitySamples.table[quantitySamples.dataId])
             .join(.leftOuter, objects.table, on: samples.table[samples.dataId] == objects.table[objects.dataId])
             .join(.leftOuter, dataProvenances.table, on: objects.table[objects.provenance] == dataProvenances.table[dataProvenances.rowId])
-            .join(.leftOuter, unitStrings.table, on: quantitySamples.table[quantitySamples.originalUnit] == unitStrings.table[unitStrings.rowId])
-
-        return try database.prepare(selection).map { row in
-            let id = row[samples.table[samples.dataId]]
-            let startDate = Date(timeIntervalSinceReferenceDate: row[samples.startDate])
-            let endDate = Date(timeIntervalSinceReferenceDate: row[samples.endDate])
-            let dataType = SampleType(rawValue: row[samples.dataType])
-            let quantity = row[quantitySamples.quantity]
-            let original = row[quantitySamples.originalQuantity]
-            let unit = row[unitStrings.unitString]
-            let timeZone = row[dataProvenances.tzName].nonEmpty
-            return .init(
-                id: id,
-                startDate: startDate,
-                endDate: endDate,
-                dataType: dataType!,
-                quantity: quantity,
-                originalQuantity: original,
-                originalUnit: unit,
-                timeZoneName: timeZone)
-        }
     }
 
-    func samples(for activity: HKWorkoutActivity) throws -> [SampleType : [Sample]] {
-        try groupedSamples(from: activity.startDate, to: activity.currentEndDate)
+    /**
+     Get the quantities associated with a quantity series.
+
+     The returned samples all have the same data type as the original series sample, and include the same `device` and `metadata`.
+     */
+    public func quantities<T>(in series: TypedQuantitySeries<T>) throws -> [T] {
+        try quantities(in: series)
+            .map(T.init(quantitySample:))
     }
 
-    func groupedSamples(from start: Date, to end: Date) throws -> [SampleType : [Sample]] {
-        try samples(from: start, to: end).reduce(into: [:]) {
-            $0[$1.dataType] = ($0[$1.dataType] ?? []) + [$1]
-        }
+    /**
+     Get the quantities associated with a quantity series.
+
+     The returned samples all have the same data type as the original series sample, and include the same `device` and `metadata`.
+     */
+    public func quantities(in series: QuantitySeries) throws -> [HKQuantitySample] {
+        try quantities(for: series.dataId, identifier: series.identifier, unit: series.unit)
     }
 
-    func sampleCount(from start: Date, to end: Date) throws -> Int {
-        let start = start.timeIntervalSinceReferenceDate
-        let end = end.timeIntervalSinceReferenceDate
-        return try database.scalar(samples.table.filter(samples.startDate >= start && samples.endDate <= end).count)
+    private func quantities(for dataId: Int, identifier: HKQuantityTypeIdentifier, unit: HKUnit) throws -> [HKQuantitySample] {
+        try quantitySeriesData.quantities(for: dataId, in: database, identifier: identifier, unit: unit)
+    }
+
+    /**
+     Count the existing location samples for a location series.
+     */
+    public func existingSampleCount(for series: QuantitySeries) throws -> Int {
+        try database.scalar(quantitySeriesData.table.filter(locationSeriesData.seriesIdentifier == series.hfdKey).count)
     }
 
     func sampleCount(for activity: HKWorkoutActivity) throws -> Int {

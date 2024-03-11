@@ -28,4 +28,11 @@ struct ObjectsTable {
             return (uuid, provenance, type, creationDate)
         }
     }
+
+    func provenance(for dataId: Int, in database: Connection) throws -> Int? {
+        let query = table
+            .select(provenance)
+            .filter(self.dataId == dataId)
+        return try database.pluck(query).map { $0[provenance] }
+    }
 }

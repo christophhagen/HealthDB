@@ -1,17 +1,12 @@
 import Foundation
 import SQLite
+import HealthKit
 
 struct QuantitySeriesDataTable {
 
-    private let database: Connection
-
-    init(database: Connection) {
-        self.database = database
-    }
-
     let table = Table("quantity_series_data")
 
-    func create(referencing samples: SamplesTable) throws {
+    func create(referencing samples: SamplesTable, in database: Connection) throws {
         try database.execute("CREATE TABLE quantity_series_data (series_identifier INTEGER NOT NULL REFERENCES quantity_sample_series(hfd_key) DEFERRABLE INITIALLY DEFERRED, timestamp REAL NOT NULL, value REAL NOT NULL, duration REAL NOT NULL, PRIMARY KEY (series_identifier, timestamp)) WITHOUT ROWID")
     }
 
@@ -23,4 +18,16 @@ struct QuantitySeriesDataTable {
 
     let duration = Expression<Double>("duration")
 
+    func quantities(for dataId: Int, in database: Connection, identifier: HKQuantityTypeIdentifier, unit: HKUnit) throws -> [HKQuantitySample] {
+        let query = table.filter(seriesIdentifier == dataId)
+        return try database.prepare(query).map { row in
+            let start = Date(timeIntervalSinceReferenceDate: row[timestamp])
+            let end = start.addingTimeInterval(row[duration])
+            return .init(
+                type: .init(identifier),
+                quantity: .init(unit: unit, doubleValue: row[value]),
+                start: start,
+                end: end)
+        }
+    }
 }

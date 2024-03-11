@@ -165,6 +165,32 @@ The `data_series` table seems to only contain location series.
 
 The column `hfd_key` links the data series to entries in the table `location_series_data` where `data_series.hfd_key == location_series_data.series_identifier`.
 
+### Quantity sample series
+
+Some quantity samples are arranged in data series, which are associated with a specific sample.
+This concerns mostly workout data, like heart rate, cycling power, or vertical oscillation data.
+
+```swift
+let heartRateSeries = try db.quantitySampleSeries(
+    ofType: HeartRate.self, 
+    from: .distantPast, 
+    to: .now)
+let series = heartRateSeries.first!
+let samples: [HeartRate] = try db.quantities(in: series)
+```
+
+There are also functions to get simple `HKQuantitySample`s, and the possibility to manually select the raw sample type for unsupported quantity types.
+
+Each data series contains an entry in `samples`, with the `data_type` according to the sample type.
+An entry in the `quantity_sample_series` with the same `data_id` as the sample contains the series specification, including the number of samples.
+
+The actual values of the data series are contained in `quantity_series_data`, where `quantity_sample_series.hfd_key == quantity_series_data.series_identifier`.
+The `value` is scaled in the default unit of the sample type.
+
+It's not obvious from the entry in `samples`, if a data series is linked to it.
+
+For each data series, there is also an entry in `quantity_sample_statistics` where the `owner_id == samples.data_id`.
+
 ## Caveats
 
 Unfortunately, Apple makes it very difficult to work with Health Data outside the provided framework. Most problematically, a lot of `HealthKit` types don't expose properties publicly that would be needed/useful. For example, it's not possible to construct a full `HKWorkout` outside of the provided `HKHealthStore`. That's why this library uses it's own `Workout` type.

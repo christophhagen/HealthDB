@@ -19,12 +19,12 @@ struct SamplesTable {
 
     let dataType = Expression<Int>("data_type")
 
-    /// Select samples of location series overlaping with the given date interval.
-    func locationSeriesQuery(from start: Date, to end: Date) -> Table {
+    /// Select samples of a type overlapping with the given date interval.
+    func query(type: SampleType, from start: Date, to end: Date) -> Table {
         let start = start.timeIntervalSinceReferenceDate
         let end = end.timeIntervalSinceReferenceDate
         return table
-            .filter(dataType == SampleType.dataSeries.rawValue)
+            .filter(dataType == type.rawValue)
             .filter(startDate <= end && endDate >= start)
     }
 }
