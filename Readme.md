@@ -5,6 +5,40 @@ A Swift interface to access health records of `healthdb.sqlite` files which have
 This library is a reverse-engineering effort to reconstruct Health data and allowing to access the SQLite database in a similar way to the actual `HKHealthStore` on iOS.
 This library may can be useful when the original health data is lost and has to be recovered from a backup, or when a sample database is needed for testing.
 
+## Status
+
+### Implemented features
+
+- Reading [Category samples](#category-samples)
+- [Quantity samples](#quantity-samples) and [series](#quantity-sample-series)
+- [Workout routes / location samples](#location-data-series)
+- [Workouts (+ Activities, Events)](#workouts)
+- [User characteristics](#basic-user-characteristics-and-values)
+
+### Not implemented
+
+- Medical records and prescriptions
+- Other [sample types](#unhandled-samples)
+- Workout statistics, workout zones
+- Several metadata fields
+- Inserting most data
+- Achievements
+
+### Caveats
+
+Unfortunately, Apple makes it very difficult to work with Health Data outside the provided framework. 
+Most problematically, a lot of `HealthKit` types don't expose properties publicly that would be needed/useful. 
+For example, it's not possible to construct a full `HKWorkout` outside of the provided `HKHealthStore` (which is why this library uses it's own `Workout` type).
+
+Secondly, the layout of internal data structures for the SQLite database are not publicly documented, so working with the database is based on guesswork and experiments. 
+To understand all data formats, it's necessary to observe how data is stored in the individual tables, but some of the data can't be inserted through the publicly available API. 
+For example, `EnvironmentalAudioExposureEvent`s can only be logged by an Apple Watch. 
+Since sample types internally use integer IDs, it's difficult to figure out all assignments.
+This framework can therefore not handle all sample types properly.
+
+Another (minor) problem are the database columns with encoded binary data, where again, no information about the structure is available. 
+There is currently some information not accessible and understood by this library.
+
 ## Opening a database
 
 Extract the `healthdb_secure.sqlite` file from a device.
@@ -233,13 +267,7 @@ There is a matching entry in `workouts` with `samples.data_id == workouts.data_i
 Workout activities are contained in `workout_activities` where `workouts.data_id == workout_activities.owner_id`.
 Similarly, workout events are contained in `workout_events` where `workouts.data_id == workout_events.owner_id`.
 
-## Caveats
-
-Unfortunately, Apple makes it very difficult to work with Health Data outside the provided framework. Most problematically, a lot of `HealthKit` types don't expose properties publicly that would be needed/useful. For example, it's not possible to construct a full `HKWorkout` outside of the provided `HKHealthStore`. That's why this library uses it's own `Workout` type.
-
-Secondly, the layout internal data structures for the SQLite database are not publicly documented, so working with the database is based on guesswork and experiments. To understand all data formats, it's necessary to observe how data is stored in the individual tables, but some of the data can't be inserted through the publicly available API. For example, `EnvironmentalAudioExposureEvent`s can only be logged by an Apple Watch. Since sample types internally use integer IDs, it's difficult to figure out those assignments.
-
-Another (minor) problem are the database columns with encoded binary data, where again, no information about the structure is available. There is currently a lot of information not accessible and understood by this library.
+## Related projects and info
 
 Related: 
 - [Export/import health data to JSON](https://github.com/mkhoshpour/healthkit-sample-generator)
