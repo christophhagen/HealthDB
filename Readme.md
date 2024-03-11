@@ -31,7 +31,7 @@ func wheelchairUse() throws -> HKWheelchairUse
 
 Access all values in the table through:
 
-```
+```swift
 func keyValuePairs() throws -> [KeyValueEntry]
 ```
 
@@ -180,6 +180,14 @@ let samples: [HeartRate] = try db.quantities(in: series)
 ```
 
 There are also functions to get simple `HKQuantitySample`s, and the possibility to manually select the raw sample type for unsupported quantity types.
+
+If you don't care about the series and just want all samples of a specific type, you can request the samples directly:
+
+```swift
+let samples: [HeartRate] = try db.quantitySamplesIncludingSeriesData(from: start, to: end)
+```
+
+**Note**: It's more efficient to first select series and then request the samples, since each relevant sample must be compared against the `data_series` table, which can take a long time for large date intervals and databases with a lot of samples.
 
 Each data series contains an entry in `samples`, with the `data_type` according to the sample type.
 An entry in the `quantity_sample_series` with the same `data_id` as the sample contains the series specification, including the number of samples.

@@ -30,4 +30,14 @@ struct QuantitySeriesDataTable {
                 end: end)
         }
     }
+
+    func quantities(for dataId: Int, in database: Connection) throws -> [(value: Double, start: Date, end: Date)] {
+        let query = table.filter(seriesIdentifier == dataId)
+        return try database.prepare(query).map { row in
+            let start = Date(timeIntervalSinceReferenceDate: row[timestamp])
+            let end = start.addingTimeInterval(row[duration])
+            let value = row[value]
+            return (value, start, end)
+        }
+    }
 }

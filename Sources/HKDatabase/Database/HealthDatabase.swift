@@ -212,7 +212,10 @@ public final class HealthDatabase {
         return try database.prepare(selection).map { try convertRowToQuantity(row: $0, type: type, unit: defaultUnit) }
     }
 
-    public func unknownQuantitySamples(rawDataType: Int, as type: HKQuantityTypeIdentifier, unit: HKUnit, from start: Date, to end: Date) throws -> [HKQuantitySample] {
+    public func unknownQuantitySamples(rawDataType: Int, as type: HKQuantityTypeIdentifier, unit: HKUnit? = nil, from start: Date, to end: Date) throws -> [HKQuantitySample] {
+        guard let unit = unit ?? type.defaultUnit else {
+            throw HKNotSupportedError("Unit needed for the given type")
+        }
         let selection = quantitySampleQuery(rawType: rawDataType, from: start, to: end)
 
         return try database.prepare(selection)
@@ -295,7 +298,10 @@ public final class HealthDatabase {
     /**
      Query quantity series overlapping a date interval.
      */
-    public func quantitySampleSeries(type: HKQuantityTypeIdentifier, unit: HKUnit, from start: Date, to end: Date) throws -> [HKQuantitySeries] {
+    public func quantitySampleSeries(type: HKQuantityTypeIdentifier, unit: HKUnit? = nil, from start: Date, to end: Date) throws -> [HKQuantitySeries] {
+        guard let unit = unit ?? type.defaultUnit else {
+            throw HKNotSupportedError("Unit needed for the given type")
+        }
         guard let dataType = type.sampleType else {
             throw HKNotSupportedError("Unsupported category type")
         }
@@ -308,7 +314,10 @@ public final class HealthDatabase {
     /**
      Query quantity series with a raw data type.
      */
-    public func unknownQuantitySamples(rawDataType: Int, as type: HKQuantityTypeIdentifier, unit: HKUnit, from start: Date, to end: Date) throws -> [HKQuantitySeries] {
+    public func unknownQuantitySamples(rawDataType: Int, as type: HKQuantityTypeIdentifier, unit: HKUnit? = nil, from start: Date, to end: Date) throws -> [HKQuantitySeries] {
+        guard let unit = unit ?? type.defaultUnit else {
+            throw HKNotSupportedError("Unit needed for the given type")
+        }
         let query = quantitySeriesQuery(rawType: rawDataType, from: start, to: end)
         return try database.prepare(query).compactMap {
             try createQuantitySeries(from: $0, type: type, unit: unit)
@@ -363,11 +372,14 @@ public final class HealthDatabase {
      The returned samples all have the same data type as the original series sample, and include the same `device` and `metadata`.
      */
     public func quantities(in series: QuantitySeries) throws -> [HKQuantitySample] {
-        try quantities(for: series.dataId, identifier: series.identifier, unit: series.unit)
+        try quantities(for: series.hfdKey, identifier: series.identifier, unit: series.unit)
     }
 
-    private func quantities(for dataId: Int, identifier: HKQuantityTypeIdentifier, unit: HKUnit) throws -> [HKQuantitySample] {
-        try quantitySeriesData.quantities(for: dataId, in: database, identifier: identifier, unit: unit)
+    private func quantities(for seriesId: Int, identifier: HKQuantityTypeIdentifier, unit: HKUnit? = nil) throws -> [HKQuantitySample] {
+        guard let unit = unit ?? identifier.defaultUnit else {
+            throw HKNotSupportedError("Unit needed for the given type")
+        }
+        return try quantitySeriesData.quantities(for: seriesId, in: database, identifier: identifier, unit: unit)
     }
 
     /**
@@ -377,13 +389,48 @@ public final class HealthDatabase {
         try database.scalar(quantitySeriesData.table.filter(locationSeriesData.seriesIdentifier == series.hfdKey).count)
     }
 
-    func sampleCount(for activity: HKWorkoutActivity) throws -> Int {
-        try sampleCount(from: activity.startDate, to: activity.currentEndDate)
+    public func quantitySamplesIncludingSeriesData(identifier: HKQuantityTypeIdentifier, unit: HKUnit? = nil, from start: Date, to end: Date) throws -> [HKQuantitySample] {
+        guard let unit = unit ?? identifier.defaultUnit else {
+            throw HKNotSupportedError("Unit needed for the given type")
+        }
+        guard let dataType = identifier.sampleType else {
+            throw HKNotSupportedError("Unsupported category type")
+        }
+        // First, select all relevant samples
+        let query = quantitySampleQuery(rawType: dataType.rawValue, from: start, to: end)
+
+        return try database.prepare(query).reduce(into: []) { (result: inout [HKQuantitySample], row: Row) in
+            let dataId = row[samples.table[samples.dataId]]
+            let sample = try convertRowToQuantity(row: row, type: identifier, unit: unit)
+
+            // Either select just the sample, or replace it with the samples of the series
+            guard let series = try quantitySampleSeries.select(dataId: dataId, in: database) else {
+                result += [sample]
+                return
+            }
+            // Add device and metadata of the original sample to all series entries
+            result += try quantitySeriesData.quantities(for: series.hfdKey, in: database)
+                .filter { $0.start <= end && $0.end >= start }
+                .map {
+                    .init(
+                        type: .init(identifier),
+                        quantity: .init(unit: unit, doubleValue: $0.value),
+                        start: $0.start,
+                        end: $0.end,
+                        device: sample.device,
+                        metadata: sample.metadata)
+                }
+        }
+    }
+
+    public func quantitySamplesIncludingSeriesData<T>(ofType type: T.Type = T.self, from start: Date, to end: Date) throws -> [T] where T: HKQuantitySampleContainer {
+        try quantitySamplesIncludingSeriesData(identifier: type.quantityTypeIdentifier, unit: type.defaultUnit, from: start, to: end)
+            .map(T.init(quantitySample:))
     }
 
     // MARK: Metadata
 
-    func metadata(for dataId: Int) throws -> [String : Any] {
+    private func metadata(for dataId: Int) throws -> [String : Any] {
         let selection = metadataValues.table
             .select(metadataValues.table[*], metadataKeys.table[metadataKeys.key])
             .filter(metadataValues.objectId == dataId)
