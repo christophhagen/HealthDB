@@ -486,6 +486,13 @@ public enum SampleType: Int {
     case workout = 79
 
     /**
+     Blood pressure
+
+     Raw value: 80
+     */
+    case bloodPressure = 80
+
+    /**
      Cycling Distance
 
      Raw value: 83
@@ -1163,6 +1170,7 @@ extension SampleType: CustomStringConvertible {
         case .activity: return "Activity"
         case .dietaryCaffeine: return "Dietary Caffeine"
         case .workout: return "Workout"
+        case .bloodPressure: return "Blood Pressure"
         case .distanceCycling: return "Distance Cycling"
         case .dietaryWater: return "Dietary Water"
         case .uvExposure: return "UV Exposure"
