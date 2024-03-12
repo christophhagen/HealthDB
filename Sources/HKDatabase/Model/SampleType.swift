@@ -63,14 +63,14 @@ public enum SampleType: Int {
 
      Raw value: 8
      */
-    case distance = 8
+    case distanceWalkingRunning = 8
 
     /**
      Resting Energy
 
      Raw value: 9
      */
-    case restingEnergy = 9
+    case basalEnergyBurned = 9
 
     /**
      Active Energy
@@ -1109,8 +1109,8 @@ extension SampleType: CustomStringConvertible {
         case .leanBodyMass: return "Lean Body Mass"
         case .heartRate: return "Heart Rate"
         case .stepCount: return "Step Count"
-        case .distance: return "Distance"
-        case .restingEnergy: return "Resting Energy"
+        case .distanceWalkingRunning: return "Walking/Running Distance"
+        case .basalEnergyBurned: return "Basal Energy Burned"
         case .activeEnergyBurned: return "Active Energy Burned"
         case .flightsClimbed: return "Flights Climbed"
         case .oxygenSaturation: return "Oxygen Saturation"
