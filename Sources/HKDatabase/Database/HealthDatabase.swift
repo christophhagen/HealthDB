@@ -128,7 +128,7 @@ public final class HKDatabaseStore {
         let query = try categorySampleQuery(type: type)
             .filter(samples.table[samples.startDate] <= end.timeIntervalSinceReferenceDate)
             .filter(samples.table[samples.endDate] >= start.timeIntervalSinceReferenceDate)
-        return try database.prepare(query).map { try convertRowToCategory(row: $0, type: type) }
+        return try database.prepare(query).map { try createCategorySample(from: $0, type: type) }
     }
 
     public func categorySamples<T>(ofType type: T.Type = T.self) throws -> [T] where T: HKCategorySampleContainer {
@@ -143,12 +143,12 @@ public final class HKDatabaseStore {
         let query = categorySampleQuery(rawDataType: rawDataType)
             .filter(samples.table[samples.startDate] <= end.timeIntervalSinceReferenceDate)
             .filter(samples.table[samples.endDate] >= start.timeIntervalSinceReferenceDate)
-        return try database.prepare(query).map { try convertRowToCategory(row: $0, type: type) }
+        return try database.prepare(query).map { try createCategorySample(from: $0, type: type) }
     }
 
     func categorySamples(type: HKCategoryTypeIdentifier) throws -> [HKCategorySample] {
         let query = try categorySampleQuery(type: type)
-        return try database.prepare(query).map { try convertRowToCategory(row: $0, type: type) }
+        return try database.prepare(query).map { try createCategorySample(from: $0, type: type) }
     }
 
     private func categorySampleQuery(type: HKCategoryTypeIdentifier) throws -> Table {
@@ -158,17 +158,24 @@ public final class HKDatabaseStore {
         return categorySampleQuery(rawDataType: dataType.rawValue)
     }
 
-    private func categorySampleQuery(rawDataType: Int) -> Table {
+    private var categorySampleQuery: Table {
         samples.table
             .select(samples.table[*],
                     objects.table[objects.provenance],
                     categorySamples.table[categorySamples.value])
-            .filter(samples.dataType == rawDataType)
             .join(.leftOuter, objects.table, on: samples.table[samples.dataId] == objects.table[objects.dataId])
             .join(.leftOuter, categorySamples.table, on: samples.table[samples.dataId] == categorySamples.table[categorySamples.dataId])
     }
 
-    private func convertRowToCategory(row: Row, type: HKCategoryTypeIdentifier) throws -> HKCategorySample {
+    private func categorySampleQuery(rawDataType: Int) -> Table {
+        categorySampleQuery.filter(samples.table[samples.dataType] == rawDataType)
+    }
+
+    private func categorySampleQuery(dataId: Int) -> Table {
+        categorySampleQuery.filter(samples.table[samples.dataId] == dataId)
+    }
+
+    private func createCategorySample(from row: Row, type: HKCategoryTypeIdentifier) throws -> HKCategorySample {
         let dataId = row[samples.table[samples.dataId]]
         let startDate = Date(timeIntervalSinceReferenceDate: row[samples.startDate])
         let endDate = Date(timeIntervalSinceReferenceDate: row[samples.endDate])
