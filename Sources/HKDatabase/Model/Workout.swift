@@ -12,7 +12,7 @@ private let df: DateFormatter = {
 
 public struct Workout {
 
-    public let id: Int
+    public let dataId: Int
 
     /// The distance in km (?)
     public let totalDistance: Double?
@@ -54,8 +54,8 @@ public struct Workout {
         workoutActivities.first?.workoutConfiguration.activityType.description ?? "Unknown activity"
     }
     
-    public init(id: Int, startDate: Date, endDate: Date, totalDistance: Double? = nil, goalType: Int? = nil, goal: Double? = nil, events: [HKWorkoutEvent] = [], activities: [HKWorkoutActivity] = [], metadata: [String : Any] = [:], device: HKDevice? = nil) {
-        self.id = id
+    public init(dataId: Int, startDate: Date, endDate: Date, totalDistance: Double? = nil, goalType: Int? = nil, goal: Double? = nil, events: [HKWorkoutEvent] = [], activities: [HKWorkoutActivity] = [], metadata: [String : Any] = [:], device: HKDevice? = nil) {
+        self.dataId = dataId
         self.startDate = startDate
         self.endDate = endDate
         self.totalDistance = totalDistance
@@ -102,17 +102,15 @@ public enum WorkoutInsertionError: Error {
     case failedToFinishWorkout
 }
 
-extension Workout: Identifiable { }
-
 extension Workout: Equatable {
     public static func == (lhs: Workout, rhs: Workout) -> Bool {
-        lhs.id == rhs.id
+        lhs.dataId == rhs.dataId
     }
 }
 
 extension Workout: Hashable {
     
     public func hash(into hasher: inout Hasher) {
-        hasher.combine(id)
+        hasher.combine(dataId)
     }
 }

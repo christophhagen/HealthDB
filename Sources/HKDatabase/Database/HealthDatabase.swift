@@ -505,16 +505,16 @@ public final class HKDatabaseStore {
     }
 
     private func createWorkout(from row: Row) throws -> Workout {
-        let id = row[workouts.table[workouts.dataId]]
+        let dataId = row[workouts.table[workouts.dataId]]
         let start = Date(timeIntervalSinceReferenceDate: row[samples.startDate])
         let end = Date(timeIntervalSinceReferenceDate: row[samples.endDate])
 
-        let events = try events.events(for: id, in: database)
-        let activities = try activities.activities(for: id, in: database)
-        let metadata = try metadata(for: id)
+        let events = try events.events(for: dataId, in: database)
+        let activities = try activities.activities(for: dataId, in: database)
+        let metadata = try metadata(for: dataId)
         // TODO: Add workout statistics
         return .init(
-            id: id,
+            dataId: dataId,
             startDate: start,
             endDate: end,
             totalDistance: row[workouts.totalDistance],
