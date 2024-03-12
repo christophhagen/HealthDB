@@ -14,9 +14,11 @@ This library may can be useful when the original health data is lost and has to 
 - [Workout routes / location samples](#location-data-series)
 - [Workouts (+ Activities, Events)](#workouts)
 - [User characteristics](#basic-user-characteristics-and-values)
+- [Correlations](#correlation-samples)
 
 ### Not implemented
 
+- Correlation food samples
 - Medical records and prescriptions
 - Other [sample types](#unhandled-samples)
 - Workout statistics, workout zones
@@ -138,6 +140,12 @@ let samples = try db.unknownQuantitySamples(
 Internally, the additional data of the samples is stored in the `quantity_samples` table where `samples.data_id == quantity_samples.data_id`.
 The database also stores an "original unit" for some samples, but this data is not exported.
 The unit is contained in the `unit_string` column of the `unit_strings` table where `quantity_samples.original_unit == unit_strings.ROWID`.
+
+### Correlation samples
+
+The samples associated with a correlation (like blood pressure values) are also stored in the `samples` table.
+They are connected with another sample (`data_type == 80` for blood pressure) through the `associations` table, which contains one entry per associated sample, where `sample.data_id == associations.parent_id` for the main sample, and `sample.data_id == associations.child_id` for the associated samples.
+
 
 ### Unhandled samples
 
