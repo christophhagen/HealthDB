@@ -4,7 +4,7 @@ import CoreLocation
 import HealthKit
 import HealthKitExtensions
 
-public final class HealthDatabase {
+public final class HKDatabaseStore {
 
     private let fileUrl: URL
 

@@ -1,6 +1,10 @@
 import Foundation
 import HealthKit
+import HealthKitExtensions
 
+/**
+ A health store interface to allow the use of other backing implementations for health data.
+ */
 public protocol HKHealthStoreInterface {
 
     // MARK: - Accessing HealthKit
@@ -88,21 +92,21 @@ public protocol HKHealthStoreInterface {
      ```
      // Read the newest prescription from the HealthKit store.
      let queryDescriptor = HKSampleQueryDescriptor(
-     predicates: [.visionPrescription()],
-     sortDescriptors: [SortDescriptor(\.startDate, order: .reverse)],
-     limit: 1)
+        predicates: [.visionPrescription()],
+        sortDescriptors: [SortDescriptor(\.startDate, order: .reverse)],
+        limit: 1)
 
      let prescription: HKVisionPrescription
 
      do {
-     guard let result = try await queryDescriptor.result(for: store).first else {
-     print("*** No prescription found. ***")
-     return
-     }
-     prescription = result
+        guard let result = try await queryDescriptor.result(for: store).first else {
+            print("*** No prescription found. ***")
+            return
+        }
+        prescription = result
      } catch {
-     // Handle the error here.
-     fatalError("*** An error occurred while reading the most recent vision prescriptions: \(error.localizedDescription) ***")
+        // Handle the error here.
+        fatalError("*** An error occurred while reading the most recent vision prescriptions: \(error.localizedDescription) ***")
      }
      ```
 
@@ -111,14 +115,14 @@ public protocol HKHealthStoreInterface {
      ```
      // Request authorization to read vision prescriptions.
      do {
-     try await store.requestPerObjectReadAuthorization(for: .visionPrescriptionType(), predicate: nil)
+        try await store.requestPerObjectReadAuthorization(for: .visionPrescriptionType(), predicate: nil)
      } catch HKError.errorUserCanceled {
-     // Handle the user canceling the authorization request.
-     print("*** The user canceled the authorization request. ***")
-     return
+        // Handle the user canceling the authorization request.
+        print("*** The user canceled the authorization request. ***")
+        return
      } catch {
-     // Handle the error here.
-     fatalError("*** An error occurred while requesting permission to read vision prescriptions: \(error.localizedDescription) ***")
+        // Handle the error here.
+        fatalError("*** An error occurred while requesting permission to read vision prescriptions: \(error.localizedDescription) ***")
      }
      ```
 
@@ -159,6 +163,15 @@ public protocol HKHealthStoreInterface {
 
     // MARK: - Querying HealthKit data
 
+    @available(iOS 15.4, *)
+    func read<T>(predicate: NSPredicate?, sortDescriptors: [SortDescriptor<HKQuantitySample>], limit: Int?) async throws -> [T] where T: HKQuantitySampleContainer
+
+    @available(iOS 15.4, *)
+    func read<T>(predicate: NSPredicate?, sortDescriptors: [SortDescriptor<HKCorrelation>], limit: Int?) async throws -> [T] where T: HKCorrelationContainer
+
+    @available(iOS 15.4, *)
+    func read<T>(predicate: NSPredicate?, sortDescriptors: [SortDescriptor<HKCategorySample>], limit: Int?) async throws -> [T] where T: HKCategorySampleContainer
+
     /**
      Starts executing the provided query.
 
@@ -178,7 +191,8 @@ public protocol HKHealthStoreInterface {
 
      It's necessary to extract this function since not all properties of a `HKSampleType` can be accessed.
      */
-    func executeSampleQuery(sampleType: HKSampleType, predicate: NSPredicate?, limit: Int, sortDescriptors: [NSSortDescriptor]?, resultsHandler: @escaping (HKSampleQuery, [HKSample]?, Error?) -> Void) -> HKQuery
+    //func executeSampleQuery(sampleType: HKSampleType, predicate: NSPredicate?, limit: Int, sortDescriptors: [NSSortDescriptor]?, resultsHandler: @escaping (HKSampleQuery, [HKSample]?, Error?) -> Void) -> HKQuery
+    // TODO: Develop query interface
 
     /**
      Stops a long-running query.
@@ -190,7 +204,7 @@ public protocol HKHealthStoreInterface {
 
      - Parameter query: Either an ``HKObserverQuery`` instance or an ``HKStatisticsCollectionQuery`` instance.
      */
-    func stop(_ query: HKQuery)
+    //func stop(_ query: HKQuery)
 
     // MARK: - Reading characteristic data
 
@@ -258,7 +272,7 @@ public protocol HKHealthStoreInterface {
 
      - Parameter object: An object that this app has previously saved to the HealthKit store.
      */
-    func delete(_ object: HKObject) async throws
+    //func delete(_ object: HKObject) async throws
 
     /**
      Deletes objects saved by this application that match the provided type and predicate.
@@ -282,7 +296,7 @@ public protocol HKHealthStoreInterface {
 
      - Parameter objects: An array of objects that this app has previously saved to HealthKit. Deleting an empty array fails with an ``HKError.Code.errorInvalidArgument`` error.
      */
-    func delete(_ objects: [HKObject]) async throws
+    //func delete(_ objects: [HKObject]) async throws
 
     /**
      Deletes objects saved by this application that match the provided type and predicate.
@@ -308,7 +322,7 @@ public protocol HKHealthStoreInterface {
      - Parameter predicate: A predicate used to filter the objects to be deleted. This method only deletes objects that match the predicate.
      - Returns: The number of objects deleted.
      */
-    func deleteObjects(of objectType: HKObjectType, predicate: NSPredicate) async throws -> Int
+    //func deleteObjects(of objectType: HKObjectType, predicate: NSPredicate) async throws -> Int
 
     /**
      Returns the earliest date permitted for samples.
@@ -336,7 +350,7 @@ public protocol HKHealthStoreInterface {
      If the sample was saved using an earlier version of iOS, the source revision’s version is set to `nil`.
 
      */
-    func save(_ object: HKObject) async throws
+    //func save(_ object: HKObject) async throws
 
     /**
      Saves an array of objects to the HealthKit store.
@@ -354,7 +368,7 @@ public protocol HKHealthStoreInterface {
      All samples retrieved by iOS 9.0 and later are given a valid ``sourceRevision`` property.
      If the sample was saved using an earlier version of iOS, the source revision’s version is set to `nil`.
      */
-    func save(_ objects: [HKObject]) async throws
+    //func save(_ objects: [HKObject]) async throws
 
     // MARK: - Accessing the preferred units
 
