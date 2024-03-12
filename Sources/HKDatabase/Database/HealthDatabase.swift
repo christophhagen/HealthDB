@@ -415,17 +415,16 @@ public final class HKDatabaseStore {
         // First, select all relevant samples
         let query = quantitySampleQuery(rawType: dataType.rawValue, from: start, to: end)
 
-        return try database.prepare(query).reduce(into: []) { (result: inout [HKQuantitySample], row: Row) in
+        return try database.prepare(query).mapAndJoin { (row: Row) in
             let dataId = row[samples.table[samples.dataId]]
             let sample = try createQuantity(from: row, type: identifier, unit: unit)
 
             // Either select just the sample, or replace it with the samples of the series
             guard let series = try quantitySampleSeries.select(dataId: dataId, in: database) else {
-                result += [sample]
-                return
+                return [sample]
             }
             // Add device and metadata of the original sample to all series entries
-            result += try quantitySeriesData.quantities(for: series.hfdKey, in: database)
+            return try quantitySeriesData.quantities(for: series.hfdKey, in: database)
                 .filter { $0.start <= end && $0.end >= start }
                 .map {
                     .init(
