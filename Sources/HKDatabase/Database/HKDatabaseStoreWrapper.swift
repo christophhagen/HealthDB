@@ -1,6 +1,7 @@
 import Foundation
 import HealthKit
 import HealthKitExtensions
+import CoreLocation
 
 /**
  Wraps a database store to provide a common interface with a ``HKHealthStore``.
@@ -23,11 +24,11 @@ extension HKDatabaseStoreWrapper: HKHealthStoreInterface {
 
     // MARK: - Accessing HealthKit
 
-    public func authorizationStatus(for type: HKObjectType) -> HKAuthorizationStatus {
+    public func authorizationStatus(for type: HKObjectTypeContainer.Type) -> HKAuthorizationStatus {
         .sharingAuthorized
     }
     
-    public func statusForAuthorizationRequest(toShare typesToShare: Set<HKSampleType>, read typesToRead: Set<HKObjectType>) async throws -> HKAuthorizationRequestStatus {
+    public func statusForAuthorizationRequest(toShare typesToShare: [any HealthKitExtensions.HKSampleTypeContainer.Type], read typesToRead: [any HealthKitExtensions.HKObjectTypeContainer.Type]) async throws -> HKAuthorizationRequestStatus {
         .unnecessary
     }
 
@@ -39,16 +40,16 @@ extension HKDatabaseStoreWrapper: HKHealthStoreInterface {
         false
     }
     
-    public func requestAuthorization(toShare typesToShare: Set<HKSampleType>, read typesToRead: Set<HKObjectType>) async throws {
+    public func requestAuthorization(toShare typesToShare: [HKSampleTypeContainer.Type], read typesToRead: [HKObjectTypeContainer.Type]) async throws {
         // Nothing to do, always authorized
     }
 
-    public func requestPerObjectReadAuthorization(for objectType: HKObjectType, predicate: NSPredicate?) async throws {
-
+    public func requestPerObjectReadAuthorization(for objectType: HKObjectTypeContainer.Type, predicate: NSPredicate?) async throws {
+        // Nothing to do, always authorized
     }
 
     public func handleAuthorizationForExtension() async throws {
-
+        // Nothing to do, always authorized
     }
 
     // MARK: - Querying HealthKit data
@@ -110,4 +111,37 @@ extension HKDatabaseStoreWrapper: HKHealthStoreInterface {
         .distantPast
     }
 
+    // MARK: Managing workouts
+
+    /**
+     Get all category samples of a single type associated with a workout.
+     - Parameter type: The type of category samples to retrieve
+     - Parameter workout: The workout for which to get the samples
+     - Returns: The category samples of the given type associated with the workout
+     */
+    public func samples<T>(ofType type: T.Type = T.self, associatedWith workout: Workout) throws -> [T] where T: HKCategorySampleContainer {
+        try store.samples(associatedWith: workout, category: T.categoryTypeIdentifier)
+            .map(T.init(sample:))
+    }
+
+    /**
+     Get all quantity samples of a single type associated with a workout.
+     - Parameter type: The type of quantity samples to retrieve
+     - Parameter workout: The workout for which to get the samples
+     - Returns: The quantity samples of the given type associated with the workout
+     */
+    public func samples<T>(ofType type: T.Type = T.self, associatedWith workout: Workout) throws -> [T] where T: HKQuantitySampleContainer {
+        try store.samples(associatedWith: workout, quantity: T.quantityTypeIdentifier)
+            .map(T.init(sample:))
+    }
+
+    /**
+     Get all location samples associated with a workout.
+     - Parameter workout: The workout for which to get the locations
+     - Returns: The location samples associated with the workout
+     */
+    public func locations(associatedWith workout: Workout) throws -> [CLLocation] {
+        try store.locationSeries(associatedWith: workout)
+            .mapAndJoin { try store.locations(in: $0) }
+    }
 }

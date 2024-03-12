@@ -13,43 +13,16 @@ public final class HKHealthStoreWrapper {
 
 extension HKHealthStoreWrapper: HKHealthStoreInterface {
 
-    public func read<T>(predicate: NSPredicate?, sortDescriptors: [SortDescriptor<HKQuantitySample>], limit: Int?) async throws -> [T] where T : HKQuantitySampleContainer {
-        let descriptor = HKSampleQueryDescriptor(
-            predicates: [.quantitySample(type: T.quantitySampleType, predicate: predicate)],
-            sortDescriptors: sortDescriptors,
-            limit: limit)
+    // MARK: - Accessing HealthKit
 
-        let results = try await descriptor.result(for: store)
-        return results.map { T.init(sample: $0) }
+    public func authorizationStatus(for type: HKObjectTypeContainer.Type) -> HKAuthorizationStatus {
+        store.authorizationStatus(for: type.objectType)
     }
-    
-    public func read<T>(predicate: NSPredicate?, sortDescriptors: [SortDescriptor<HKCorrelation>], limit: Int?) async throws -> [T] where T : HKCorrelationContainer {
-        let descriptor = HKSampleQueryDescriptor(
-            predicates: [.correlation(type: T.correlationType, predicate: predicate)],
-            sortDescriptors: sortDescriptors,
-            limit: limit)
 
-        let results = try await descriptor.result(for: store)
-        return results.map { T.init(sample: $0) }
-    }
-    
-    public func read<T>(predicate: NSPredicate?, sortDescriptors: [SortDescriptor<HKCategorySample>], limit: Int?) async throws -> [T] where T : HKCategorySampleContainer {
-        let descriptor = HKSampleQueryDescriptor(
-            predicates: [.categorySample(type: T.categorySampleType, predicate: predicate)],
-            sortDescriptors: sortDescriptors,
-            limit: limit)
-
-        let results = try await descriptor.result(for: store)
-        return results.map { T.init(sample: $0) }
-    }
-    
-
-    public func authorizationStatus(for type: HKObjectType) -> HKAuthorizationStatus {
-        store.authorizationStatus(for: type)
-    }
-    
-    public func statusForAuthorizationRequest(toShare typesToShare: Set<HKSampleType>, read typesToRead: Set<HKObjectType>) async throws -> HKAuthorizationRequestStatus {
-        try await store.statusForAuthorizationRequest(toShare: typesToShare, read: typesToRead)
+    public func statusForAuthorizationRequest(toShare typesToShare: [HKSampleTypeContainer.Type], read typesToRead: [HKObjectTypeContainer.Type]) async throws -> HKAuthorizationRequestStatus {
+        let writableTypes = typesToShare.map { $0.sampleType }
+        let readableTypes = typesToRead.map { $0.objectType }
+        return try await store.statusForAuthorizationRequest(toShare: Set(writableTypes), read: Set(readableTypes))
     }
     
     public static func isHealthDataAvailable() -> Bool {
@@ -64,14 +37,16 @@ extension HKHealthStoreWrapper: HKHealthStoreInterface {
 #endif
     }
     
-    public func requestAuthorization(toShare typesToShare: Set<HKSampleType>, read typesToRead: Set<HKObjectType>) async throws {
-        try await store.requestAuthorization(toShare: typesToShare, read: typesToRead)
+    public func requestAuthorization(toShare typesToShare: [HKSampleTypeContainer.Type], read typesToRead: [HKObjectTypeContainer.Type]) async throws {
+        let writableTypes = typesToShare.map { $0.sampleType }
+        let readableTypes = typesToRead.map { $0.objectType }
+        try await store.requestAuthorization(toShare: Set(writableTypes), read: Set(readableTypes))
     }
-    
-    public func requestPerObjectReadAuthorization(for objectType: HKObjectType, predicate: NSPredicate?) async throws {
-        try await store.requestPerObjectReadAuthorization(for: objectType, predicate: predicate)
+
+    public func requestPerObjectReadAuthorization(for objectType: HKObjectTypeContainer.Type, predicate: NSPredicate?) async throws {
+        try await store.requestPerObjectReadAuthorization(for: objectType.objectType, predicate: predicate)
     }
-    
+
     public func handleAuthorizationForExtension() async throws {
 #if os(watchOS)
         throw HKNotSupportedError("handleAuthorizationForExtension() is unavailable for WatchOS")
@@ -79,15 +54,45 @@ extension HKHealthStoreWrapper: HKHealthStoreInterface {
         try await store.handleAuthorizationForExtension()
 #endif
     }
+
+    // MARK: - Querying HealthKit data
+
+    public func read<T>(predicate: NSPredicate?, sortDescriptors: [SortDescriptor<HKQuantitySample>], limit: Int?) async throws -> [T] where T : HKQuantitySampleContainer {
+        let descriptor = HKSampleQueryDescriptor(
+            predicates: [.quantitySample(type: T.quantitySampleType, predicate: predicate)],
+            sortDescriptors: sortDescriptors,
+            limit: limit)
+
+        let results = try await descriptor.result(for: store)
+        return results.map { T.init(sample: $0) }
+    }
+
+    public func read<T>(predicate: NSPredicate?, sortDescriptors: [SortDescriptor<HKCorrelation>], limit: Int?) async throws -> [T] where T : HKCorrelationContainer {
+        let descriptor = HKSampleQueryDescriptor(
+            predicates: [.correlation(type: T.correlationType, predicate: predicate)],
+            sortDescriptors: sortDescriptors,
+            limit: limit)
+
+        let results = try await descriptor.result(for: store)
+        return results.map { T.init(sample: $0) }
+    }
+
+    public func read<T>(predicate: NSPredicate?, sortDescriptors: [SortDescriptor<HKCategorySample>], limit: Int?) async throws -> [T] where T : HKCategorySampleContainer {
+        let descriptor = HKSampleQueryDescriptor(
+            predicates: [.categorySample(type: T.categorySampleType, predicate: predicate)],
+            sortDescriptors: sortDescriptors,
+            limit: limit)
+
+        let results = try await descriptor.result(for: store)
+        return results.map { T.init(sample: $0) }
+    }
+
+    // MARK: - Reading characteristic data
     
     public func dateOfBirthComponents() throws -> DateComponents {
         try store.dateOfBirthComponents()
     }
     
-    public func earliestPermittedSampleDate() -> Date {
-        store.earliestPermittedSampleDate()
-    }
-
     public func biologicalSex() throws -> HKBiologicalSex {
         try store.biologicalSex().biologicalSex
     }
@@ -103,6 +108,29 @@ extension HKHealthStoreWrapper: HKHealthStoreInterface {
     public func wheelchairUse() throws -> HKWheelchairUse {
         try store.wheelchairUse().wheelchairUse
     }
+
+    // MARK: - Working with HealthKit objects
+    
+    public func earliestPermittedSampleDate() -> Date {
+        store.earliestPermittedSampleDate()
+    }
+
+    // MARK: - Accessing the preferred units
+
+
+    // MARK: - Managing background delivery
+
+
+    // MARK: - Managing workouts
+
+
+    // MARK: - Managing workout sessions
+
+
+    // MARK: - Managing estimates
+
+
+    // MARK: - Accessing the move mode
 
     public func activityMoveMode() throws -> HKActivityMoveMode {
         try store.activityMoveMode().activityMoveMode
