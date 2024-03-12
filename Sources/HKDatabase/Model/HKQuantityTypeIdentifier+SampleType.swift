@@ -34,11 +34,11 @@ extension HKQuantityTypeIdentifier {
             //case .appleExerciseTime: self = .appleExerciseTime
             //case .appleMoveTime: self = .appleMoveTime
             //case .appleStandTime: self = .appleStandTime
-            //case .basalEnergyBurned: self = .basalEnergyBurned
+            case .basalEnergyBurned: self = .basalEnergyBurned
             case .distanceCycling: self = .distanceCycling
             case .distanceDownhillSnowSports: self = .distanceDownhillSnowSports
             case .distanceSwimming: self = .distanceSwimming
-            //case .distanceWalkingRunning: self = .distanceWalkingRunning
+            case .distanceWalkingRunning: self = .distanceWalkingRunning
             case .distanceWheelchair: self = .distanceWheelchair
             case .flightsClimbed: self = .flightsClimbed
             //case .nikeFuel: self = .nikeFuel
@@ -179,11 +179,11 @@ extension HKQuantityTypeIdentifier {
         //case .appleExerciseTime: return .appleExerciseTime
         //case .appleMoveTime: return .appleMoveTime
         //case .appleStandTime: return .appleStandTime
-        //case .basalEnergyBurned: return .basalEnergyBurned
+        case .basalEnergyBurned: return .basalEnergyBurned
         case .distanceCycling: return .distanceCycling
         case .distanceDownhillSnowSports: return .distanceDownhillSnowSports
         case .distanceSwimming: return .distanceSwimming
-        //case .distanceWalkingRunning: return .distanceWalkingRunning
+        case .distanceWalkingRunning: return .distanceWalkingRunning
         case .distanceWheelchair: return .distanceWheelchair
         case .flightsClimbed: return .flightsClimbed
         //case .nikeFuel: return .nikeFuel
