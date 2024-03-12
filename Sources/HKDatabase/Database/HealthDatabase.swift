@@ -243,14 +243,21 @@ public final class HKDatabaseStore {
         return quantitySampleQuery(rawType: dataType, from: start, to: end)
     }
 
-    private func quantitySampleQuery(rawType: Int) -> Table {
-        return samples.table
+    private var quantitySampleQuery: Table {
+        samples.table
             .select(samples.table[*],
                     objects.table[objects.provenance],
                     quantitySamples.table[*])
-            .filter(samples.dataType == rawType)
             .join(.leftOuter, objects.table, on: samples.table[samples.dataId] == objects.table[objects.dataId])
             .join(.leftOuter, quantitySamples.table, on: samples.table[samples.dataId] == quantitySamples.table[quantitySamples.dataId])
+    }
+
+    private func quantitySampleQuery(dataId: Int) -> Table {
+        quantitySampleQuery.filter(samples.table[samples.dataId] == dataId)
+    }
+
+    private func quantitySampleQuery(rawType: Int) -> Table {
+        quantitySampleQuery.filter(samples.table[samples.dataType] == rawType)
     }
 
     private func quantitySampleQuery(rawType: Int, from start: Date, to end: Date) -> Table {
@@ -284,7 +291,7 @@ public final class HKDatabaseStore {
      */
     public func quantitySampleSeries<T>(ofType type: T.Type = T.self, from start: Date, to end: Date) throws -> [TypedQuantitySeries<T>] where T: HKQuantitySampleContainer {
         guard let dataType = type.quantityTypeIdentifier.sampleType else {
-            throw HKNotSupportedError("Unsupported category type")
+            throw HKNotSupportedError("Unsupported quantity type")
         }
 
         let query = quantitySeriesQuery(dataType: dataType, from: start, to: end)
@@ -310,7 +317,7 @@ public final class HKDatabaseStore {
             throw HKNotSupportedError("Unit needed for the given type")
         }
         guard let dataType = type.sampleType else {
-            throw HKNotSupportedError("Unsupported category type")
+            throw HKNotSupportedError("Unsupported quantity type")
         }
         let query = quantitySeriesQuery(dataType: dataType, from: start, to: end)
         return try database.prepare(query).compactMap {
@@ -401,7 +408,7 @@ public final class HKDatabaseStore {
             throw HKNotSupportedError("Unit needed for the given type")
         }
         guard let dataType = identifier.sampleType else {
-            throw HKNotSupportedError("Unsupported category type")
+            throw HKNotSupportedError("Unsupported quantity type")
         }
         // First, select all relevant samples
         let query = quantitySampleQuery(rawType: dataType.rawValue, from: start, to: end)
