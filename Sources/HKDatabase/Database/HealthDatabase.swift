@@ -200,7 +200,7 @@ public final class HKDatabaseStore {
         let selection = try quantitySampleQuery(type: T.quantityTypeIdentifier)
 
         return try database.prepare(selection)
-            .map { try convertRowToQuantity(row: $0, type: T.quantityTypeIdentifier, unit: T.defaultUnit) }
+            .map { try createQuantity(from: $0, type: T.quantityTypeIdentifier, unit: T.defaultUnit) }
             .map { T.init(quantitySample: $0) }
     }
 
@@ -208,7 +208,7 @@ public final class HKDatabaseStore {
         let selection = try quantitySampleQuery(type: T.quantityTypeIdentifier, from: start, to: end)
 
         return try database.prepare(selection)
-            .map { try convertRowToQuantity(row: $0, type: T.quantityTypeIdentifier, unit: T.defaultUnit) }
+            .map { try createQuantity(from: $0, type: T.quantityTypeIdentifier, unit: T.defaultUnit) }
             .map { T.init(quantitySample: $0) }
     }
 
@@ -218,7 +218,7 @@ public final class HKDatabaseStore {
         }
         let selection = try quantitySampleQuery(type: type)
 
-        return try database.prepare(selection).map { try convertRowToQuantity(row: $0, type: type, unit: defaultUnit) }
+        return try database.prepare(selection).map { try createQuantity(from: $0, type: type, unit: defaultUnit) }
     }
 
     public func unknownQuantitySamples(rawDataType: Int, as type: HKQuantityTypeIdentifier, unit: HKUnit? = nil, from start: Date, to end: Date) throws -> [HKQuantitySample] {
@@ -228,7 +228,7 @@ public final class HKDatabaseStore {
         let selection = quantitySampleQuery(rawType: rawDataType, from: start, to: end)
 
         return try database.prepare(selection)
-            .map { try convertRowToQuantity(row: $0, type: type, unit: unit) }
+            .map { try createQuantity(from: $0, type: type, unit: unit) }
     }
 
     private func quantitySampleQuery(type: HKQuantityTypeIdentifier) throws -> Table {
@@ -267,7 +267,7 @@ public final class HKDatabaseStore {
             .filter(samples.table[samples.startDate] <= end.timeIntervalSinceReferenceDate && samples.table[samples.endDate] >= start.timeIntervalSinceReferenceDate)
     }
 
-    private func convertRowToQuantity(row: Row, type: HKQuantityTypeIdentifier, unit: HKUnit) throws -> HKQuantitySample {
+    private func createQuantity(from row: Row, type: HKQuantityTypeIdentifier, unit: HKUnit) throws -> HKQuantitySample {
         let dataId = row[samples.table[samples.dataId]]
         let dataProvenance = row[objects.provenance]
 
@@ -300,7 +300,7 @@ public final class HKDatabaseStore {
         return try database.prepare(query)
             .compactMap { row in
                 let dataId = row[samples.table[samples.dataId]]
-                let sample = try convertRowToQuantity(row: row, type: type.quantityTypeIdentifier, unit: T.defaultUnit)
+                let sample = try createQuantity(from: row, type: type.quantityTypeIdentifier, unit: T.defaultUnit)
                 return .init(
                     dataId: dataId,
                     sampleCount: row[quantitySampleSeries.count],
@@ -342,7 +342,7 @@ public final class HKDatabaseStore {
 
     private func createQuantitySeries(from row: Row, type: HKQuantityTypeIdentifier, unit: HKUnit) throws -> HKQuantitySeries {
         let dataId = row[samples.table[samples.dataId]]
-        let sample = try convertRowToQuantity(row: row, type: type, unit: unit)
+        let sample = try createQuantity(from: row, type: type, unit: unit)
         return .init(
             dataId: dataId,
             sampleCount: row[quantitySampleSeries.count],
@@ -417,7 +417,7 @@ public final class HKDatabaseStore {
 
         return try database.prepare(query).reduce(into: []) { (result: inout [HKQuantitySample], row: Row) in
             let dataId = row[samples.table[samples.dataId]]
-            let sample = try convertRowToQuantity(row: row, type: identifier, unit: unit)
+            let sample = try createQuantity(from: row, type: identifier, unit: unit)
 
             // Either select just the sample, or replace it with the samples of the series
             guard let series = try quantitySampleSeries.select(dataId: dataId, in: database) else {
@@ -534,7 +534,7 @@ public final class HKDatabaseStore {
     private func createQuantitySamples(dataIds: [Int], type: HKQuantityTypeIdentifier, unit: HKUnit) throws -> [HKQuantitySample] {
         try dataIds.compactMap { dataId in
             try database.pluck(quantitySampleQuery(dataId: dataId)).map { row in
-                try convertRowToQuantity(row: row, type: type, unit: unit)
+                try createQuantity(from: row, type: type, unit: unit)
             }
         }
     }
