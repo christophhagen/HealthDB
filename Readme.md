@@ -50,12 +50,23 @@ The file should be placed in a location with read/write access.
 ```swift
 import HKDatabase
 
-let db = try HealthDatabase(url: ...)
+let db = try HKDatabaseStore(fileUrl: ...)
 ```
+
+The `HKDatabaseStore` is the basic object to interact with the health data, similar to the `HKHealthStore`.
+
+This library relies heavily on the [HealthKitExtensions](https://github.com/christophhagen/HealthKitExtensions) to simplify interacting with health data, and provides a more convenient database wrapper:
+
+```
+let db = try HKDatabaseStoreWrapper(fileUrl: ...)
+```
+
+This class wraps a `HKDatabaseStore` and provides functions to more easily query the database.
+The following readme is mostly based on this class.
 
 ## Basic user characteristics and values
 
-Similar to the `HKHealthStore`, these can be accessed through separate functions on `HealthDatabase`:
+Similar to the `HKHealthStore`, these can be accessed through separate functions on `HKDatabaseStoreWrapper`:
 
 ```swift
 func biologicalSex() throws -> HKBiologicalSex

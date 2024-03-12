@@ -8,6 +8,9 @@ public struct KeyValueEntry {
 
     public let key: String
 
+    /// The value of the entry
+    ///
+    /// This value can be `Int`, `Double`, `String`, or `Data`
     public let value: Any?
 
     public let provenance: Int

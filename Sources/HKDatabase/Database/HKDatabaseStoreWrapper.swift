@@ -105,6 +105,15 @@ extension HKDatabaseStoreWrapper: HKHealthStoreInterface {
         try store.activityMoveMode()
     }
 
+    /**
+     A list of all key-value pairs.
+
+     Access all entries in the `key_value_secure` table.
+     */
+    public func keyValuePairs() throws -> [KeyValueEntry] {
+        try store.keyValuePairs()
+    }
+
     // MARK: - Working with HealthKit objects
 
     public func earliestPermittedSampleDate() -> Date {

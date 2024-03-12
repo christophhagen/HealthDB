@@ -31,16 +31,18 @@ struct KeyValueSecureTable {
     }
 
     func all(in database: Connection) throws -> [KeyValueEntry] {
-        try database.prepare(table).map { row in
-                .init(
-                    category: row[category],
-                    domain: row[domain],
-                    key: row[key],
-                    value: value(in: row),
-                    provenance: row[provenance],
-                    modificationDate: Date(timeIntervalSinceReferenceDate: row[modificationDate]),
-                    syncIdentity: row[syncIdentity])
-        }
+        try database.prepare(table).map(createKeyValueEntry)
+    }
+
+    private func createKeyValueEntry(from row: Row) -> KeyValueEntry {
+        .init(
+            category: row[category],
+            domain: row[domain],
+            key: row[key],
+            value: value(in: row),
+            provenance: row[provenance],
+            modificationDate: Date(timeIntervalSinceReferenceDate: row[modificationDate]),
+            syncIdentity: row[syncIdentity])
     }
 
     private func value(in row: Row) -> Any? {
