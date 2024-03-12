@@ -45,7 +45,7 @@ There is currently some information not accessible and understood by this librar
 
 Extract the `healthdb_secure.sqlite` file from a device.
 This is most easily done by creating a local (encrypted!) device backup, and the browsing the data with a tool like [iMazing](https://imazing.com).
-Copy the file to an accessible location, and create a database object:
+The file should be placed in a location with read/write access.
 
 ```swift
 import HKDatabase
@@ -181,6 +181,8 @@ There are many sample tables in the database, and all appear to be linked by the
 
 ### Location data series
 
+Location samples are linked to workouts, and can be accessed if a workout was retrieved, see [Workouts](#workouts).
+
 Locations are grouped into data series, which can be selected based on a date range:
 
 ```swift
@@ -194,8 +196,8 @@ The locations can then be accessed using the relevant series:
 let series = locationSeries.first!
 let locations: [CLLocation] = try database.locations(in: series)
 ```
-Location series data doesn't appear to be directly linked to workouts, so the `samples` table is searched for a data series with an overlapping date interval.
-It's also possible to directly select location samples based on a time interval.
+The `samples` table is searched for a data series with an overlapping date interval.
+It's also possible to directly select location samples based on an interval.
 In this case, samples from different location series may be returned.
 
 ```swift
@@ -257,6 +259,14 @@ let workouts = try db.workouts(from: .distantPast, to: .now)
 `HealthKit` doesn't allow the creation of `HKWorkout`s outside of the `HKHealthStore`, so this framework uses it's own `Workout` type.
 The workouts have mostly similar fields, including the associated `workoutActivities` and `workoutEvents`.
 Statistics are not yet included.
+
+You can request additional samples associated with the workout:
+
+```swift
+let workout: Workout = ...
+let locations: [CLLocation] = try db.locations(associatedWith: workout)
+let heartRate = try db.samples(ofType: HeartRate.self, associatedWith: workout)
+```
 
 It's possible to insert `Workout`s into a proper `HKHealthStore`:
 
