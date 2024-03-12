@@ -496,17 +496,52 @@ public final class HKDatabaseStore {
         guard !children.isEmpty else {
             return []
         }
-        var associatedSamples = [HKSample]()
-        for (rawType, elements) in children {
+        return try children.mapAndJoin { (rawType, ids) -> [HKSample] in
             guard let sampleType = SampleType(rawValue: rawType) else {
-                print("Ignoring \(elements.count) unknown samples with raw type \(rawType)")
-                continue
+                print("Ignoring \(ids.count) unknown samples with raw type \(rawType)")
+                return []
             }
-            let newSamples = try createSamples(dataIds: elements, type: sampleType)
-            associatedSamples += newSamples
+            return try createSamples(dataIds: ids, type: sampleType) as [HKSample]
+        }
+    }
+
+    private func associatedSamples(with dataId: Int, identifier: HKQuantityTypeIdentifier, unit: HKUnit?) throws -> [HKQuantitySample] {
+        guard let unit = unit ?? identifier.defaultUnit else {
+            throw HKNotSupportedError("Unit needed for the given type")
+        }
+        guard let dataType = identifier.sampleType else {
+            throw HKNotSupportedError("Unsupported quantity type")
         }
 
-        return associatedSamples
+        return try dataIds(associatedWith: dataId, dataType: dataType)
+            .compactMap { dataId in
+                try database.pluck(quantitySampleQuery(dataId: dataId))
+            }.map { row in
+                try createQuantity(from: row, type: identifier, unit: unit)
+            }
+    }
+
+    private func associatedSamples(with dataId: Int, identifier: HKCategoryTypeIdentifier) throws -> [HKCategorySample] {
+        guard let dataType = identifier.sampleType else {
+            throw HKNotSupportedError("Unsupported category type")
+        }
+
+        return try dataIds(associatedWith: dataId, dataType: dataType)
+            .compactMap { dataId in
+                try database.pluck(quantitySampleQuery(dataId: dataId))
+            }.map { row in
+                try createCategorySample(from: row, type: identifier)
+            }
+    }
+
+    private func dataIds(associatedWith dataId: Int, dataType: SampleType) throws -> [Int] {
+        let query = associations.query(parentId: dataId)
+            .join(samples.table, on: associations.childId == samples.dataId)
+            .filter(samples.table[samples.dataType] == dataType.rawValue)
+            .select(samples.dataId)
+
+        return try database.prepare(query)
+            .map { $0[samples.dataId] }
     }
 
     /**
@@ -523,7 +558,13 @@ public final class HKDatabaseStore {
         if let categoryType = HKCategoryTypeIdentifier(sampleType: type) {
             return try createCategorySamples(dataIds: dataIds, type: categoryType)
         }
-        print("Ignoring \(dataIds.count) samples with unhandled sample type \(type)")
+        if type == .dataSeries {
+            print("Ignoring \(dataIds.count) location series")
+        } else if type == .workout {
+            print("Ignoring \(dataIds.count) associated workouts")
+        } else {
+            print("Ignoring \(dataIds.count) samples with unhandled sample type \(type)")
+        }
         return []
     }
 
@@ -664,6 +705,29 @@ public final class HKDatabaseStore {
         for (key, value) in workout.metadata {
             try insert(value, for: key, of: dataId)
         }
+    }
+
+    /**
+     Get all quantity and category samples associated with a workout.
+     */
+    public func samples(associatedWith workout: Workout) throws -> [HKSample] {
+        try correlatedObjects(for: workout.dataId)
+    }
+
+    public func samples(associatedWith workout: Workout, category: HKCategoryTypeIdentifier) throws -> [HKCategorySample] {
+        try associatedSamples(with: workout.dataId, identifier: category)
+    }
+
+    public func samples(associatedWith workout: Workout, quantity: HKQuantityTypeIdentifier) throws -> [HKQuantitySample] {
+        try associatedSamples(with: workout.dataId, identifier: quantity, unit: nil)
+    }
+
+    /**
+     Get all location series associated with a workout.
+     */
+    public func locationSeries(associatedWith workout: Workout) throws -> [LocationSeries] {
+        try dataIds(associatedWith: workout.dataId, dataType: .dataSeries)
+            .compactMap { try dataSeries.select(dataId: $0, in: database) }
     }
 
     // MARK: Testing
