@@ -763,14 +763,14 @@ public enum SampleType: Int {
 
      Raw value: 172
      */
-    case environmentalAudioExposure = 172
+    case environmentalAudioExposureEvent = 172
 
     /**
      Headphone Audio Exposure
 
      Raw value: 173
      */
-    case headphoneAudioExposure = 173
+    case headphoneAudioExposureEvent = 173
 
     /**
      Six Minute Walk Test Distance
@@ -1202,8 +1202,8 @@ extension SampleType: CustomStringConvertible {
         case .sleepChanges: return "Sleep Changes"
         case .appetiteChanges: return "Appetite Changes"
         case .hotFlashes: return "Hot Flashes"
-        case .environmentalAudioExposure: return "Environmental Audio Exposure"
-        case .headphoneAudioExposure: return "Headphone Audio Exposure"
+        case .environmentalAudioExposureEvent: return "Environmental Audio Exposure"
+        case .headphoneAudioExposureEvent: return "Headphone Audio Exposure"
         case .sixMinuteWalkTestDistance: return "Six Minute Walk Test Distance"
         case .toothbrushingEvent: return "Toothbrushing Event"
         case .pregnancy: return "Pregnancy"
