@@ -3,6 +3,151 @@ import HealthKit
 
 extension HKQuantityTypeIdentifier {
 
+    init?(sampleType: SampleType) {
+        /*
+        if #available(macOS 14.0, *) {
+            switch self {
+            case .cyclingCadence: self = .cyclingCadence
+            case .cyclingFunctionalThresholdPower: self = .cyclingFunctionalThresholdPower
+            case .cyclingPower: self = .cyclingPower
+            case .cyclingSpeed: self = .cyclingSpeed
+            case .physicalEffort: self = .physicalEffort
+
+            default:
+            break
+            }
+        }
+         */
+        switch sampleType {
+            //case .appleSleepingWristTemperature: self = .appleSleepingWristTemperature
+
+            case .bodyFatPercentage: self = .bodyFatPercentage
+            case .bodyMass: self = .bodyMass
+            case .bodyMassIndex: self = .bodyMassIndex
+            case .electrodermalActivity: self = .electrodermalActivity
+            case .height: self = .height
+            case .leanBodyMass: self = .leanBodyMass
+            case .waistCircumference: self = .waistCircumference
+
+            // Fitness
+            case .activeEnergyBurned: self = .activeEnergyBurned
+            //case .appleExerciseTime: self = .appleExerciseTime
+            //case .appleMoveTime: self = .appleMoveTime
+            //case .appleStandTime: self = .appleStandTime
+            //case .basalEnergyBurned: self = .basalEnergyBurned
+            case .distanceCycling: self = .distanceCycling
+            case .distanceDownhillSnowSports: self = .distanceDownhillSnowSports
+            case .distanceSwimming: self = .distanceSwimming
+            //case .distanceWalkingRunning: self = .distanceWalkingRunning
+            case .distanceWheelchair: self = .distanceWheelchair
+            case .flightsClimbed: self = .flightsClimbed
+            //case .nikeFuel: self = .nikeFuel
+            case .pushCount: self = .pushCount
+            case .runningPower: self = .runningPower
+            case .runningSpeed: self = .runningSpeed
+            case .stepCount: self = .stepCount
+            case .swimmingStrokeCount: self = .swimmingStrokeCount
+            case .underwaterDepth: self = .underwaterDepth
+
+            // Hearing Health
+            case .environmentalAudioExposureEvent: self = .environmentalAudioExposure
+            case .environmentalSoundReduction: self = .environmentalSoundReduction
+            case .headphoneAudioExposureEvent: self = .headphoneAudioExposure
+
+            // Heart
+            //case .atrialFibrillationBurden: self = .atrialFibrillationBurden
+            case .heartRate: self = .heartRate
+            case .heartRateRecoveryOneMinute: self = .heartRateRecoveryOneMinute
+            case .heartRateVariabilitySDNN: self = .heartRateVariabilitySDNN
+            case .peripheralPerfusionIndex: self = .peripheralPerfusionIndex
+            case .restingHeartRate: self = .restingHeartRate
+            //case .vo2Max: self = .vo2Max
+            //case .walkingHeartRateAverage: self = .walkingHeartRateAverage
+
+            // Mobility
+            //case .appleWalkingSteadiness: self = .appleWalkingSteadiness
+            case .runningGroundContactTime: self = .runningGroundContactTime
+            case .runningStrideLength: self = .runningStrideLength
+            case .runningVerticalOscillation: self = .runningVerticalOscillation
+            case .sixMinuteWalkTestDistance: self = .sixMinuteWalkTestDistance
+            case .stairAscentSpeed: self = .stairAscentSpeed
+            case .stairDescentSpeed: self = .stairDescentSpeed
+            //case .walkingAsymmetryPercentage: self = .walkingAsymmetryPercentage
+            //case .walkingDoubleSupportPercentage: self = .walkingDoubleSupportPercentage
+            //case .walkingSpeed: self = .walkingSpeed
+            //case .walkingStepLength: self = .walkingStepLength
+
+            // Nutrition
+            case .dietaryBiotin: self = .dietaryBiotin
+            case .dietaryCaffeine: self = .dietaryCaffeine
+            case .dietaryCalcium: self = .dietaryCalcium
+            case .dietaryCarbohydrates: self = .dietaryCarbohydrates
+            case .dietaryChloride: self = .dietaryChloride
+            case .dietaryCholesterol: self = .dietaryCholesterol
+            case .dietaryChromium: self = .dietaryChromium
+            case .dietaryCopper: self = .dietaryCopper
+            case .dietaryEnergyConsumed: self = .dietaryEnergyConsumed
+            case .dietaryFatMonounsaturated: self = .dietaryFatMonounsaturated
+            case .dietaryFatPolyunsaturated: self = .dietaryFatPolyunsaturated
+            case .dietaryFatSaturated: self = .dietaryFatSaturated
+            case .dietaryFatTotal: self = .dietaryFatTotal
+            case .dietaryFiber: self = .dietaryFiber
+            case .dietaryFolate: self = .dietaryFolate
+            case .dietaryIodine: self = .dietaryIodine
+            case .dietaryIron: self = .dietaryIron
+            case .dietaryMagnesium: self = .dietaryMagnesium
+            case .dietaryManganese: self = .dietaryManganese
+            case .dietaryMolybdenum: self = .dietaryMolybdenum
+            case .dietaryNiacin: self = .dietaryNiacin
+            case .dietaryPantothenicAcid: self = .dietaryPantothenicAcid
+            case .dietaryPhosphorus: self = .dietaryPhosphorus
+            case .dietaryPotassium: self = .dietaryPotassium
+            case .dietaryProtein: self = .dietaryProtein
+            case .dietaryRiboflavin: self = .dietaryRiboflavin
+            case .dietarySelenium: self = .dietarySelenium
+            case .dietarySodium: self = .dietarySodium
+            case .dietarySugar: self = .dietarySugar
+            case .dietaryThiamin: self = .dietaryThiamin
+            case .dietaryVitaminA: self = .dietaryVitaminA
+            case .dietaryVitaminB12: self = .dietaryVitaminB12
+            case .dietaryVitaminB6: self = .dietaryVitaminB6
+            case .dietaryVitaminC: self = .dietaryVitaminC
+            case .dietaryVitaminD: self = .dietaryVitaminD
+            case .dietaryVitaminE: self = .dietaryVitaminE
+            case .dietaryVitaminK: self = .dietaryVitaminK
+            case .dietaryWater: self = .dietaryWater
+            case .dietaryZinc: self = .dietaryZinc
+
+            // Other
+            //case .bloodAlcoholContent: self = .bloodAlcoholContent
+            case .bloodPressureDiastolic: self = .bloodPressureDiastolic
+            case .bloodPressureSystolic: self = .bloodPressureSystolic
+            case .insulinDelivery: self = .insulinDelivery
+            case .numberOfAlcoholicBeverages: self = .numberOfAlcoholicBeverages
+            case .numberOfTimesFallen: self = .numberOfTimesFallen
+            //case .timeInDaylight: self = .timeInDaylight
+            case .uvExposure: self = .uvExposure
+            case .waterTemperature: self = .waterTemperature
+
+            // Reproductive Health
+            case .basalBodyTemperature: self = .basalBodyTemperature
+
+            // Respiratory
+            case .forcedExpiratoryVolume1: self = .forcedExpiratoryVolume1
+            case .forcedVitalCapacity: self = .forcedVitalCapacity
+            case .inhalerUsage: self = .inhalerUsage
+            case .oxygenSaturation: self = .oxygenSaturation
+            case .peakExpiratoryFlowRate: self = .peakExpiratoryFlowRate
+            case .respiratoryRate: self = .respiratoryRate
+
+            // Vital Signs
+            case .bloodGlucose: self = .bloodGlucose
+            case .bodyTemperature: self = .bodyTemperature
+        default:
+            return nil
+        }
+    }
+
     var sampleType: SampleType? {
         /*
         if #available(macOS 14.0, *) {
@@ -50,9 +195,9 @@ extension HKQuantityTypeIdentifier {
         case .underwaterDepth: return .underwaterDepth
 
         // Hearing Health
-        case .environmentalAudioExposure: return .environmentalAudioExposure
+        case .environmentalAudioExposure: return .environmentalAudioExposureEvent
         case .environmentalSoundReduction: return .environmentalSoundReduction
-        case .headphoneAudioExposure: return .headphoneAudioExposure
+        case .headphoneAudioExposure: return .headphoneAudioExposureEvent
 
         // Heart
         //case .atrialFibrillationBurden: return .atrialFibrillationBurden

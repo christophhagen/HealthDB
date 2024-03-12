@@ -10,6 +10,8 @@ public final class HKDatabaseStore {
 
     private let database: Connection
 
+    private let associations = AssociationsTable()
+
     private let samples = SamplesTable()
 
     private let categorySamples = CategorySamplesTable()
@@ -440,6 +442,109 @@ public final class HKDatabaseStore {
     public func quantitySamplesIncludingSeriesData<T>(ofType type: T.Type = T.self, from start: Date, to end: Date) throws -> [T] where T: HKQuantitySampleContainer {
         try quantitySamplesIncludingSeriesData(identifier: type.quantityTypeIdentifier, unit: type.defaultUnit, from: start, to: end)
             .map(T.init(quantitySample:))
+    }
+
+    // MARK: Correlations
+
+    func correlationSamples(type: HKCorrelationTypeIdentifier) throws -> [HKCorrelation] {
+        guard let sampleType = type.sampleType else {
+            throw HKNotSupportedError("Unsupported correlation type")
+        }
+
+        let query = samples.table
+            .select(samples.table[*],
+                    objects.table[objects.provenance])
+            .filter(samples.dataType == sampleType.rawValue)
+            .join(.leftOuter, objects.table, on: samples.table[samples.dataId] == objects.table[objects.dataId])
+
+        return try database.prepare(query).map { try createCorrelation(from: $0, type: type) }
+    }
+
+    private func createCorrelation(from row: Row, type: HKCorrelationTypeIdentifier) throws -> HKCorrelation {
+        let dataId = row[samples.table[samples.dataId]]
+        let startDate = Date(timeIntervalSinceReferenceDate: row[samples.startDate])
+        let endDate = Date(timeIntervalSinceReferenceDate: row[samples.endDate])
+        let dataProvenance = row[objects.provenance]
+        let device: HKDevice? = try dataProvenances.device(for: dataProvenance, in: database)
+        let metadata = try metadata(for: dataId)
+        let objects = try correlatedObjects(for: dataId)
+
+        return HKCorrelation(
+            type: .init(type),
+            start: startDate,
+            end: endDate,
+            objects: Set(objects),
+            device: device,
+            metadata: metadata)
+    }
+
+    private func correlatedObjects(for dataId: Int) throws -> [HKSample] {
+        // Get associated child_id fields from associations where parent_id == data_id
+        let query = associations.query(parentId: dataId)
+            .join(samples.table, on: associations.childId == samples.dataId)
+            .select(samples.dataId, samples.dataType)
+        let children: [Int : [Int]] = try database.prepare(query)
+            .map { (row: Row) in
+                (dataId: row[samples.dataId], dataType: row[samples.dataType])
+            }
+            .reduce(into: [:]) { dict, element in
+                if let existing = dict[element.dataType] {
+                    dict[element.dataType] = existing + [element.dataId]
+                } else {
+                    dict[element.dataType] = [element.dataId]
+                }
+            }
+        guard !children.isEmpty else {
+            return []
+        }
+        var associatedSamples = [HKSample]()
+        for (rawType, elements) in children {
+            guard let sampleType = SampleType(rawValue: rawType) else {
+                print("Ignoring \(elements.count) unknown samples with raw type \(rawType)")
+                continue
+            }
+            let newSamples = try createSamples(dataIds: elements, type: sampleType)
+            associatedSamples += newSamples
+        }
+
+        return associatedSamples
+    }
+
+    /**
+     Create samples from data ids.
+     */
+    private func createSamples(dataIds: [Int], type: SampleType) throws -> [HKSample] {
+        if let quantityType = HKQuantityTypeIdentifier(sampleType: type) {
+            guard let unit = quantityType.defaultUnit else {
+                print("Ignoring \(dataIds.count) \(quantityType) samples due to unknown unit")
+                return []
+            }
+            return try createQuantitySamples(dataIds: dataIds, type: quantityType, unit: unit)
+        }
+        if let categoryType = HKCategoryTypeIdentifier(sampleType: type) {
+            return try createCategorySamples(dataIds: dataIds, type: categoryType)
+        }
+        print("Ignoring \(dataIds.count) samples with unhandled sample type \(type)")
+        return []
+    }
+
+    /**
+     Create quantity samples from data ids.
+     */
+    private func createQuantitySamples(dataIds: [Int], type: HKQuantityTypeIdentifier, unit: HKUnit) throws -> [HKQuantitySample] {
+        try dataIds.compactMap { dataId in
+            try database.pluck(quantitySampleQuery(dataId: dataId)).map { row in
+                try convertRowToQuantity(row: row, type: type, unit: unit)
+            }
+        }
+    }
+
+    private func createCategorySamples(dataIds: [Int], type: HKCategoryTypeIdentifier) throws -> [HKCategorySample] {
+        try dataIds.compactMap { dataId in
+            try database.pluck(categorySampleQuery(dataId: dataId)).map { row in
+                try createCategorySample(from: row, type: type)
+            }
+        }
     }
 
     // MARK: Metadata
