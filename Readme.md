@@ -7,12 +7,13 @@ This library may can be useful when the original health data is lost and has to 
 
 ## Status
 
+
 ### Implemented features
 
 - Reading [Category samples](#category-samples)
 - [Quantity samples](#quantity-samples) and [series](#quantity-sample-series)
-- [Workout routes / location samples](#location-data-series)
-- [Workouts (+ Activities, Events)](#workouts)
+- [Workouts, Activities, Events)](#workouts)
+- [Workout routes / location samples](#workout-routes)
 - [User characteristics](#basic-user-characteristics-and-values)
 - [Correlations](#correlation-samples)
 
@@ -79,7 +80,7 @@ func wheelchairUse() throws -> HKWheelchairUse
 Access all values in the table through:
 
 ```swift
-func keyValuePairs() throws -> [KeyValueEntry]
+let data: [KeyValueEntry] = try db.keyValuePairs()
 ```
 
 Internally, they are stored in the `key_value_secure` table.
@@ -92,7 +93,6 @@ In the database, the initial entry point is always the `samples` table. It conta
 This type then determines where the additional data is stored.
 
 The known sample types are managed in the `SampleType` enum
-
 
 ### Category samples
 
@@ -190,36 +190,6 @@ There are many sample tables in the database, and all appear to be linked by the
 `verifiable_clinical_record_samples`
 `workout_zones_samples`
 
-### Location data series
-
-Location samples are linked to workouts, and can be accessed if a workout was retrieved, see [Workouts](#workouts).
-
-Locations are grouped into data series, which can be selected based on a date range:
-
-```swift
-let locationSeries = try database.locationSeries(from: .distantPast, to: .now)
-```
-
-All series overlapping the provided date range are returned.
-The locations can then be accessed using the relevant series:
-
-```swift
-let series = locationSeries.first!
-let locations: [CLLocation] = try database.locations(in: series)
-```
-The `samples` table is searched for a data series with an overlapping date interval.
-It's also possible to directly select location samples based on an interval.
-In this case, samples from different location series may be returned.
-
-```swift
-let locations = try database.locations(from: .distantPast, to: .now)
-```
-
-Data series are partially stored in the table `data_series`, but they also contain a sample in the `samples` table with `data_type == 102` and the same `data_id`.
-The `data_series` table seems to only contain location series.
-
-The column `hfd_key` links the data series to entries in the table `location_series_data` where `data_series.hfd_key == location_series_data.series_identifier`.
-
 ### Quantity sample series
 
 Some quantity samples are arranged in data series, which are associated with a specific sample.
@@ -271,13 +241,48 @@ let workouts = try db.workouts(from: .distantPast, to: .now)
 The workouts have mostly similar fields, including the associated `workoutActivities` and `workoutEvents`.
 Statistics are not yet included.
 
-You can request additional samples associated with the workout:
+Workouts are entries in the `samples` table with `data_type == 79`. 
+There is a matching entry in `workouts` with `samples.data_id == workouts.data_id`.
+
+Workout activities are contained in `workout_activities` where `workouts.data_id == workout_activities.owner_id`.
+Similarly, workout events are contained in `workout_events` where `workouts.data_id == workout_events.owner_id`.
+
+Workout routes are entries in the `data_series` table.
+
+### Workout routes
+
+Workout routes are just location series and are linked to workouts.
+As with workouts, this library uses it's own `WorkoutRoute` type, with similar fields to an `HKWorkoutRoute`.
 
 ```swift
 let workout: Workout = ...
-let locations: [CLLocation] = try db.locations(associatedWith: workout)
-let heartRate = try db.samples(ofType: HeartRate.self, associatedWith: workout)
+if let route = try db.route(associatedWith: workout) {
+    let locations = try db.locations(associatedWith: route)
+}
 ```
+
+Data series are partially stored in the table `data_series`, but they also contain a sample in the `samples` table with `data_type == 102` and the same `data_id`.
+The `data_series` table seems to currently only contain location series.
+
+The column `hfd_key` links the data series to entries in the table `location_series_data` where `data_series.hfd_key == location_series_data.series_identifier`.
+
+### Samples associated with workouts
+
+You can request additional samples associated with a workout:
+
+```swift
+let workout: Workout = ...
+let heartRateSamples = try db.samples(ofType: HeartRate.self, associatedWith: workout)
+```
+
+Both category and quantity samples can be requested.
+
+### Workout statistics
+
+Statistics are stored in the `workout_statistics` table.
+They are linked to workout activities by `workout_activities.ROWID == workout_statistics.workout_activity_id`.
+
+### Converting workouts
 
 It's possible to insert `Workout`s into a proper `HKHealthStore`:
 
@@ -287,14 +292,8 @@ let routePoints: [CLLocation] = ...
 let savedWorkout: HKWorkout = try workout.insert(
     into: HKHealthStore(), 
     samples: heartRateSamples,
-    route: routePoints)
+    route: locations)
 ```
-
-Workouts are entries in the `samples` table with `data_type == 79`. 
-There is a matching entry in `workouts` with `samples.data_id == workouts.data_id`.
-
-Workout activities are contained in `workout_activities` where `workouts.data_id == workout_activities.owner_id`.
-Similarly, workout events are contained in `workout_events` where `workouts.data_id == workout_events.owner_id`.
 
 ## Related projects and info
 

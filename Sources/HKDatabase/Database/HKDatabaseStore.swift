@@ -730,6 +730,49 @@ public final class HKDatabaseStore {
             .compactMap { try dataSeries.select(dataId: $0, in: database) }
     }
 
+    /**
+     Get the route associated with a workout.
+     - Parameter workout: The workout for which to select the route
+     - Returns: The route associated with the workout, if available
+     */
+    public func route(associatedWith workout: Workout) throws -> WorkoutRoute? {
+        let query = associations.query(parentId: workout.dataId)
+            .join(samples.table, on: associations.childId == samples.table[samples.dataId])
+            .filter(samples.table[samples.dataType] == SampleType.dataSeries.rawValue)
+            .join(.leftOuter, objects.table, on: samples.table[samples.dataId] == objects.table[objects.dataId])
+            .join(dataSeries.table, on: dataSeries.table[dataSeries.dataId] == samples.table[samples.dataId])
+
+        return try database.pluck(query).map { row in
+            let dataId = row[samples.table[samples.dataId]]
+            let startDate = Date(timeIntervalSinceReferenceDate: row[samples.startDate])
+            let endDate = Date(timeIntervalSinceReferenceDate: row[samples.endDate])
+            let dataProvenance = row[objects.provenance]
+            let device = try dataProvenances.device(for: dataProvenance, in: database)
+            let metadata = try metadata(for: dataId)
+            return WorkoutRoute(
+                dataId: dataId,
+                isFrozen: row[dataSeries.frozen],
+                count: row[dataSeries.count],
+                insertionEra: row[dataSeries.insertionEra],
+                hfdKey: row[dataSeries.hfdKey],
+                seriesLocation: row[dataSeries.seriesLocation],
+                uuid: .init(data: row[objects.uuid]!)!,
+                startDate: startDate,
+                endDate: endDate,
+                device: device,
+                metadata: metadata)
+        }
+    }
+
+    /**
+     Get the locations associated with a workout route.
+     - Parameter route: The route for which locations are requested
+     - Returns: The locations contained in the route
+     */
+    public func locations(associatedWith route: WorkoutRoute) throws -> [CLLocation] {
+        try locationSeriesData.locations(for: route.hfdKey, in: database)
+    }
+
     // MARK: Testing
 
     public convenience init(database: Connection) {

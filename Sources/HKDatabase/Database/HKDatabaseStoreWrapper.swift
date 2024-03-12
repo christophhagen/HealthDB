@@ -145,6 +145,24 @@ extension HKDatabaseStoreWrapper: HKHealthStoreInterface {
     }
 
     /**
+     Get the route associated with a workout.
+     - Parameter workout: The workout for which to select the route
+     - Returns: The route associated with the workout, if available
+     */
+    public func route(associatedWith workout: Workout) throws -> WorkoutRoute? {
+        try store.route(associatedWith: workout)
+    }
+
+    /**
+     Get the locations associated with a workout route.
+     - Parameter route: The route for which locations are requested
+     - Returns: The locations contained in the route
+     */
+    public func locations(associatedWith route: WorkoutRoute) throws -> [CLLocation] {
+        try store.locations(associatedWith: route)
+    }
+
+    /**
      Get all location samples associated with a workout.
      - Parameter workout: The workout for which to get the locations
      - Returns: The location samples associated with the workout
