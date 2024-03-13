@@ -325,8 +325,8 @@ public final class HKDatabaseStore {
 
     // MARK: Correlations
 
-    func correlationSamples(type: HKCorrelationTypeIdentifier) throws -> [HKCorrelation] {
-        guard let sampleType = type.sampleType else {
+    func samples(correlation: HKCorrelationTypeIdentifier) throws -> [HKCorrelation] {
+        guard let sampleType = correlation.sampleType else {
             throw HKNotSupportedError("Unsupported correlation type")
         }
 
@@ -336,10 +336,10 @@ public final class HKDatabaseStore {
             .filter(samples.dataType == sampleType.rawValue)
             .join(.leftOuter, objects.table, on: samples.table[samples.dataId] == objects.table[objects.dataId])
 
-        return try database.prepare(query).map { try createCorrelation(from: $0, type: type) }
+        return try database.prepare(query).map { try sample(from: $0, correlation: correlation) }
     }
 
-    private func createCorrelation(from row: Row, type: HKCorrelationTypeIdentifier) throws -> HKCorrelation {
+    private func sample(from row: Row, correlation: HKCorrelationTypeIdentifier) throws -> HKCorrelation {
         let dataId = row[samples.table[samples.dataId]]
         let startDate = Date(timeIntervalSinceReferenceDate: row[samples.startDate])
         let endDate = Date(timeIntervalSinceReferenceDate: row[samples.endDate])
@@ -349,7 +349,7 @@ public final class HKDatabaseStore {
         let objects = try correlatedObjects(for: dataId)
 
         return HKCorrelation(
-            type: .init(type),
+            type: .init(correlation),
             start: startDate,
             end: endDate,
             objects: Set(objects),
@@ -381,7 +381,7 @@ public final class HKDatabaseStore {
                 print("Ignoring \(ids.count) unknown samples with raw type \(rawType)")
                 return []
             }
-            return try createSamples(dataIds: ids, type: sampleType) as [HKSample]
+            return try samples(from: ids, type: sampleType) as [HKSample]
         }
     }
 
@@ -427,13 +427,13 @@ public final class HKDatabaseStore {
     /**
      Create samples from data ids.
      */
-    private func createSamples(dataIds: [Int], type: SampleType) throws -> [HKSample] {
+    private func samples(from dataIds: [Int], type: SampleType) throws -> [HKSample] {
         if let quantityType = HKQuantityTypeIdentifier(sampleType: type) {
             guard let unit = quantityType.defaultUnit else {
                 print("Ignoring \(dataIds.count) \(quantityType) samples due to unknown unit")
                 return []
             }
-            return try createQuantitySamples(dataIds: dataIds, type: quantityType, unit: unit)
+            return try samples(fromQuantityIds: dataIds, type: quantityType, unit: unit)
         }
         if let categoryType = HKCategoryTypeIdentifier(sampleType: type) {
             return try samples(fromCategoryIds: dataIds, type: categoryType)
@@ -451,7 +451,7 @@ public final class HKDatabaseStore {
     /**
      Create quantity samples from data ids.
      */
-    private func createQuantitySamples(dataIds: [Int], type: HKQuantityTypeIdentifier, unit: HKUnit) throws -> [HKQuantitySample] {
+    private func samples(fromQuantityIds dataIds: [Int], type: HKQuantityTypeIdentifier, unit: HKUnit) throws -> [HKQuantitySample] {
         try dataIds.compactMap { dataId in
             try database.pluck(query(categorySampleId: dataId)).map { row in
                 try sample(from: row, quantity: type, unit: unit)
@@ -522,7 +522,7 @@ public final class HKDatabaseStore {
             .join(.leftOuter, samples.table, on: workouts.table[workouts.dataId] == samples.table[samples.dataId])
             .filter(samples.table[samples.startDate] <= endTime && 
                     samples.table[samples.endDate] >= startTime)
-        return try database.prepare(query).map(createWorkout)
+        return try database.prepare(query).map(workout)
     }
 
     /**
@@ -545,10 +545,10 @@ public final class HKDatabaseStore {
             .filter(workoutActivities.table[workoutActivities.activityType] == typeId &&
                     workoutActivities.table[workoutActivities.isPrimaryActivity] == true)
         return try database.prepare(query)
-            .map(createWorkout)
+            .map(workout)
     }
 
-    private func createWorkout(from row: Row) throws -> Workout {
+    private func workout(from row: Row) throws -> Workout {
         let dataId = row[workouts.table[workouts.dataId]]
         let start = Date(timeIntervalSinceReferenceDate: row[samples.table[samples.startDate]])
         let end = Date(timeIntervalSinceReferenceDate: row[samples.table[samples.endDate]])

@@ -121,7 +121,7 @@ extension HKDatabaseStoreWrapper: HKHealthStoreInterface {
     }
 
     public func samples<T>(ofCorrelation correlation: T.Type = T.self, predicate: NSPredicate?, sortDescriptors: [SortDescriptor<HKCorrelation>], limit: Int?) throws -> [T] where T : HKCorrelationContainer {
-        try store.correlationSamples(type: T.correlationType)
+        try store.samples(correlation: T.correlationType)
             .filtered(using: predicate)
             .sorted(using: sortDescriptors)
             .limited(by: limit)
