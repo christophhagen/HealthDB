@@ -5,29 +5,24 @@ A Swift interface to access health records of `healthdb.sqlite` files which have
 This library is a reverse-engineering effort to reconstruct Health data and allowing to access the SQLite database in a similar way to the actual `HKHealthStore` on iOS.
 This library may can be useful when the original health data is lost and has to be recovered from a backup, or when a sample database is needed for testing.
 
-## Status
+## Working features
 
-
-### Implemented features
-
-- Reading [Category samples](#category-samples)
-- [Quantity samples](#quantity-samples) and [series](#quantity-sample-series)
-- [Workouts, Activities, Events)](#workouts)
-- [Workout routes / location samples](#workout-routes)
-- [User characteristics](#basic-user-characteristics-and-values)
-- [Correlations](#correlation-samples)
-- [ECG Samples](#ecg-samples)
-
-### Not implemented
-
-- Correlation food samples
-- Medical records and prescriptions
-- Other [sample types](#unhandled-samples)
-- Workout statistics, workout zones
-- Several metadata fields
-- Inserting most data
-- Achievements
-- Workout goals (Only duration)
+| Feature | Status | Comment |
+|---|---|---|
+[Category samples](#category-samples) | ✅ | 55/65 types supported |
+[Quantity samples](#quantity-samples) | ✅ | 90/112 types supported |
+[Quantity series](#quantity-sample-series) | ✅ | 90/112 types supported |
+[Workouts](#workouts) | ✅ 
+[Workout activities](#workouts) | ✅ 
+[Workout events](#workouts) | ✅ 
+[Workout statistics](#workouts) | ✅ | Average + min/max
+Workout goals | ❗️ | Only `duration`
+Workout zones | ❌
+[User characteristics](#basic-user-characteristics-and-values) | ✅ | Except `HKActivityMoveMode`
+[Correlations](#correlation-samples) | ✅ | Except `Food`
+[ECG Samples](#ecg-samples) | ✅ | Including voltages
+Medical records and prescriptions | ❌
+Achievements | ❌
 
 ### Caveats
 
@@ -60,7 +55,7 @@ The `HKDatabaseStore` is the basic object to interact with the health data, simi
 
 This library relies heavily on the [HealthKitExtensions](https://github.com/christophhagen/HealthKitExtensions) to simplify interacting with health data, and provides a more convenient database wrapper:
 
-```
+```swift
 let db = try HKDatabaseStoreWrapper(fileUrl: ...)
 ```
 
@@ -72,11 +67,11 @@ The following readme is mostly based on this class.
 Similar to the `HKHealthStore`, these can be accessed through separate functions on `HKDatabaseStoreWrapper`:
 
 ```swift
-func biologicalSex() throws -> HKBiologicalSex
-func bloodType() throws -> HKBloodType
-func dateOfBirthComponents() throws -> DateComponents
-func fitzpatrickSkinType() throws -> HKFitzpatrickSkinType
-func wheelchairUse() throws -> HKWheelchairUse
+let sex = try db.biologicalSex()
+let bloodType = try db.bloodType()
+let dateOfBirth = try db.dateOfBirthComponents()
+let skinType = try db.fitzpatrickSkinType()
+let wheelchair = try db.wheelchairUse()
 ```
 
 Access all values in the table through:
@@ -94,17 +89,11 @@ Samples are separated into different types.
 In the database, the initial entry point is always the `samples` table. It contains the date interval and the data type.
 This type then determines where the additional data is stored.
 
-The known sample types are managed in the `SampleType` enum
+The known sample types are managed in the `SampleType` enum, as well as extensions on `HKQuantityTypeIdentifier`, `HKCorrelationTypeIdentifier`, and `HKCategoryTypeIdentifier`.
 
 ### Category samples
 
 Access category samples through:
-
-```swift
-let samples: [HKCategorySample] = try db.samples(type: .vomiting)
-```
-
-You can also use the types from [HealthKitExtensions](https://github.com/christophhagen/HealthKitExtensions):
 
 ```swift
 let samples: [Vomiting] = try db.samples(from: .distantPast, to: .now)
@@ -112,15 +101,17 @@ let samples: [Vomiting] = try db.samples(from: .distantPast, to: .now)
 
 The functions will fail with a `HKNotSupportedError` if the internal `SampleType` identifier is not known.
 
-Internally, the additional data of the samples is stored in the `category_samples` table where `samples.data_id == category_samples.data_id`
+The following category types are yet unsupported:
 
-There are at least these unknown category sample identifiers: 112, 116, 178.
+AppleStandHour, HighHeartRateEvent, IrregularHeartRhythmEvent, LowCardioFitnessEvent, AppleWalkingSteadinessEvent, InfrequentMenstrualCycles, IrregularMenstrualCycles, PersistentIntermenstrualBleeding, ProgesteroneTestResult, ProlongedMenstrualPeriods
+
+The following sample types may fit: 112, 116, 178.
 
 To access unknown samples:
 
 ```swift
-let samples = try db.unknownCategorySamples(
-    rawDataType: 147, 
+let samples = try db.store.samples(
+    rawCategory: 147, 
     as: .lowHeartRateEvent, 
     from: .distantPast, 
     to: .now)
@@ -129,21 +120,26 @@ let samples = try db.unknownCategorySamples(
 This function will produce errors if the sample data contains invalid values, which may happen when the `SampleType` doesn't match the `HKCategoryTypeIdentifier`.
 If you figure out the identifier for a currently unknown type, please open an issue, and it will be included.
 
+Internally, the additional data of the samples is stored in the `category_samples` table where `samples.data_id == category_samples.data_id`
+
 ### Quantity samples
 
 ```swift
-let samples: [HKQuantitySample] = try db.samples(type: .bodyMass)
 let samples: [BodyMass] = try db.samples(from: .distantPast, to: .now)
 ```
 
 The functions will fail with a `HKNotSupportedError` if the internal `SampleType` identifier is not known.
 The value in the database is interpreted according to the default unit of each sample type.
 
+The following types are currently unsupported:
+
+CyclingCadence, CyclingFunctionalThresholdPower, CyclingFunctionalThresholdPower, CyclingPower, CyclingSpeed, PhysicalEffort, AppleSleepingWristTemperature, AppleExerciseTime, AppleMoveTime, AppleStandTime, NikeFuel, AtrialFibrillationBurden, Vo2Max, WalkingHeartRateAverage, AppleWalkingSteadiness, WalkingAsymmetryPercentage, WalkingDoubleSupportPercentage, WalkingDoubleSupportPercentage, WalkingSpeed, WalkingStepLength, BloodAlcoholContent, TimeInDaylight
+
 To access unknown samples:
 
 ```swift
-let samples = try db.unknownQuantitySamples(
-        rawDataType: 3, 
+let samples = try db.samples(
+        rawQuantity: 3, 
         as: .bodyMass, 
         unit: .gramUnit(with: .kilo), 
         from: .distantPast, 
@@ -156,41 +152,44 @@ The unit is contained in the `unit_string` column of the `unit_strings` table wh
 
 ### Correlation samples
 
+```swift
+let samples: [BloodPressure] = try db.samples(from: .distantPast, to: .now)
+```
+
 The samples associated with a correlation (like blood pressure values) are also stored in the `samples` table.
 They are connected with another sample (`data_type == 80` for blood pressure) through the `associations` table, which contains one entry per associated sample, where `sample.data_id == associations.parent_id` for the main sample, and `sample.data_id == associations.child_id` for the associated samples.
-
 
 ### Unhandled samples
 
 There are many sample tables in the database, and all appear to be linked by their `data_id` column to the `data_id` column in the `samples` table.
 
-| Name | Content |
+| Name | Supported |
 |---|---|
-`account_owner_samples` |
-`allergy_record_samples`
-`binary_samples` | Binary Samples
-`category_samples` | Category Samples, Unknown categories: 112, 116, 178
-`clinical_note_record_samples`
-`clinical_record_samples`
-`condition_record_samples`
-`coverage_record_samples`
-`diagnostic_test_report_samples`
-`diagnostic_test_result_samples`
-`ecg_samples` | ECG Samples
-`medication_dispense_record_samples`
-`medication_dose_event_samples`
-`medication_order_samples`
-`medication_record_samples`
-`procedure_record_samples`
-`quantity_samples` | Quantity samples, like body measurements
-`scored_assessment_samples`
-`signed_clinical_data_record_samples`
-`sleep_schedule_samples` | Sleep Schedule Samples
-`state_of_mind_samples`
-`unknown_record_samples`
-`vaccination_record_samples`
-`verifiable_clinical_record_samples`
-`workout_zones_samples`
+`account_owner_samples` | ❌
+`allergy_record_samples` | ❌
+`binary_samples` | ❌
+`category_samples` | ✅
+`clinical_note_record_samples` | ❌
+`clinical_record_samples` | ❌
+`condition_record_samples` | ❌
+`coverage_record_samples` | ❌
+`diagnostic_test_report_samples` | ❌
+`diagnostic_test_result_samples` | ❌
+`ecg_samples` | ✅
+`medication_dispense_record_samples` | ❌
+`medication_dose_event_samples` | ❌
+`medication_order_samples` | ❌
+`medication_record_samples` | ❌
+`procedure_record_samples` | ❌
+`quantity_samples` | ✅
+`scored_assessment_samples` | ❌
+`signed_clinical_data_record_samples` | ❌
+`sleep_schedule_samples` | ✅
+`state_of_mind_samples` | ❌
+`unknown_record_samples` | ❌
+`vaccination_record_samples` | ❌
+`verifiable_clinical_record_samples` | ❌
+`workout_zones_samples` | ❌
 
 ### Quantity sample series
 
@@ -198,8 +197,8 @@ Some quantity samples are arranged in data series, which are associated with a s
 This concerns mostly workout data, like heart rate, cycling power, or vertical oscillation data.
 
 ```swift
-let heartRateSeries = try db.quantitySampleSeries(
-    ofType: HeartRate.self, 
+let heartRateSeries = try db.series(
+    ofQuantity: HeartRate.self, 
     from: .distantPast, 
     to: .now)
 let series = heartRateSeries.first!
@@ -209,17 +208,18 @@ let samples: [HeartRate] = try db.quantities(in: series)
 **Note** The samples of the series have no `device` or `metadata` associated with it.
 Check the `sample` property of the data series to get those values.
 
-There are also functions to get simple `HKQuantitySample`s, and the possibility to manually select the raw sample type for unsupported quantity types.
+There are also functions on `HKDatabaseStore` to get simple `HKQuantitySample`s, and the possibility to manually select the raw sample type for unsupported quantity types.
 
 If you don't care about the series and just want all samples of a specific type, you can request the samples directly:
 
 ```swift
-let samples: [HeartRate] = try db.quantitySamplesIncludingSeriesData(from: start, to: end)
+let samples: [HeartRate] = try db.samples(
+    includingSeriesData: true, 
+    from: start, 
+    to: end)
 ```
 
 **Note**: If you select samples directly, then the `device` and `metadata` properties of the `HKQuantitySample`s will be set to the value of the data series sample.
-
-**Note**: It's more efficient to first select series and then request the samples, since each relevant sample must be compared against the `data_series` table, which can take a long time for large date intervals and databases with a lot of samples.
 
 Each data series contains an entry in `samples`, with the `data_type` according to the sample type.
 An entry in the `quantity_sample_series` with the same `data_id` as the sample contains the series specification, including the number of samples.
