@@ -98,8 +98,8 @@ public final class HKDatabaseStore {
     /**
      Attempt to extract category samples by specifying the sample type manually.
      */
-    public func samples(rawType: Int, as category: HKCategoryTypeIdentifier, from start: Date = .distantPast, to end: Date = .distantFuture) throws -> [HKCategorySample] {
-        let query = query(rawCategory: rawType, from: start, to: end)
+    public func samples(rawCategory: Int, as category: HKCategoryTypeIdentifier, from start: Date = .distantPast, to end: Date = .distantFuture) throws -> [HKCategorySample] {
+        let query = query(rawCategory: rawCategory, from: start, to: end)
         return try database.prepare(query).map {
             try sample(from: $0, category: category)
         }
@@ -167,11 +167,11 @@ public final class HKDatabaseStore {
         }
     }
 
-    public func samples(rawType: Int, as quantity: HKQuantityTypeIdentifier, unit: HKUnit? = nil, from start: Date = .distantPast, to end: Date = .distantFuture) throws -> [HKQuantitySample] {
+    public func samples(rawQuantity: Int, as quantity: HKQuantityTypeIdentifier, unit: HKUnit? = nil, from start: Date = .distantPast, to end: Date = .distantFuture) throws -> [HKQuantitySample] {
         guard let unit = unit ?? quantity.defaultUnit else {
             throw HKNotSupportedError("Unit needed for the given type")
         }
-        let selection = query(rawQuantity: rawType, from: start, to: end)
+        let selection = query(rawQuantity: rawQuantity, from: start, to: end)
         return try database.prepare(selection)
             .map { try sample(from: $0, quantity: quantity, unit: unit) }
     }
