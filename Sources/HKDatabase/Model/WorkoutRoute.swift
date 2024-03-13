@@ -4,7 +4,7 @@ import HealthKit
 /**
  A workout route loaded from the database.
  */
-public struct WorkoutRoute {
+public struct WorkoutRoute: HKSampleProtocol {
 
     /**
      The id of the sample.
@@ -31,22 +31,22 @@ public struct WorkoutRoute {
     /// Unknown property. Seems to always be `2`.
     public let seriesLocation: Int
 
-    public let uuid: UUID
+    // MARK: HKSampleProtocol
 
     public let startDate: Date
 
     public let endDate: Date
 
+    public var sampleType: HKSampleType {
+        HKSeriesType.workoutRoute()
+    }
+
+    // MARK: HKObjectProtocol
+
+    public let uuid: UUID
+
     public let device: HKDevice?
 
     public let metadata: [String : Any]?
 
-
-    public var hasUndeterminedDuration: Bool {
-        endDate == .distantFuture
-    }
-
-    public var sampleType: HKSampleType {
-        HKSeriesType.workoutRoute()
-    }
 }

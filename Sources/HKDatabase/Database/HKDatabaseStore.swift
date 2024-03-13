@@ -756,9 +756,9 @@ public final class HKDatabaseStore {
                 insertionEra: row[dataSeries.insertionEra],
                 hfdKey: row[dataSeries.hfdKey],
                 seriesLocation: row[dataSeries.seriesLocation],
-                uuid: .init(data: row[objects.uuid]!)!,
                 startDate: startDate,
                 endDate: endDate,
+                uuid: .init(data: row[objects.uuid]!)!,
                 device: device,
                 metadata: metadata)
         }
