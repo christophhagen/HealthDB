@@ -6,7 +6,7 @@ struct WorkoutStatisticsTable {
 
     let table = Table("workout_statistics")
 
-    func create(referencing workoutActivities: WorkoutActivitiesTable, in database: Connection) throws {
+    func create(in database: Connection, referencing workoutActivities: WorkoutActivitiesTable) throws {
         try database.execute("CREATE TABLE workout_statistics (ROWID INTEGER PRIMARY KEY AUTOINCREMENT, workout_activity_id INTEGER NOT NULL REFERENCES workout_activities(ROWID) ON DELETE CASCADE, data_type INTEGER NOT NULL, quantity REAL NOT NULL, min REAL, max REAL, UNIQUE(workout_activity_id, data_type))")
     }
 

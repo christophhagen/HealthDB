@@ -3,7 +3,7 @@ import SQLite
 
 struct QuantitySamplesTable {
 
-    func create(referencing unitStrings: UnitStringsTable, in database: Connection) throws {
+    func create(in database: Connection, referencing unitStrings: UnitStringsTable) throws {
         try database.execute("CREATE TABLE quantity_samples (data_id INTEGER PRIMARY KEY, quantity REAL, original_quantity REAL, original_unit INTEGER REFERENCES unit_strings (ROWID) ON DELETE NO ACTION)")
     }
 

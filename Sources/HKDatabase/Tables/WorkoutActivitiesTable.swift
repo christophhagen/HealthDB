@@ -64,7 +64,7 @@ struct WorkoutActivitiesTable {
         try database.prepare(table.filter(ownerId == workoutId)).map(activity)
     }
 
-    func create(referencing workouts: WorkoutsTable, in database: Connection) throws {
+    func create(in database: Connection, referencing workouts: WorkoutsTable) throws {
         try database.execute("CREATE TABLE workout_activities (ROWID INTEGER PRIMARY KEY AUTOINCREMENT, uuid BLOB UNIQUE NOT NULL, owner_id INTEGER NOT NULL REFERENCES workouts(data_id) ON DELETE CASCADE, is_primary_activity INTEGER NOT NULL, activity_type INTEGER NOT NULL, location_type INTEGER NOT NULL, swimming_location_type INTEGER NOT NULL, lap_length BLOB, start_date REAL NOT NULL, end_date REAL NOT NULL, duration REAL NOT NULL, metadata BLOB)")
         /*
          try database.run(table.create { t in

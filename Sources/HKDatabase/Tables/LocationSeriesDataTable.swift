@@ -66,7 +66,7 @@ struct LocationSeriesDataTable {
             sourceInfo: .init())
     }
 
-    func create(references dataSeries: DataSeriesTable, in database: Connection) throws {
+    func create(in database: Connection, referencing dataSeries: DataSeriesTable) throws {
         try database.execute("CREATE TABLE location_series_data (series_identifier INTEGER NOT NULL REFERENCES data_series(hfd_key) DEFERRABLE INITIALLY DEFERRED, timestamp REAL NOT NULL, longitude REAL NOT NULL, latitude REAL NOT NULL, altitude REAL NOT NULL, speed REAL NOT NULL, course REAL NOT NULL, horizontal_accuracy REAL NOT NULL, vertical_accuracy REAL NOT NULL, speed_accuracy REAL NOT NULL, course_accuracy REAL NOT NULL, signal_environment INTEGER NOT NULL, PRIMARY KEY (series_identifier, timestamp)) WITHOUT ROWID")
     }
 

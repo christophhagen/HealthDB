@@ -3,7 +3,7 @@ import SQLite
 
 struct ObjectsTable {
 
-    func create(referencing dataProvenances: DataProvenancesTable, in database: Connection) throws {
+    func create(in database: Connection, referencing dataProvenances: DataProvenancesTable) throws {
         try database.execute("CREATE TABLE objects (data_id INTEGER PRIMARY KEY AUTOINCREMENT, uuid BLOB UNIQUE, provenance INTEGER NOT NULL REFERENCES data_provenances (ROWID) ON DELETE CASCADE, type INTEGER, creation_date REAL)")
     }
 

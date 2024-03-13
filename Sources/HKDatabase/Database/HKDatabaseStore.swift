@@ -12,39 +12,39 @@ public final class HKDatabaseStore {
 
     private let associations = AssociationsTable()
 
+    private let categorySamples = CategorySamplesTable()
+
+    private let dataProvenances = DataProvenancesTable()
+
+    private let dataSeries = DataSeriesTable()
+
     private let ecgSamples = ECGSamplesTable()
 
-    private let samples = SamplesTable()
+    private let keyValueSecure = KeyValueSecureTable()
 
-    private let categorySamples = CategorySamplesTable()
+    private let locationSeriesData = LocationSeriesDataTable()
+
+    private let metadataKeys = MetadataKeysTable()
+
+    private let metadataValues = MetadataValuesTable()
+
+    private let objects = ObjectsTable()
 
     private let quantitySamples = QuantitySamplesTable()
 
     private let quantitySampleSeries = QuantitySampleSeriesTable()
-    
+
     private let quantitySeriesData = QuantitySeriesDataTable()
 
-    private let objects = ObjectsTable()
-
-    private let dataProvenances = DataProvenancesTable()
+    private let samples = SamplesTable()
 
     private let unitStrings = UnitStringsTable()
 
     private let workouts = WorkoutsTable()
 
-    private let locationSeriesData = LocationSeriesDataTable()
+    private let workoutActivities = WorkoutActivitiesTable()
 
-    private let dataSeries = DataSeriesTable()
-
-    private let keyValueSecure = KeyValueSecureTable()
-
-    private let events = WorkoutEventsTable()
-
-    private let activities = WorkoutActivitiesTable()
-
-    private let metadataValues = MetadataValuesTable()
-
-    private let metadataKeys = MetadataKeysTable()
+    private let workoutEvents = WorkoutEventsTable()
 
     private let workoutStatistics = WorkoutStatisticsTable()
 
@@ -664,9 +664,9 @@ public final class HKDatabaseStore {
             .join(.leftOuter, samples.table, on: workouts.table[workouts.dataId] == samples.table[samples.dataId])
             .filter(samples.table[samples.startDate] <= endTime &&
                     samples.table[samples.endDate] >= startTime)
-            .join(.leftOuter, activities.table, on: workouts.table[workouts.dataId] == activities.table[activities.ownerId])
-            .filter(activities.table[activities.activityType] == typeId &&
-                    activities.table[activities.isPrimaryActivity] == true)
+            .join(.leftOuter, workoutActivities.table, on: workouts.table[workouts.dataId] == workoutActivities.table[workoutActivities.ownerId])
+            .filter(workoutActivities.table[workoutActivities.activityType] == typeId &&
+                    workoutActivities.table[workoutActivities.isPrimaryActivity] == true)
         return try database.prepare(query)
             .map(createWorkout)
     }
@@ -676,8 +676,8 @@ public final class HKDatabaseStore {
         let start = Date(timeIntervalSinceReferenceDate: row[samples.table[samples.startDate]])
         let end = Date(timeIntervalSinceReferenceDate: row[samples.table[samples.endDate]])
 
-        let events = try events.events(for: dataId, in: database)
-        let activities = try activities.activities(for: dataId, in: database)
+        let events = try workoutEvents.events(for: dataId, in: database)
+        let activities = try workoutActivities.activities(for: dataId, in: database)
         let metadata = try metadata(for: dataId)
         // TODO: Add workout statistics
         return .init(
@@ -700,14 +700,14 @@ public final class HKDatabaseStore {
         )
         let dataId = Int(rowid)
         for event in workout.workoutEvents {
-            try events.insert(event, dataId: dataId, in: database)
+            try workoutEvents.insert(event, dataId: dataId, in: database)
         }
 
         if let activity = workout.workoutActivities.first {
-            try activities.insert(activity, isPrimaryActivity: true, dataId: dataId, in: database)
+            try workoutActivities.insert(activity, isPrimaryActivity: true, dataId: dataId, in: database)
         }
         for activity in workout.workoutActivities.dropFirst() {
-            try activities.insert(activity, isPrimaryActivity: false, dataId: dataId, in: database)
+            try workoutActivities.insert(activity, isPrimaryActivity: false, dataId: dataId, in: database)
         }
 
         for (key, value) in workout.metadata {
@@ -781,9 +781,9 @@ public final class HKDatabaseStore {
         guard let uuid = workoutActivity.externalUUID?.data else {
             throw HKNotSupportedError("No external UUID for workout activity")
         }
-        let query = activities.table
-            .filter(activities.uuid == uuid)
-            .join(.leftOuter, workoutStatistics.table, on: workoutStatistics.workoutActivityId == activities.table[activities.rowId])
+        let query = workoutActivities.table
+            .filter(workoutActivities.uuid == uuid)
+            .join(.leftOuter, workoutStatistics.table, on: workoutStatistics.workoutActivityId == workoutActivities.table[workoutActivities.rowId])
 
         return try database.prepare(query).reduce(into: [:]) { dict, row in
             guard let statistics = try? workoutStatistics.createStatistics(from: row) else {
@@ -809,9 +809,9 @@ public final class HKDatabaseStore {
         guard let unit = unit ?? type.defaultUnit else {
             throw HKNotSupportedError("Unsupported quantity type for statistics")
         }
-        let query = activities.table
-            .filter(activities.uuid == uuid)
-            .join(workoutStatistics.table, on: workoutStatistics.workoutActivityId == activities.table[activities.rowId])
+        let query = workoutActivities.table
+            .filter(workoutActivities.uuid == uuid)
+            .join(workoutStatistics.table, on: workoutStatistics.workoutActivityId == workoutActivities.table[workoutActivities.rowId])
             .filter(workoutStatistics.table[workoutStatistics.dataType] == sampleType.rawValue)
         return try database.pluck(query).map {
             workoutStatistics.createStatistics(from: $0, type: .init(type), unit: unit)
@@ -897,37 +897,27 @@ public final class HKDatabaseStore {
      Use this function only to create a new database for testing.
      */
     public func createTables() throws {
+        // Referenced by dataSeries, ecgSamples, quantitySeriesData
         try samples.create(in: database)
+        // Referenced by quantitySamples
         try unitStrings.create(in: database)
-        try quantitySamples.create(referencing: unitStrings, in: database)
+
+        try associations.create(in: database)
+        try categorySamples.create(in: database)
         try dataProvenances.create(in: database)
-        try objects.create(referencing: dataProvenances, in: database)
-        try workouts.create(in: database)
-        try events.create(referencing: workouts, in: database)
-        try activities.create(referencing: workouts, in: database)
-        try metadataValues.create(in: database)
+        try dataSeries.create(in: database, referencing: samples)
+        try ecgSamples.create(in: database, referencing: samples)
+        try keyValueSecure.create(in: database)
+        try locationSeriesData.create(in: database, referencing: dataSeries)
         try metadataKeys.create(in: database)
-        try locationSeriesData.create(references: dataSeries, in: database)
-        try workoutStatistics.create(referencing: activities, in: database)
-        try ecgSamples.create(referencing: samples, in: database)
-    }
-
-    func insert(workout: Workout, into store: HKHealthStore) async throws -> HKWorkout? {
-        guard let configuration = workout.workoutActivities.first?.workoutConfiguration else {
-            return nil
-        }
-
-        let builder = HKWorkoutBuilder(healthStore: store, configuration: configuration, device: nil)
-        let metadata = workout.metadata.reduce(into: [:]) { dict, element in
-            dict[element.key] = element.value
-        }
-        try await builder.addMetadata(metadata)
-        try await builder.addWorkoutEvents(workout.workoutEvents)
-        for activity in workout.workoutActivities {
-            try await builder.addWorkoutActivity(activity)
-        }
-        let endDate = workout.workoutActivities.compactMap { $0.endDate }.max() ?? Date()
-        try await builder.endCollection(at: endDate)
-        return try await builder.finishWorkout()
+        try metadataValues.create(in: database)
+        try objects.create(in: database, referencing: dataProvenances)
+        try quantitySamples.create(in: database, referencing: unitStrings)
+        try quantitySampleSeries.create(in: database)
+        try quantitySeriesData.create(in: database, referencing: samples)
+        try workouts.create(in: database)
+        try workoutActivities.create(in: database, referencing: workouts)
+        try workoutEvents.create(in: database, referencing: workouts)
+        try workoutStatistics.create(in: database, referencing: workoutActivities)
     }
 }

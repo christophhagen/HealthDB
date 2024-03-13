@@ -44,7 +44,7 @@ struct WorkoutEventsTable {
         let metadata = metadata(row[metadata])
         let type = HKWorkoutEventType(rawValue: row[type])!
         // let sessionUUID = row[sessionUUID]
-        // let error = row[rrror]
+        // let error = row[error]
         return .init(type:  type, dateInterval: interval, metadata: metadata)
     }
 
@@ -55,8 +55,8 @@ struct WorkoutEventsTable {
         return WorkoutEventsTable.decode(metadata: data)
     }
 
-    func create(referencing workouts: WorkoutsTable, in database: Connection) throws {
-        // try database.execute("CREATE TABLE workout_events (ROWID INTEGER PRIMARY KEY AUTOINCREMENT, owner_id INTEGER NOT NULL REFERENCES workouts (data_id) ON DELETE CASCADE, date REAL NOT NULL, type INTEGER NOT NULL, duration REAL NOT NULL, metadata BLOB, session_uuid BLOB, error BLOB)")
+    func create(in database: Connection, referencing workouts: WorkoutsTable) throws {
+        // CREATE TABLE workout_events (ROWID INTEGER PRIMARY KEY AUTOINCREMENT, owner_id INTEGER NOT NULL REFERENCES workouts (data_id) ON DELETE CASCADE, date REAL NOT NULL, type INTEGER NOT NULL, duration REAL NOT NULL, metadata BLOB, session_uuid BLOB, error BLOB)
         try database.run(table.create { t in
             t.column(rowId, primaryKey: .autoincrement)
             t.column(ownerId, references: workouts.table, workouts.dataId)

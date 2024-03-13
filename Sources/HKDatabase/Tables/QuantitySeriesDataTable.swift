@@ -6,7 +6,7 @@ struct QuantitySeriesDataTable {
 
     let table = Table("quantity_series_data")
 
-    func create(referencing samples: SamplesTable, in database: Connection) throws {
+    func create(in database: Connection, referencing samples: SamplesTable) throws {
         try database.execute("CREATE TABLE quantity_series_data (series_identifier INTEGER NOT NULL REFERENCES quantity_sample_series(hfd_key) DEFERRABLE INITIALLY DEFERRED, timestamp REAL NOT NULL, value REAL NOT NULL, duration REAL NOT NULL, PRIMARY KEY (series_identifier, timestamp)) WITHOUT ROWID")
     }
 
