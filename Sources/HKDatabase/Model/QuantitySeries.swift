@@ -2,7 +2,7 @@ import Foundation
 import HealthKit
 import HealthKitExtensions
 
-public protocol QuantitySeries {
+public protocol QuantitySeriesProtocol {
 
     var dataId: Int { get }
 
@@ -19,7 +19,7 @@ public protocol QuantitySeries {
     var unit: HKUnit { get }
 }
 
-public struct HKQuantitySeries: QuantitySeries {
+public struct HKQuantitySeries: QuantitySeriesProtocol {
 
     public let dataId: Int
 
@@ -39,7 +39,7 @@ public struct HKQuantitySeries: QuantitySeries {
 }
 
 
-public struct TypedQuantitySeries<T>: QuantitySeries where T: HKQuantitySampleContainer {
+public struct QuantitySeries<T>: QuantitySeriesProtocol where T: HKQuantitySampleContainer {
 
     public let dataId: Int
 

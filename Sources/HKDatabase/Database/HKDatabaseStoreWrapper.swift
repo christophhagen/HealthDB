@@ -72,7 +72,7 @@ extension HKDatabaseStoreWrapper: HKHealthStoreInterface {
      - Parameter sortDescriptors: The descriptors to order the returned samples
      - Parameter limit: The maximum number of samples to return
      */
-    public func samples<T>(ofType type: T.Type = T.self, predicate: NSPredicate? = nil, sortDescriptors: [SortDescriptor<HKCategorySample>] = [], limit: Int? = nil) throws -> [T] where T : HKCategorySampleContainer {
+    public func samples<T>(ofCategory category: T.Type = T.self, predicate: NSPredicate? = nil, sortDescriptors: [SortDescriptor<HKCategorySample>] = [], limit: Int? = nil) throws -> [T] where T : HKCategorySampleContainer {
         try store.samples(category: T.categoryTypeIdentifier)
             .filtered(using: predicate)
             .sorted(using: sortDescriptors)
@@ -86,12 +86,32 @@ extension HKDatabaseStoreWrapper: HKHealthStoreInterface {
      - Parameter start: The beginning of the date range of interest
      - Parameter end: The end of the date range
      */
-    public func samples<T>(ofType type: T.Type = T.self, from start: Date = .distantPast, to end: Date = .distantFuture) throws -> [T] where T: HKQuantitySampleContainer {
-        try store.samples(quantity: T.quantityTypeIdentifier, from: start, to: end, unit: T.defaultUnit)
-            .map { T.init(quantitySample: $0) }
+    public func samples<T>(ofQuantity quantity: T.Type = T.self, from start: Date = .distantPast, to end: Date = .distantFuture) throws -> [T] where T: HKQuantitySampleContainer {
+        try store.samples(
+            quantity: T.quantityTypeIdentifier,
+            includingSeriesData: false,
+            from: start, to: end,
+            unit: T.defaultUnit)
+        .map { T.init(quantitySample: $0) }
     }
 
-    public func samples<T>(ofType type: T.Type = T.self, predicate: NSPredicate?, sortDescriptors: [SortDescriptor<HKQuantitySample>], limit: Int?) throws -> [T] where T : HKQuantitySampleContainer {
+    /**
+     Access quantity samples in a date interval.
+     - Parameter type: The quantity sample type
+     - Parameter includingSeriesData: Include samples from data series
+     - Parameter start: The beginning of the date range of interest
+     - Parameter end: The end of the date range
+     */
+    public func samples<T>(ofQuantity quantity: T.Type = T.self, includingSeriesData: Bool, from start: Date = .distantPast, to end: Date = .distantFuture) throws -> [T] where T: HKQuantitySampleContainer {
+        try store.samples(
+            quantity: T.quantityTypeIdentifier,
+            includingSeriesData: includingSeriesData,
+            from: start, to: end,
+            unit: T.defaultUnit)
+        .map { T.init(quantitySample: $0) }
+    }
+
+    public func samples<T>(ofQuantity quantity: T.Type = T.self, predicate: NSPredicate?, sortDescriptors: [SortDescriptor<HKQuantitySample>], limit: Int?) throws -> [T] where T : HKQuantitySampleContainer {
 
         try store.samples(quantity: T.quantityTypeIdentifier)
             .filtered(using: predicate)
@@ -100,12 +120,37 @@ extension HKDatabaseStoreWrapper: HKHealthStoreInterface {
             .map(T.init(quantitySample:))
     }
 
-    public func samples<T>(ofType type: T.Type = T.self, predicate: NSPredicate?, sortDescriptors: [SortDescriptor<HKCorrelation>], limit: Int?) throws -> [T] where T : HKCorrelationContainer {
+    public func samples<T>(ofCorrelation correlation: T.Type = T.self, predicate: NSPredicate?, sortDescriptors: [SortDescriptor<HKCorrelation>], limit: Int?) throws -> [T] where T : HKCorrelationContainer {
         try store.correlationSamples(type: T.correlationType)
             .filtered(using: predicate)
             .sorted(using: sortDescriptors)
             .limited(by: limit)
             .map(T.init(correlation:))
+    }
+
+    /**
+     Query quantity series overlapping a date interval.
+     */
+    public func series<T>(ofQuantity quantity: T.Type = T.self, from start: Date = .distantPast, to end: Date = .distantFuture) throws -> [QuantitySeries<T>] where T: HKQuantitySampleContainer {
+        try store.series(quantity: T.quantityTypeIdentifier, unit: T.defaultUnit, from: start, to: end)
+            .map { .init(
+                dataId: $0.dataId,
+                sampleCount: $0.sampleCount,
+                insertionEra: $0.insertionEra,
+                hfdKey: $0.hfdKey,
+                seriesLocation: $0.seriesLocation,
+                sample: T.init(quantitySample: $0.sample))
+            }
+    }
+
+    /**
+     Get the quantities associated with a quantity series.
+
+     The returned samples all have the same data type as the original series sample, and include the same `device` and `metadata`.
+     */
+    public func quantities<T>(in series: QuantitySeries<T>) throws -> [T] {
+        try store.quantities(in: series)
+            .map(T.init(quantitySample:))
     }
 
     // MARK: - Reading characteristic data

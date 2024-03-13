@@ -57,7 +57,7 @@ extension HKHealthStoreWrapper: HKHealthStoreInterface {
 
     // MARK: - Querying HealthKit data
 
-    public func samples<T>(ofType type: T.Type = T.self, predicate: NSPredicate?, sortDescriptors: [SortDescriptor<HKQuantitySample>], limit: Int?) async throws -> [T] where T : HKQuantitySampleContainer {
+    public func samples<T>(ofQuantity quantity: T.Type = T.self, predicate: NSPredicate?, sortDescriptors: [SortDescriptor<HKQuantitySample>], limit: Int?) async throws -> [T] where T : HKQuantitySampleContainer {
         let descriptor = HKSampleQueryDescriptor(
             predicates: [.quantitySample(type: T.quantitySampleType, predicate: predicate)],
             sortDescriptors: sortDescriptors,
@@ -67,7 +67,7 @@ extension HKHealthStoreWrapper: HKHealthStoreInterface {
         return results.map { T.init(sample: $0) }
     }
 
-    public func samples<T>(ofType type: T.Type = T.self, predicate: NSPredicate?, sortDescriptors: [SortDescriptor<HKCorrelation>], limit: Int?) async throws -> [T] where T : HKCorrelationContainer {
+    public func samples<T>(ofCorrelation correlation: T.Type = T.self, predicate: NSPredicate?, sortDescriptors: [SortDescriptor<HKCorrelation>], limit: Int?) async throws -> [T] where T : HKCorrelationContainer {
         let descriptor = HKSampleQueryDescriptor(
             predicates: [.correlation(type: T.correlationType, predicate: predicate)],
             sortDescriptors: sortDescriptors,
@@ -77,7 +77,7 @@ extension HKHealthStoreWrapper: HKHealthStoreInterface {
         return results.map { T.init(sample: $0) }
     }
 
-    public func samples<T>(ofType type: T.Type = T.self, predicate: NSPredicate?, sortDescriptors: [SortDescriptor<HKCategorySample>], limit: Int?) async throws -> [T] where T : HKCategorySampleContainer {
+    public func samples<T>(ofCategory category: T.Type = T.self, predicate: NSPredicate?, sortDescriptors: [SortDescriptor<HKCategorySample>], limit: Int?) async throws -> [T] where T : HKCategorySampleContainer {
         let descriptor = HKSampleQueryDescriptor(
             predicates: [.categorySample(type: T.categorySampleType, predicate: predicate)],
             sortDescriptors: sortDescriptors,

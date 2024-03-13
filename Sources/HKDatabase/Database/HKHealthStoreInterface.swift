@@ -174,13 +174,13 @@ public protocol HKHealthStoreInterface {
     // MARK: - Querying HealthKit data
 
     @available(iOS 15.4, *)
-    func samples<T>(ofType type: T.Type, predicate: NSPredicate?, sortDescriptors: [SortDescriptor<HKQuantitySample>], limit: Int?) async throws -> [T] where T: HKQuantitySampleContainer
+    func samples<T>(ofQuantity quantity: T.Type, predicate: NSPredicate?, sortDescriptors: [SortDescriptor<HKQuantitySample>], limit: Int?) async throws -> [T] where T: HKQuantitySampleContainer
 
     @available(iOS 15.4, *)
-    func samples<T>(ofType type: T.Type, predicate: NSPredicate?, sortDescriptors: [SortDescriptor<HKCorrelation>], limit: Int?) async throws -> [T] where T: HKCorrelationContainer
+    func samples<T>(ofCorrelation correlation: T.Type, predicate: NSPredicate?, sortDescriptors: [SortDescriptor<HKCorrelation>], limit: Int?) async throws -> [T] where T: HKCorrelationContainer
 
     @available(iOS 15.4, *)
-    func samples<T>(ofType type: T.Type, predicate: NSPredicate?, sortDescriptors: [SortDescriptor<HKCategorySample>], limit: Int?) async throws -> [T] where T: HKCategorySampleContainer
+    func samples<T>(ofCategory category: T.Type, predicate: NSPredicate?, sortDescriptors: [SortDescriptor<HKCategorySample>], limit: Int?) async throws -> [T] where T: HKCategorySampleContainer
 
     /**
      Starts executing the provided query.
