@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+// The ECG data contained in the `voltage_payload` column of the `ecg_samples` table
+message ECGVoltageData {
+
+    // Wrapper for the voltage measurements
+    message Inner {
+
+        // Unknown property
+        bool something = 1;
+
+        // The voltage samples (microvolts)
+        repeated float samples = 3;
+    }
+
+    // Wrapper for the voltage measurements
+    Inner inner = 1;
+
+    // The sampling frequency of the measurements
+    double samplingFrequency = 2;
+
+}

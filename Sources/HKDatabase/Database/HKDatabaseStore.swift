@@ -12,6 +12,8 @@ public final class HKDatabaseStore {
 
     private let associations = AssociationsTable()
 
+    private let ecgSamples = ECGSamplesTable()
+
     private let samples = SamplesTable()
 
     private let categorySamples = CategorySamplesTable()
@@ -773,6 +775,64 @@ public final class HKDatabaseStore {
         try locationSeriesData.locations(for: route.hfdKey, in: database)
     }
 
+    // MARK: ECG Samples
+
+    /**
+     Read Electorcardiogram samples.
+     - Parameter start: The start date of the interval to search
+     - Parameter end: The end date of the interval to search
+     - Returns: The samples in the specified date range
+     */
+    public func electrocardiograms(from start: Date = .distantPast, to end: Date = .distantFuture) throws -> [Electrocardiogram] {
+        let query = ecgSamples.table
+            .join(.leftOuter, samples.table, on: ecgSamples.table[ecgSamples.dataId] == samples.table[samples.dataId])
+            .join(.leftOuter, objects.table, on: samples.table[samples.dataId] == objects.table[objects.dataId])
+            .filter(samples.table[samples.startDate] <= end.timeIntervalSinceReferenceDate &&
+                    samples.table[samples.endDate] >= start.timeIntervalSinceReferenceDate)
+
+        return try database.prepare(query).map(createElectrocardiogram)
+    }
+
+    private func createElectrocardiogram(from row: Row) throws -> Electrocardiogram {
+        let dataId = row[samples.table[samples.dataId]]
+        let startDate = Date(timeIntervalSinceReferenceDate: row[samples.startDate])
+        let endDate = Date(timeIntervalSinceReferenceDate: row[samples.endDate])
+        let dataProvenance = row[objects.provenance]
+        let device = try dataProvenances.device(for: dataProvenance, in: database)
+        let metadata = try metadata(for: dataId)
+        let data = try ecgSamples.payload(for: dataId, in: database)
+        let frequency = (data?.samplingFrequency).map { HKQuantity(unit: .hertz(), doubleValue: $0) }
+        let heartRate = row[ecgSamples.averageHeartRate]
+            .map { HKQuantity(unit: .count().unitDivided(by: .minute()), doubleValue: $0) }
+
+        return Electrocardiogram(
+            dataId: dataId,
+            symptomsStatus: .init(rawValue: row[ecgSamples.symptomsStatus])!,
+            samplingFrequency: frequency,
+            numberOfVoltageMeasurements: data?.inner.samples.count ?? 0,
+            classification: .init(rawValue: row[ecgSamples.privateClassification])!,
+            averageHeartRate: heartRate,
+            startDate: startDate,
+            endDate: endDate,
+            uuid: .init(data: row[objects.uuid]!)!,
+            metadata: metadata,
+            device: device)
+    }
+
+    /**
+     Get the voltage measurements associated with an electrocardiogram.
+     - Parameter electrocardiogram: The electrocardiogram for which to get voltage measurements
+     - Returns: The voltage measurements in the electrocardiogram
+     */
+    public func voltageMeasurements(associatedWith electrocardiogram: Electrocardiogram) throws -> [HKQuantity] {
+        guard let payload = try ecgSamples.payload(for: electrocardiogram.dataId, in: database) else {
+            return []
+        }
+        return payload.inner.samples.map {
+            HKQuantity(unit: .voltUnit(with: .micro), doubleValue: Double($0))
+        }
+    }
+
     // MARK: Testing
 
     public convenience init(database: Connection) {
@@ -796,6 +856,7 @@ public final class HKDatabaseStore {
         try metadataValues.create(in: database)
         try metadataKeys.create(in: database)
         try locationSeriesData.create(references: dataSeries, in: database)
+        try ecgSamples.create(referencing: samples, in: database)
     }
 
     private func testActivityOverlap() throws {

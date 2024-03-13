@@ -16,6 +16,7 @@ This library may can be useful when the original health data is lost and has to 
 - [Workout routes / location samples](#workout-routes)
 - [User characteristics](#basic-user-characteristics-and-values)
 - [Correlations](#correlation-samples)
+- [ECG Samples](#ecg-samples)
 
 ### Not implemented
 
@@ -294,6 +295,31 @@ let savedWorkout: HKWorkout = try workout.insert(
     samples: heartRateSamples,
     route: locations)
 ```
+
+### ECG Samples
+
+Electrocardiogram samples can be accessed using:
+
+```swift
+let ecgs = try db.electrocardiograms(from: .distantPast, to: distantFuture)
+```
+
+The elements returned are `Electrocardiogram`s which is a custom type similar to ``HKElectrocardiogram`` and with largely the same properties.
+
+To get the associated voltage measurements:
+
+```swift
+let electrocardiogram: Electrocardiogram = ...
+let voltages = try db.voltageMeasurements(associatedWith: electrocardiogram)
+```
+
+The voltages are `HKQuantity`s with `Volt` units.
+
+In the database, electrocardiograms are stored in the `ecg_samples` table, which is also linked to the `samples` table via the `data_id` column.
+ECG Samples have the `data_type` 144.
+The samples have associated `voltage_payload` (SQLite `BLOB`), which is encoded using [protobuf](https://protobuf.dev).
+The concrete specification can be viewed in the [ECGVoltageData.proto](Sources/HKDatabase/Model/ECGVoltageData.proto) file.
+It contains an array of the voltage samples in microvolts, as well as the sampling frequency and an unknown property.
 
 ## Related projects and info
 
