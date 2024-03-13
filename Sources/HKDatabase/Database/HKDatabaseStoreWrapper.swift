@@ -191,6 +191,58 @@ extension HKDatabaseStoreWrapper: HKHealthStoreInterface {
             .mapAndJoin { try store.locations(in: $0) }
     }
 
+    /**
+     Get the statistics associated with a workout activity.
+     - Parameter workoutActivity: The activity of interest
+     - Returns: A dictionary with the available statistics for the quantity keys
+     */
+    public func statistics(associatedWith workoutActivity: HKWorkoutActivity) throws -> [HKQuantityType : Statistics] {
+        try store.statistics(associatedWith: workoutActivity)
+    }
+
+    /**
+     Get statistics associated with a workout activity.
+     - Parameter type: The type of statistic to select
+     - Parameter workoutActivity: The activity of interest
+     - Returns: The available statistics for the quantity
+     */
+    public func statistics<T>(for type: T.Type = T.self, associatedWith workoutActivity: HKWorkoutActivity) throws -> Statistics? where T: HKQuantitySampleContainer {
+        try store.statistics(T.quantityTypeIdentifier, associatedWith: workoutActivity, unit: T.defaultUnit)
+    }
+
+    /**
+     Get the average value for a statistic associated with a workout activity.
+     - Parameter type: The type of statistic to select
+     - Parameter workoutActivity: The activity of interest
+     - Returns: The average quantity
+     */
+    public func average<T>(for type: T.Type = T.self, associatedWith workoutActivity: HKWorkoutActivity) throws -> HKQuantity? where T: HKQuantitySampleContainer {
+        try store.statistics(T.quantityTypeIdentifier, associatedWith: workoutActivity, unit: T.defaultUnit)
+            .map { $0.average }
+    }
+
+    /**
+     Get the minimum value for a statistic associated with a workout activity.
+     - Parameter type: The type of statistic to select
+     - Parameter workoutActivity: The activity of interest
+     - Returns: The minimum quantity
+     */
+    public func minimum<T>(for type: T.Type = T.self, associatedWith workoutActivity: HKWorkoutActivity) throws -> HKQuantity? where T: HKQuantitySampleContainer {
+        try store.statistics(T.quantityTypeIdentifier, associatedWith: workoutActivity, unit: T.defaultUnit)
+            .map { $0.minimum }
+    }
+
+    /**
+     Get the maximum value for a statistic associated with a workout activity.
+     - Parameter type: The type of statistic to select
+     - Parameter workoutActivity: The activity of interest
+     - Returns: The maximum quantity
+     */
+    public func maximum<T>(for type: T.Type = T.self, associatedWith workoutActivity: HKWorkoutActivity) throws -> HKQuantity? where T: HKQuantitySampleContainer {
+        try store.statistics(T.quantityTypeIdentifier, associatedWith: workoutActivity, unit: T.defaultUnit)
+            .map { $0.maximum }
+    }
+
     // MARK: ECG Samples
 
     /**

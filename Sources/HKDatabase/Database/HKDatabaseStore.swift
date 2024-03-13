@@ -46,6 +46,8 @@ public final class HKDatabaseStore {
 
     private let metadataKeys = MetadataKeysTable()
 
+    private let workoutStatistics = WorkoutStatisticsTable()
+
     /**
      Open a Health database at the given url.
      */
@@ -771,6 +773,52 @@ public final class HKDatabaseStore {
     }
 
     /**
+     Get the statistics associated with a workout activity.
+     - Parameter workoutActivity: The activity of interest
+     - Returns: A dictionary with the available statistics for the quantity keys
+     */
+    public func statistics(associatedWith workoutActivity: HKWorkoutActivity) throws -> [HKQuantityType : Statistics] {
+        guard let uuid = workoutActivity.externalUUID?.data else {
+            throw HKNotSupportedError("No external UUID for workout activity")
+        }
+        let query = activities.table
+            .filter(activities.uuid == uuid)
+            .join(.leftOuter, workoutStatistics.table, on: workoutStatistics.workoutActivityId == activities.table[activities.rowId])
+
+        return try database.prepare(query).reduce(into: [:]) { dict, row in
+            guard let statistics = try? workoutStatistics.createStatistics(from: row) else {
+                return
+            }
+            dict[statistics.quantityType] = statistics
+        }
+    }
+
+    /**
+     Get statistics associated with a workout activity.
+     - Parameter type: The quantity type of interest
+     - Parameter workoutActivity: The activity of interest
+     - Returns: The available statistics for the quantity
+     */
+    public func statistics(_ type: HKQuantityTypeIdentifier, associatedWith workoutActivity: HKWorkoutActivity, unit: HKUnit? = nil) throws -> Statistics? {
+        guard let uuid = workoutActivity.externalUUID?.data else {
+            throw HKNotSupportedError("No external UUID for workout activity")
+        }
+        guard let sampleType = type.sampleType else {
+            throw HKNotSupportedError("Unsupported quantity type for statistics")
+        }
+        guard let unit = unit ?? type.defaultUnit else {
+            throw HKNotSupportedError("Unsupported quantity type for statistics")
+        }
+        let query = activities.table
+            .filter(activities.uuid == uuid)
+            .join(workoutStatistics.table, on: workoutStatistics.workoutActivityId == activities.table[activities.rowId])
+            .filter(workoutStatistics.table[workoutStatistics.dataType] == sampleType.rawValue)
+        return try database.pluck(query).map {
+            workoutStatistics.createStatistics(from: $0, type: .init(type), unit: unit)
+        }
+    }
+
+    /**
      Get the locations associated with a workout route.
      - Parameter route: The route for which locations are requested
      - Returns: The locations contained in the route
@@ -860,6 +908,7 @@ public final class HKDatabaseStore {
         try metadataValues.create(in: database)
         try metadataKeys.create(in: database)
         try locationSeriesData.create(references: dataSeries, in: database)
+        try workoutStatistics.create(referencing: activities, in: database)
         try ecgSamples.create(referencing: samples, in: database)
     }
 

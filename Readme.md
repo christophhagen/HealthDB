@@ -282,6 +282,33 @@ Both category and quantity samples can be requested.
 
 ### Workout statistics
 
+The database stores some statistics about workout activities in a separate table.
+
+```swift
+let workout: Workout = ...
+let activity = workout.workoutActivities.first!
+let statistics = try db.statistics(associatedWith: activity)
+let speed = statistics[.init(.runningSpeed)]
+```
+
+The resulting `Statistics` types are similar to `HKStatistics`, but with fewer properties (just `average`, `minimum` and `maximum`).
+Presumably HealthKit computes the other properties on the fly.
+
+It's also possible to get statistics of a specific type:
+
+```swift
+let workout: Workout = ...
+let activity = workout.workoutActivities.first!
+let speed = try db.statistics(for: RunningSpeed.self, associatedWith: activity)
+print(speed!.average)
+```
+
+Or, even quicker:
+
+```swift
+let minSpeed = try db.minimum(for: RunningSpeed.self, associatedWith: activity)
+```
+
 Statistics are stored in the `workout_statistics` table.
 They are linked to workout activities by `workout_activities.ROWID == workout_statistics.workout_activity_id`.
 
