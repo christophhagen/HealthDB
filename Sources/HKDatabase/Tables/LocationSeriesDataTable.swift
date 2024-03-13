@@ -43,13 +43,6 @@ struct LocationSeriesDataTable {
         return try database.prepare(query).map(location)
     }
 
-    func locationCount(from start: Date, to end: Date, in database: Connection) throws -> Int {
-        let startTime = start.timeIntervalSinceReferenceDate
-        let endTime = end.timeIntervalSinceReferenceDate
-        let query = table.filter(timestamp >= startTime && timestamp <= endTime).count
-        return try database.scalar(query)
-    }
-
     func location(row: Row) -> CLLocation {
         .init(
             coordinate: .init(

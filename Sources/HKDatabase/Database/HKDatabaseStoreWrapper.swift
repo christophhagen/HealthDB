@@ -187,8 +187,8 @@ extension HKDatabaseStoreWrapper: HKHealthStoreInterface {
      - Returns: The location samples associated with the workout
      */
     public func locations(associatedWith workout: Workout) throws -> [CLLocation] {
-        try store.locationSeries(associatedWith: workout)
-            .mapAndJoin { try store.locations(in: $0) }
+        try route(associatedWith: workout)
+            .map { try store.locations(associatedWith: $0) } ?? []
     }
 
     /**

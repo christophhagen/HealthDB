@@ -80,43 +80,6 @@ public final class HKDatabaseStore {
         try keyValueSecure.all(in: database)
     }
 
-    // MARK: Locations
-
-    public func locations(from start: Date, to end: Date) throws -> [CLLocation] {
-        try locationSeriesData.locations(from: start, to: end, in: database)
-    }
-
-    /**
-     Count the number of location samples in a date interval.
-     */
-    public func locationSampleCount(from start: Date, to end: Date) throws -> Int {
-        try locationSeriesData.locationCount(from: start, to: end, in: database)
-    }
-
-    /**
-     Query location series overlapping a date interval.
-     */
-    public func locationSeries(from start: Date, to end: Date) throws -> [LocationSeries] {
-        let query = samples.query(type: .dataSeries, from: start, to: end)
-        return try database.prepare(query).compactMap { row in
-            try dataSeries.select(dataId: row[samples.dataId], in: database)
-        }
-    }
-
-    /**
-     Get the locations associated with a location series.
-     */
-    public func locations(in series: LocationSeries) throws -> [CLLocation] {
-        try locationSeriesData.locations(for: series.hfdKey, in: database)
-    }
-
-    /**
-     Count the existing location samples for a location series.
-     */
-    func existingLocationSampleCount(for series: LocationSeries) throws -> Int {
-        try database.scalar(locationSeriesData.table.filter(locationSeriesData.seriesIdentifier == series.hfdKey).count)
-    }
-
     // MARK: Category Samples
 
     /**
@@ -731,14 +694,6 @@ public final class HKDatabaseStore {
     }
 
     /**
-     Get all location series associated with a workout.
-     */
-    public func locationSeries(associatedWith workout: Workout) throws -> [LocationSeries] {
-        try dataIds(associatedWith: workout.dataId, dataType: .dataSeries)
-            .compactMap { try dataSeries.select(dataId: $0, in: database) }
-    }
-
-    /**
      Get the route associated with a workout.
      - Parameter workout: The workout for which to select the route
      - Returns: The route associated with the workout, if available
@@ -771,6 +726,24 @@ public final class HKDatabaseStore {
                 metadata: metadata)
         }
     }
+
+    /**
+     Get the locations associated with a workout route.
+     - Parameter route: The route for which locations are requested
+     - Returns: The locations contained in the route
+     */
+    public func locations(associatedWith route: WorkoutRoute) throws -> [CLLocation] {
+        try locationSeriesData.locations(for: route.hfdKey, in: database)
+    }
+
+    /**
+     Get locations from workout routes.
+     */
+    public func locations(from start: Date = .distantPast, to end: Date = .distantFuture) throws -> [CLLocation] {
+        try locationSeriesData.locations(from: start, to: end, in: database)
+    }
+
+    // MARK: Workout statistics
 
     /**
      Get the statistics associated with a workout activity.
@@ -816,15 +789,6 @@ public final class HKDatabaseStore {
         return try database.pluck(query).map {
             workoutStatistics.createStatistics(from: $0, type: .init(type), unit: unit)
         }
-    }
-
-    /**
-     Get the locations associated with a workout route.
-     - Parameter route: The route for which locations are requested
-     - Returns: The locations contained in the route
-     */
-    public func locations(associatedWith route: WorkoutRoute) throws -> [CLLocation] {
-        try locationSeriesData.locations(for: route.hfdKey, in: database)
     }
 
     // MARK: ECG Samples

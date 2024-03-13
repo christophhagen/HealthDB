@@ -20,17 +20,4 @@ struct DataSeriesTable {
     let hfdKey = Expression<Int>("hfd_key")
 
     let seriesLocation = Expression<Int>("series_location")
-
-    func select(dataId id: Int, in database: Connection) throws -> LocationSeries? {
-        let query = table.filter(dataId == id)
-        return try database.pluck(query).map { row in
-                .init(
-                    dataId: row[dataId],
-                    isFrozen: row[frozen],
-                    sampleCount: row[count],
-                    insertionEra: row[insertionEra],
-                    hfdKey: row[hfdKey],
-                    seriesLocation: row[seriesLocation])
-        }
-    }
 }
