@@ -64,47 +64,6 @@ struct WorkoutActivitiesTable {
         try database.prepare(table.filter(ownerId == workoutId)).map(activity)
     }
 
-    private func testQuantity() -> HKQuantitySample {
-        let quantity = HKQuantity(unit: .count(), doubleValue: 2)
-        let id = HKQuantityTypeIdentifier.flightsClimbed
-        return HKQuantitySample(
-            type: HKQuantityType(id),
-            quantity: quantity,
-            start: Date.now,
-            end: Date.now,
-            device: HKDevice.local(),
-            metadata: [String : Any]())
-    }
-
-    private func bloodPressure(systolic systolicValue: Double, diastolic diastolicValue: Double) -> HKCorrelation {
-        let unit = HKUnit.millimeterOfMercury()
-
-        let systolicQuantity = HKQuantity(unit: unit, doubleValue: systolicValue)
-        let diastolicQuantity = HKQuantity(unit: unit, doubleValue: diastolicValue)
-
-        let systolicType = HKQuantityType.quantityType(forIdentifier: .bloodPressureSystolic)!
-        let diastolicType = HKQuantityType.quantityType(forIdentifier: .bloodPressureDiastolic)!
-
-        let nowDate = Date()
-        let systolicSample = HKQuantitySample(type: systolicType, quantity: systolicQuantity, start: nowDate, end: nowDate)
-        let diastolicSample = HKQuantitySample(type: diastolicType, quantity: diastolicQuantity, start: nowDate, end: nowDate)
-
-        let objects: Set<HKSample> = [systolicSample, diastolicSample]
-        let type = HKObjectType.correlationType(forIdentifier: .bloodPressure)!
-        return HKCorrelation(type: type, start: nowDate, end: nowDate, objects: objects)
-    }
-
-    private func testCategory() -> HKCategorySample {
-        let id = HKCategoryTypeIdentifier.abdominalCramps
-        return HKCategorySample(
-            type: HKCategoryType(id),
-            value: HKCategoryValueSeverity.moderate.rawValue,
-            start: Date.now, 
-            end: Date.now,
-            device: HKDevice.local(),
-            metadata: [String : Any]())
-    }
-
     func create(referencing workouts: WorkoutsTable, in database: Connection) throws {
         try database.execute("CREATE TABLE workout_activities (ROWID INTEGER PRIMARY KEY AUTOINCREMENT, uuid BLOB UNIQUE NOT NULL, owner_id INTEGER NOT NULL REFERENCES workouts(data_id) ON DELETE CASCADE, is_primary_activity INTEGER NOT NULL, activity_type INTEGER NOT NULL, location_type INTEGER NOT NULL, swimming_location_type INTEGER NOT NULL, lap_length BLOB, start_date REAL NOT NULL, end_date REAL NOT NULL, duration REAL NOT NULL, metadata BLOB)")
         /*
