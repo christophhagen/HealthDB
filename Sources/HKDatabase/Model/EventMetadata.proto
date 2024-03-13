@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+// Wrapper for workout event metadata
+message WorkoutEventMetadata {
+
+  // All metadata elements
+  repeated Element elements = 1;
+
+  message Element {
+
+    string key = 1;
+
+    optional uint64 unsignedValue = 4;
+
+    Quantity quantity = 6;
+
+    message Quantity {
+
+      double value = 1;
+
+      string unit = 2;
+    }
+  }
+}
