@@ -123,6 +123,25 @@ extension HKDatabaseStoreWrapper: HKHealthStoreInterface {
     // MARK: Managing workouts
 
     /**
+     All workouts in the database, regardless of type.
+     - Parameter start: The start of the date range of interest
+     - Parameter end: The end of the date range of interest
+     */
+    public func workouts(from start: Date = .distantPast, to end: Date = .distantFuture) throws -> [Workout] {
+        try store.workouts(from: start, to: end)
+    }
+
+    /**
+     All workouts with the given activity type.
+     - Parameter type: The activity type of interest
+     - Parameter start: The start of the date range of interest
+     - Parameter end: The end of the date range of interest
+     */
+    public func workouts(type: HKWorkoutActivityType, from start: Date = .distantPast, to end: Date = .distantFuture) throws -> [Workout] {
+        try store.workouts(type: type, from: start, to: end)
+    }
+
+    /**
      Get all category samples of a single type associated with a workout.
      - Parameter type: The type of category samples to retrieve
      - Parameter workout: The workout for which to get the samples

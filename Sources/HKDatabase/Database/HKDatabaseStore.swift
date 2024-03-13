@@ -630,45 +630,49 @@ public final class HKDatabaseStore {
 
     // MARK: Workouts
 
-    public func workouts(from start: Date, to end: Date) throws -> [Workout] {
-        let startTime = end.timeIntervalSinceReferenceDate
+    /**
+     All workouts in the database, regardless of type.
+     - Parameter start: The start of the date range of interest
+     - Parameter end: The end of the date range of interest
+     */
+    public func workouts(from start: Date = .distantPast, to end: Date = .distantFuture) throws -> [Workout] {
+        let startTime = start.timeIntervalSinceReferenceDate
         let endTime = end.timeIntervalSinceReferenceDate
 
         let query = workouts.table
-            .join(samples.table, on: workouts.table[workouts.dataId] == samples.table[samples.dataId])
-            .filter(samples.table[samples.startDate] >= endTime && samples.table[samples.endDate] >= startTime)
+            .join(.leftOuter, samples.table, on: workouts.table[workouts.dataId] == samples.table[samples.dataId])
+            .filter(samples.table[samples.startDate] <= endTime && 
+                    samples.table[samples.endDate] >= startTime)
         return try database.prepare(query).map(createWorkout)
     }
 
-    public func workouts(type: HKWorkoutActivityType, from start: Date, to end: Date) throws -> [Workout] {
-        let startTime = end.timeIntervalSinceReferenceDate
+    /**
+     All workouts with the given activity type.
+     - Parameter type: The activity type of interest
+     - Parameter start: The start of the date range of interest
+     - Parameter end: The end of the date range of interest
+     */
+    public func workouts(type: HKWorkoutActivityType, from start: Date = .distantPast, to end: Date = .distantFuture) throws -> [Workout] {
+        let startTime = start.timeIntervalSinceReferenceDate
         let endTime = end.timeIntervalSinceReferenceDate
         let typeId = Int(type.rawValue)
 
+        // Select only workouts where the primary activity has the correct type
         let query = workouts.table
-            .join(samples.table, on: workouts.table[workouts.dataId] == samples.table[samples.dataId])
-            .filter(samples.table[samples.startDate] >= endTime && samples.table[samples.endDate] >= startTime)
+            .join(.leftOuter, samples.table, on: workouts.table[workouts.dataId] == samples.table[samples.dataId])
+            .filter(samples.table[samples.startDate] <= endTime &&
+                    samples.table[samples.endDate] >= startTime)
+            .join(.leftOuter, activities.table, on: workouts.table[workouts.dataId] == activities.table[activities.ownerId])
+            .filter(activities.table[activities.activityType] == typeId &&
+                    activities.table[activities.isPrimaryActivity] == true)
         return try database.prepare(query)
-            .filter { row in
-                let dataId = row[workouts.table[workouts.dataId]]
-                let hasActivityTypeQuery = activities.table
-                    .filter(activities.ownerId == dataId)
-                    .filter(activities.activityType == typeId)
-                return try database.pluck(hasActivityTypeQuery) != nil
-            }
             .map(createWorkout)
-    }
-
-    public func allWorkouts() throws -> [Workout] {
-        let query = workouts.table
-            .join(samples.table, on: workouts.table[workouts.dataId] == samples.table[samples.dataId])
-        return try database.prepare(query).map(createWorkout)
     }
 
     private func createWorkout(from row: Row) throws -> Workout {
         let dataId = row[workouts.table[workouts.dataId]]
-        let start = Date(timeIntervalSinceReferenceDate: row[samples.startDate])
-        let end = Date(timeIntervalSinceReferenceDate: row[samples.endDate])
+        let start = Date(timeIntervalSinceReferenceDate: row[samples.table[samples.startDate]])
+        let end = Date(timeIntervalSinceReferenceDate: row[samples.table[samples.endDate]])
 
         let events = try events.events(for: dataId, in: database)
         let activities = try activities.activities(for: dataId, in: database)
@@ -857,21 +861,6 @@ public final class HKDatabaseStore {
         try metadataKeys.create(in: database)
         try locationSeriesData.create(references: dataSeries, in: database)
         try ecgSamples.create(referencing: samples, in: database)
-    }
-
-    private func testActivityOverlap() throws {
-        let workouts = try allWorkouts()
-        let activities = workouts.map { $0.workoutActivities }.joined().sorted()
-        var current = activities.first!
-        for next in activities.dropFirst() {
-            let overlap = next.startDate.timeIntervalSince(current.currentEndDate)
-            if overlap < 0 {
-                print("Overlap \(-overlap.roundedInt) s:")
-                print("    Activity \(current.workoutConfiguration.activityType): \(current.startDate) -> \(current.currentEndDate)")
-                print("    Activity \(next.workoutConfiguration.activityType): \(next.startDate) -> \(next.currentEndDate)")
-            }
-            current = next
-        }
     }
 
     func insert(workout: Workout, into store: HKHealthStore) async throws -> HKWorkout? {

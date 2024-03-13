@@ -27,6 +27,7 @@ This library may can be useful when the original health data is lost and has to 
 - Several metadata fields
 - Inserting most data
 - Achievements
+- Workout goals (Only duration)
 
 ### Caveats
 
@@ -236,6 +237,7 @@ Workouts can be queried from the database similar to other samples:
 
 ```swift
 let workouts = try db.workouts(from: .distantPast, to: .now)
+let runs = try db.workouts(type: .running)
 ```
 
 `HealthKit` doesn't allow the creation of `HKWorkout`s outside of the `HKHealthStore`, so this framework uses it's own `Workout` type.
