@@ -3,7 +3,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "iOSHealthDBInterface",
+    name: "HealthDB",
     platforms: [.iOS(.v16), .macOS(.v13), .watchOS(.v9)],
     products: [
         .library(
