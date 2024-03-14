@@ -80,6 +80,23 @@ public final class HKDatabaseStore {
         try keyValueSecure.all(in: database)
     }
 
+    // MARK: Objects
+
+    /**
+     Extract common object properties from a row.
+     */
+    private func objectData(from row: Row) throws -> (dataId: Int, startDate: Date, endDate: Date, uuid: UUID, device: HKDevice?, metadata: [String : Any]) {
+        let dataId = row[samples.table[samples.dataId]]
+        let startDate = Date(timeIntervalSinceReferenceDate: row[samples.startDate])
+        let endDate = Date(timeIntervalSinceReferenceDate: row[samples.endDate])
+        let dataProvenance = row[objects.provenance]
+        let uuid = UUID(data: row[objects.uuid]!)!
+        let device = try dataProvenances.device(for: dataProvenance, in: database)
+        var metadata = try metadata(for: dataId)
+        metadata[HKMetadataKeyExternalUUID] = uuid.uuidString
+        return (dataId, startDate, endDate, uuid, device, metadata)
+    }
+
     // MARK: Category Samples
 
     /**
@@ -117,7 +134,6 @@ public final class HKDatabaseStore {
             .filter(samples.table[samples.dataId] == dataId)
     }
 
-    #warning("Add UUID to all samples using this query")
     private var categorySampleQuery: Table {
         samples.table
             .select(samples.table[*],
@@ -134,19 +150,14 @@ public final class HKDatabaseStore {
         guard let value = row[categorySamples.value] else {
             return nil
         }
-        let dataId = row[samples.table[samples.dataId]]
-        let startDate = Date(timeIntervalSinceReferenceDate: row[samples.startDate])
-        let endDate = Date(timeIntervalSinceReferenceDate: row[samples.endDate])
-        let dataProvenance = row[objects.provenance]
-        let device: HKDevice? = try dataProvenances.device(for: dataProvenance, in: database)
-        let metadata = try metadata(for: dataId)
+        let object = try objectData(from: row)
         return HKCategorySample(
             type: .init(category),
             value: value,
-            start: startDate,
-            end: endDate,
-            device: device,
-            metadata: metadata)
+            start: object.startDate,
+            end: object.endDate,
+            device: object.device,
+            metadata: object.metadata)
     }
 
     /**
@@ -167,27 +178,18 @@ public final class HKDatabaseStore {
     public func categories(rawType: Int, from start: Date = .distantPast, to end: Date = .distantFuture) throws -> [RawCategory] {
         let selection = query(rawCategory: rawType, from: start, to: end)
         return try database.prepare(selection).compactMap { row -> RawCategory? in
-            let dataId = row[samples.table[samples.dataId]]
-            let dataProvenance = row[objects.provenance]
-            #warning("Extract common properties into function")
-            let uuid = UUID(data: row[objects.uuid]!)!
-
-            let device: HKDevice? = try dataProvenances.device(for: dataProvenance, in: database)
-            let metadata = try metadata(for: dataId)
-
-            let startDate = Date(timeIntervalSinceReferenceDate: row[samples.startDate])
-            let endDate = Date(timeIntervalSinceReferenceDate: row[samples.endDate])
             guard let value = row[categorySamples.value] else {
                 //print("Category (\(rawType)) sample \(dataId): No value, ignoring")
                 return nil
             }
+            let object = try objectData(from: row)
             return .init(
-                startDate: startDate,
-                endDate: endDate,
+                startDate: object.startDate,
+                endDate: object.endDate,
                 category: value,
-                uuid: uuid,
-                metadata: metadata,
-                device: device)
+                uuid: object.uuid,
+                metadata: object.metadata,
+                device: object.device)
         }
     }
 
@@ -242,26 +244,18 @@ public final class HKDatabaseStore {
     public func quantities(rawType: Int, from start: Date = .distantPast, to end: Date = .distantFuture) throws -> [RawQuantity] {
         let selection = query(rawQuantity: rawType, from: start, to: end)
         return try database.prepare(selection).compactMap { row -> RawQuantity? in
-            let dataId = row[samples.table[samples.dataId]]
-            let dataProvenance = row[objects.provenance]
-            let uuid = UUID(data: row[objects.uuid]!)!
-
-            let device: HKDevice? = try dataProvenances.device(for: dataProvenance, in: database)
-            let metadata = try metadata(for: dataId)
-
-            let startDate = Date(timeIntervalSinceReferenceDate: row[samples.startDate])
-            let endDate = Date(timeIntervalSinceReferenceDate: row[samples.endDate])
             guard let value = row[quantitySamples.quantity] else {
                 //print("\(quantity) sample \(dataId): No value, ignoring")
                 return nil
             }
+            let object = try objectData(from: row)
             return .init(
-                startDate: startDate,
-                endDate: endDate,
+                startDate: object.startDate,
+                endDate: object.endDate,
                 quantity: value,
-                uuid: uuid,
-                metadata: metadata,
-                device: device)
+                uuid: object.uuid,
+                metadata: object.metadata,
+                device: object.device)
         }
     }
 
@@ -284,7 +278,6 @@ public final class HKDatabaseStore {
         quantitySampleQuery.filter(samples.table[samples.dataId] == dataId)
     }
 
-    #warning("Add UUID to all samples using this query")
     private var quantitySampleQuery: Table {
         samples.table
             .select(samples.table[*],
@@ -298,25 +291,18 @@ public final class HKDatabaseStore {
     }
 
     private func sample(from row: Row, quantity: HKQuantityTypeIdentifier, unit: HKUnit) throws -> HKQuantitySample? {
-        let dataId = row[samples.table[samples.dataId]]
-        let dataProvenance = row[objects.provenance]
-
-        let device: HKDevice? = try dataProvenances.device(for: dataProvenance, in: database)
-        let metadata = try metadata(for: dataId)
-
-        let startDate = Date(timeIntervalSinceReferenceDate: row[samples.startDate])
-        let endDate = Date(timeIntervalSinceReferenceDate: row[samples.endDate])
         guard let value = row[quantitySamples.quantity] else {
             //print("\(quantity) sample \(dataId): No value, ignoring")
             return nil
         }
+        let object = try objectData(from: row)
         return HKQuantitySample(
             type: .init(quantity),
             quantity: HKQuantity(unit: unit, doubleValue: value),
-            start: startDate,
-            end: endDate,
-            device: device,
-            metadata: metadata)
+            start: object.startDate,
+            end: object.endDate,
+            device: object.device,
+            metadata: object.metadata)
     }
 
     // MARK: Quantity series
@@ -415,6 +401,10 @@ public final class HKDatabaseStore {
             guard let series = try quantitySampleSeries.select(dataId: dataId, in: database) else {
                 return [sample]
             }
+
+            var metadata = sample.metadata
+            metadata?[HKMetadataKeyExternalUUID] = nil
+
             // Add device and metadata of the original sample to all series entries
             return try quantitySeriesData
                 .quantities(for: series.hfdKey, in: database)
@@ -426,7 +416,7 @@ public final class HKDatabaseStore {
                         start: $0.start,
                         end: $0.end,
                         device: sample.device,
-                        metadata: sample.metadata)
+                        metadata: metadata)
                 }
         }
     }
@@ -440,7 +430,8 @@ public final class HKDatabaseStore {
 
         let query = samples.table
             .select(samples.table[*],
-                    objects.table[objects.provenance])
+                    objects.table[objects.provenance],
+                    objects.table[objects.uuid])
             .filter(samples.dataType == sampleType.rawValue)
             .join(.leftOuter, objects.table, on: samples.table[samples.dataId] == objects.table[objects.dataId])
 
@@ -448,21 +439,15 @@ public final class HKDatabaseStore {
     }
 
     private func sample(from row: Row, correlation: HKCorrelationTypeIdentifier) throws -> HKCorrelation {
-        let dataId = row[samples.table[samples.dataId]]
-        let startDate = Date(timeIntervalSinceReferenceDate: row[samples.startDate])
-        let endDate = Date(timeIntervalSinceReferenceDate: row[samples.endDate])
-        let dataProvenance = row[objects.provenance]
-        let device: HKDevice? = try dataProvenances.device(for: dataProvenance, in: database)
-        let metadata = try metadata(for: dataId)
-        let objects = try correlatedObjects(for: dataId)
-
+        let object = try objectData(from: row)
+        let objects = try correlatedObjects(for: object.dataId)
         return HKCorrelation(
             type: .init(correlation),
-            start: startDate,
-            end: endDate,
+            start: object.startDate,
+            end: object.endDate,
             objects: Set(objects),
-            device: device,
-            metadata: metadata)
+            device: object.device,
+            metadata: object.metadata)
     }
 
     private func correlatedObjects(for dataId: Int) throws -> [HKSample] {
@@ -514,6 +499,10 @@ public final class HKDatabaseStore {
             guard let series = try quantitySampleSeries.select(dataId: dataId, in: database) else {
                 return [sample]
             }
+
+            var metadata = sample.metadata
+            metadata?[HKMetadataKeyExternalUUID] = nil
+
             // Add device and metadata of the original sample to all series entries
             return try quantitySeriesData.quantities(for: series.hfdKey, in: database)
                 .map {
@@ -523,7 +512,7 @@ public final class HKDatabaseStore {
                         start: $0.start,
                         end: $0.end,
                         device: sample.device,
-                        metadata: sample.metadata)
+                        metadata: metadata)
                 }
         }
     }
@@ -673,24 +662,19 @@ public final class HKDatabaseStore {
     }
 
     private func workout(from row: Row) throws -> Workout {
-        let dataId = row[workouts.table[workouts.dataId]]
-        let start = Date(timeIntervalSinceReferenceDate: row[samples.table[samples.startDate]])
-        let end = Date(timeIntervalSinceReferenceDate: row[samples.table[samples.endDate]])
-
-        let events = try workoutEvents.events(for: dataId, in: database)
-        let activities = try workoutActivities.activities(for: dataId, in: database)
-        let metadata = try metadata(for: dataId)
-        // TODO: Add workout statistics
+        let object = try objectData(from: row)
+        let events = try workoutEvents.events(for: object.dataId, in: database)
+        let activities = try workoutActivities.activities(for: object.dataId, in: database)
         return .init(
-            dataId: dataId,
-            startDate: start,
-            endDate: end,
+            dataId: object.dataId,
+            startDate: object.startDate,
+            endDate: object.endDate,
             totalDistance: row[workouts.totalDistance],
             goalType: row[workouts.goalType],
             goal:  row[workouts.goal],
             events: events,
             activities: activities,
-            metadata: metadata)
+            metadata: object.metadata)
     }
 
     public func insert(workout: Workout) throws {
@@ -744,24 +728,19 @@ public final class HKDatabaseStore {
             .join(dataSeries.table, on: dataSeries.table[dataSeries.dataId] == samples.table[samples.dataId])
 
         return try database.pluck(query).map { row in
-            let dataId = row[samples.table[samples.dataId]]
-            let startDate = Date(timeIntervalSinceReferenceDate: row[samples.startDate])
-            let endDate = Date(timeIntervalSinceReferenceDate: row[samples.endDate])
-            let dataProvenance = row[objects.provenance]
-            let device = try dataProvenances.device(for: dataProvenance, in: database)
-            let metadata = try metadata(for: dataId)
+            let object = try objectData(from: row)
             return WorkoutRoute(
-                dataId: dataId,
+                dataId: object.dataId,
                 isFrozen: row[dataSeries.frozen],
                 count: row[dataSeries.count],
                 insertionEra: row[dataSeries.insertionEra],
                 hfdKey: row[dataSeries.hfdKey],
                 seriesLocation: row[dataSeries.seriesLocation],
-                startDate: startDate,
-                endDate: endDate,
+                startDate: object.startDate,
+                endDate: object.endDate,
                 uuid: .init(data: row[objects.uuid]!)!,
-                device: device,
-                metadata: metadata)
+                device: object.device,
+                metadata: object.metadata)
         }
     }
 
@@ -848,29 +827,24 @@ public final class HKDatabaseStore {
     }
 
     private func createElectrocardiogram(from row: Row) throws -> Electrocardiogram {
-        let dataId = row[samples.table[samples.dataId]]
-        let startDate = Date(timeIntervalSinceReferenceDate: row[samples.startDate])
-        let endDate = Date(timeIntervalSinceReferenceDate: row[samples.endDate])
-        let dataProvenance = row[objects.provenance]
-        let device = try dataProvenances.device(for: dataProvenance, in: database)
-        let metadata = try metadata(for: dataId)
-        let data = try ecgSamples.payload(for: dataId, in: database)
+        let object = try objectData(from: row)
+        let data = try ecgSamples.payload(for: object.dataId, in: database)
         let frequency = (data?.samplingFrequency).map { HKQuantity(unit: .hertz(), doubleValue: $0) }
         let heartRate = row[ecgSamples.averageHeartRate]
             .map { HKQuantity(unit: .count().unitDivided(by: .minute()), doubleValue: $0) }
 
         return Electrocardiogram(
-            dataId: dataId,
+            dataId: object.dataId,
             symptomsStatus: .init(rawValue: row[ecgSamples.symptomsStatus])!,
             samplingFrequency: frequency,
             numberOfVoltageMeasurements: data?.inner.samples.count ?? 0,
             classification: .init(rawValue: row[ecgSamples.privateClassification])!,
             averageHeartRate: heartRate,
-            startDate: startDate,
-            endDate: endDate,
-            uuid: .init(data: row[objects.uuid]!)!,
-            metadata: metadata,
-            device: device)
+            startDate: object.startDate,
+            endDate: object.endDate,
+            uuid: object.uuid,
+            metadata: object.metadata,
+            device: object.device)
     }
 
     /**

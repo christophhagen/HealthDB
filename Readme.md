@@ -204,7 +204,7 @@ There are many sample tables in the database, and all appear to be linked by the
 |---|---|
 `account_owner_samples` | ❌
 `allergy_record_samples` | ❌
-`binary_samples` | ❌
+`binary_samples` | ❌ [Note](#binary-samples)
 `category_samples` | ✅
 `clinical_note_record_samples` | ❌
 `clinical_record_samples` | ❌
