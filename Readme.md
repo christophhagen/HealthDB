@@ -131,6 +131,9 @@ let samples: [BodyMass] = try db.samples(from: .distantPast, to: .now)
 The functions will fail with a `HKNotSupportedError` if the internal `SampleType` identifier is not known.
 The value in the database is interpreted according to the default unit of each sample type.
 
+**Note** The database may contain quantity samples without an associated value (no entry in `quantity_samples`). These appear to be left over from past database migrations, since the samples are usually found as part of a [quantity series](#quantity-sample-series).
+These samples are therefore skipped.
+
 The following types are currently unsupported:
 
 CyclingCadence, CyclingFunctionalThresholdPower, CyclingFunctionalThresholdPower, CyclingPower, CyclingSpeed, PhysicalEffort, AppleSleepingWristTemperature, AppleExerciseTime, AppleMoveTime, AppleStandTime, NikeFuel, AtrialFibrillationBurden, Vo2Max, WalkingHeartRateAverage, AppleWalkingSteadiness, WalkingAsymmetryPercentage, WalkingDoubleSupportPercentage, WalkingDoubleSupportPercentage, WalkingSpeed, WalkingStepLength, BloodAlcoholContent, TimeInDaylight
