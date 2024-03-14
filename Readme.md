@@ -84,7 +84,9 @@ Internally, they are stored in the `key_value_secure` table.
 
 ## Samples
 
-Samples are separated into different types.
+Samples are separated into different types, similar to the `HealthKit` types `HKCategorySample`, `HKQuantitySample`, `HKCorrelationSample`, etc.
+
+**Note** All samples returned from the database have their original `UUID` set as a metadata property using the `HKMetadataKeyExternalUUID`. Original metadata with the same key is discarded.
 
 In the database, the initial entry point is always the `samples` table. It contains the date interval and the data type.
 This type then determines where the additional data is stored.
