@@ -1,11 +1,17 @@
-# iOS HealthDB Interface
+# iOS Health Database Interface
 
-A Swift interface to access health records of `healthdb.sqlite` files which have been recovered from iOS backups.
+A Swift interface to access health records of `healthdb_secure.sqlite` files which have been recovered from iOS backups.
 
-This library is a reverse-engineering effort to reconstruct Health data and allowing to access the SQLite database in a similar way to the actual `HKHealthStore` on iOS.
-This library may can be useful when the original health data is lost and has to be recovered from a backup, or when a sample database is needed for testing.
+This library is a reverse-engineering effort to reconstruct Health data from the SQLite database contained in an iOS Backup.
+This library may can be useful when the original health data is lost and has to be recovered, or when a sample database is needed for testing.
+And in general, it can be quite interesting to see the amount of data stored in Health.
 
 ## Working features
+
+The framework allows access to a large part of the health records, but not all data types are fully supported.
+New features may be added in the future, but there is also a chance that future updates may change the database layout and break a few things.
+
+The following feature list refers to databases recovered with iOS 16 and iOS 17.
 
 | Feature | Status | Comment |
 |---|---|---|
