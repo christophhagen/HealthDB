@@ -10,8 +10,8 @@ This library may can be useful when the original health data is lost and has to 
 | Feature | Status | Comment |
 |---|---|---|
 [Category samples](#category-samples) | ✅ | 55/65 types supported |
-[Quantity samples](#quantity-samples) | ✅ | 90/112 types supported |
-[Quantity series](#quantity-sample-series) | ✅ | 90/112 types supported |
+[Quantity samples](#quantity-samples) | ✅ | 109/112 types supported |
+[Quantity series](#quantity-sample-series) | ✅ | 109/112 types supported |
 [Workouts](#workouts) | ✅ 
 [Workout activities](#workouts) | ✅ 
 [Workout events](#workouts) | ✅ 
@@ -134,9 +134,7 @@ The value in the database is interpreted according to the default unit of each s
 **Note** The database may contain quantity samples without an associated value (no entry in `quantity_samples`). These appear to be left over from past database migrations, since the samples are usually found as part of a [quantity series](#quantity-sample-series).
 These samples are therefore skipped.
 
-The following types are currently unsupported:
-
-CyclingCadence, CyclingFunctionalThresholdPower, CyclingFunctionalThresholdPower, CyclingPower, CyclingSpeed, PhysicalEffort, AppleSleepingWristTemperature, AppleExerciseTime, AppleMoveTime, AppleStandTime, NikeFuel, AtrialFibrillationBurden, Vo2Max, WalkingHeartRateAverage, AppleWalkingSteadiness, WalkingAsymmetryPercentage, WalkingDoubleSupportPercentage, WalkingDoubleSupportPercentage, WalkingSpeed, WalkingStepLength, BloodAlcoholContent, TimeInDaylight
+The following types are currently unsupported: `AppleSleepingWristTemperature`, `AppleMoveTime`, `NikeFuel`
 
 To access unknown samples:
 

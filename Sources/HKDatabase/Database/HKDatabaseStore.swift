@@ -177,6 +177,45 @@ public final class HKDatabaseStore {
         }
     }
 
+    /**
+     Get quantity values for an unknown type.
+
+     Use this function to parse quantity samples where the ``HKQuantityType`` is not known.
+     */
+    public func quantities(rawType: Int, from start: Date = .distantPast, to end: Date = .distantFuture) throws -> [RawQuantity] {
+        let selection = query(rawQuantity: rawType, from: start, to: end)
+        return try database.prepare(selection).compactMap { row -> RawQuantity? in
+            let dataId = row[samples.table[samples.dataId]]
+            let dataProvenance = row[objects.provenance]
+            let uuid = UUID(data: row[objects.uuid]!)!
+
+            let device: HKDevice? = try dataProvenances.device(for: dataProvenance, in: database)
+            let metadata = try metadata(for: dataId)
+
+            let startDate = Date(timeIntervalSinceReferenceDate: row[samples.startDate])
+            let endDate = Date(timeIntervalSinceReferenceDate: row[samples.endDate])
+            guard let value = row[quantitySamples.quantity] else {
+                //print("\(quantity) sample \(dataId): No value, ignoring")
+                return nil
+            }
+            return .init(
+                startDate: startDate,
+                endDate: endDate,
+                quantity: value,
+                uuid: uuid,
+                metadata: metadata,
+                device: device)
+        }
+    }
+
+    public func unknownRawSampleTypes() throws -> Set<Int> {
+        let query = samples.table.select(samples.dataType.distinct)
+        let unknown = try database.prepare(query)
+            .map { $0[samples.dataType.distinct] }
+            .filter { SampleType(rawValue: $0) == nil }
+        return Set(unknown)
+    }
+
     private func query(rawQuantity: Int, from start: Date, to end: Date) -> Table {
         quantitySampleQuery
             .filter(samples.table[samples.dataType] == rawQuantity &&
@@ -192,6 +231,7 @@ public final class HKDatabaseStore {
         samples.table
             .select(samples.table[*],
                     objects.table[objects.provenance],
+                    objects.table[objects.uuid],
                     quantitySamples.table[*])
             .join(.leftOuter, objects.table, 
                   on: samples.table[samples.dataId] == objects.table[objects.dataId])
