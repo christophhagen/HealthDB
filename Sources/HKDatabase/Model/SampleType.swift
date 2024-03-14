@@ -7,7 +7,7 @@ import Foundation
 
  In the SQLite database, it is stored as an integer.
  */
-public enum SampleType: Int {
+public enum SampleType: Int, CaseIterable {
 
     /**
      Body Mass Index
@@ -84,7 +84,7 @@ public enum SampleType: Int {
 
      Raw value: 12
      */
-    case flightsClimbed = 11
+    case flightsClimbed = 12
 
     /**
      Oxygen Saturation
@@ -113,6 +113,13 @@ public enum SampleType: Int {
      Raw value: 17
      */
     case bloodPressureDiastolic = 17
+
+    /**
+     Blood Alcohol Content
+
+     Raw value: 18
+     */
+    case bloodAlcoholContent = 18
 
     /**
      Peripheral Perfusion Index
@@ -430,13 +437,6 @@ public enum SampleType: Int {
     case weeklyCalorieGoal = 67
 
     /**
-     Watch On
-
-     Raw value: 70
-     */
-    case watchOn = 70
-
-    /**
      Forced Vital Capacity
 
      Raw value: 71
@@ -458,18 +458,20 @@ public enum SampleType: Int {
     case peakExpiratoryFlowRate = 73
 
     /**
-     Stand Minutes
+     Exercise Time
 
      Raw value: 75
      */
-    case standMinutes = 75
+    case appleExerciseTime = 75
 
     /**
      Activity
 
+     - Note: Possibly no longer in use
+
      Raw value: 76
      */
-    case activity = 76
+    //case activity = 76
 
     /**
      Dietary Caffeine
@@ -574,7 +576,21 @@ public enum SampleType: Int {
 
      Raw value: 102
      */
-    case dataSeries = 102
+    case workoutRoute = 102
+
+    /**
+     Stand Hour Goal
+
+     Raw value: 104
+     */
+    case standHourGoal = 104
+
+    /**
+     Exercise Minutes Goal
+
+     Raw value: 105
+     */
+    case exerciseMinutesGoal = 105
 
     /**
      Swimming Distance
@@ -623,7 +639,7 @@ public enum SampleType: Int {
 
      Raw value: 124
      */
-    case vO2Max = 124
+    case vo2Max = 124
 
     /**
      Insulin Delivery
@@ -631,6 +647,13 @@ public enum SampleType: Int {
      Raw value: 125
      */
     case insulinDelivery = 125
+
+    /**
+     Walking Heart Rate Average
+
+     Raw value: 137
+     */
+    case walkingHeartRateAverage = 137
 
     /**
      Snow Sports Downhill Distance
@@ -780,11 +803,39 @@ public enum SampleType: Int {
     case headphoneAudioExposureEvent = 173
 
     /**
+     Walking Double Support Percentage
+
+     Raw value: 182
+     */
+    case walkingDoubleSupportPercentage = 182
+
+    /**
      Six Minute Walk Test Distance
 
      Raw value: 183
      */
     case sixMinuteWalkTestDistance = 183
+
+    /**
+     Apple Stand Minutes
+
+     Raw value: 186
+     */
+    case appleStandTime = 186
+
+    /**
+     Walking Speed
+
+     Raw value: 187
+     */
+    case walkingSpeed = 187
+
+    /**
+     Walking Step Length
+
+     Raw value: 188
+     */
+    case walkingStepLength = 188
 
     /**
      Toothbrushing Event
@@ -813,6 +864,13 @@ public enum SampleType: Int {
      Raw value: 193
      */
     case contraceptive = 193
+
+    /**
+     Walking Asymmetry Percentage
+
+     Raw value: 194
+     */
+    case walkingAsymmetryPercentage = 194
 
     /**
      Stair Ascent Speed
@@ -1020,6 +1078,19 @@ public enum SampleType: Int {
     case pregnancyTestResult = 243
 
     /**
+     Atrial Fibrillation Burden
+
+     Raw value: 248
+     */
+    case atrialFibrillationBurden = 248
+
+    /**
+     Apple Walking Steadiness
+
+     Raw value: 249
+     */
+    case appleWalkingSteadiness = 249
+    /**
      Number Of Alcoholic Beverages
 
      Raw value: 251
@@ -1088,6 +1159,48 @@ public enum SampleType: Int {
      Raw value: 277
      */
     case waterTemperature = 277
+
+    /**
+     Time in Daylight
+
+     Raw value: 279
+     */
+    case timeInDaylight = 279
+
+    /**
+     Cycling Power
+
+     Raw value: 280
+     */
+    case cyclingPower = 280
+
+    /**
+     Cycling Speed
+
+     Raw value: 281
+     */
+    case cyclingSpeed = 281
+
+    /**
+     Cycling Cadence
+
+     Raw value: 282
+     */
+    case cyclingCadence = 282
+
+    /**
+     Cycling Functional Threshold Power
+
+     Raw value: 283
+     */
+    case cyclingFunctionalThresholdPower = 283
+
+    /**
+     Physical Effort
+
+     Raw value: 286
+     */
+    case physicalEffort = 286
 }
 
 extension SampleType: Equatable {
@@ -1117,6 +1230,7 @@ extension SampleType: CustomStringConvertible {
         case .bloodGlucose: return "Blood Glucose"
         case .bloodPressureSystolic: return "Systolic Blood Pressure"
         case .bloodPressureDiastolic: return "Diastolic Blood Pressure"
+        case .bloodAlcoholContent: return "Blood Alcohol Content"
         case .peripheralPerfusionIndex: return "Peripheral Perfusion Index"
         case .dietaryFatTotal: return "Total Dietary Fat"
         case .dietaryFatPolyunsaturated: return "Dietary Fat Polyunsaturated"
@@ -1162,12 +1276,10 @@ extension SampleType: CustomStringConvertible {
         case .bodyTemperature: return "Body Temperature"
         case .sleepAnalysis: return "Sleep Analysis"
         case .weeklyCalorieGoal: return "Weekly Calorie Goal"
-        case .watchOn: return "Watch On"
         case .forcedVitalCapacity: return "Forced Vital Capacity"
         case .forcedExpiratoryVolume1: return "Forced Expiratory Volume 1"
         case .peakExpiratoryFlowRate: return "Peak Expiratory Flow Rate"
-        case .standMinutes: return "Stand Minutes"
-        case .activity: return "Activity"
+        case .appleExerciseTime: return "Exercise Time"
         case .dietaryCaffeine: return "Dietary Caffeine"
         case .workout: return "Workout"
         case .bloodPressure: return "Blood Pressure"
@@ -1182,15 +1294,18 @@ extension SampleType: CustomStringConvertible {
         case .sexualActivity: return "Sexual Activity"
         case .mindfulSession: return "Mindful Session"
         case .pushCount: return "Push Count"
-        case .dataSeries: return "Data Series"
+        case .workoutRoute: return "Workout Route"
+        case .standHourGoal: return "Stand Hour Goal"
+        case .exerciseMinutesGoal: return "Exercise Minutes Goal"
         case .distanceSwimming: return "Distance Swimming"
         case .swimmingStrokeCount: return "Swimming Stroke Count"
         case .distanceWheelchair: return "Distance Wheelchair"
         case .waistCircumference: return "Waist Circumference"
         case .restingHeartRate: return "Resting Heart Rate"
         case .binarySample: return "Binary Sample"
-        case .vO2Max: return "VO2 Max"
+        case .vo2Max: return "VO2 Max"
         case .insulinDelivery: return "Insulin Delivery"
+        case .walkingHeartRateAverage: return "Walking Heart Rate Average"
         case .distanceDownhillSnowSports: return "Distance Downhill Snow Sports"
         case .heartRateVariabilitySDNN: return "Heart Rate Variability SDNN"
         case .ecgSample: return "ECG Sample"
@@ -1212,11 +1327,16 @@ extension SampleType: CustomStringConvertible {
         case .hotFlashes: return "Hot Flashes"
         case .environmentalAudioExposureEvent: return "Environmental Audio Exposure"
         case .headphoneAudioExposureEvent: return "Headphone Audio Exposure"
+        case .walkingDoubleSupportPercentage: return "Walking Double Support Percentage"
         case .sixMinuteWalkTestDistance: return "Six Minute Walk Test Distance"
+        case .appleStandTime: return "Stand Time"
+        case .walkingSpeed: return "Walking Speed"
+        case .walkingStepLength: return "Walking Step Length"
         case .toothbrushingEvent: return "Toothbrushing Event"
         case .pregnancy: return "Pregnancy"
         case .lactation: return "Lactation"
         case .contraceptive: return "Contraceptive"
+        case .walkingAsymmetryPercentage: return "Walking Asymmetry Percentage"
         case .stairAscentSpeed: return "Stair Ascent Speed"
         case .stairDescentSpeed: return "Stair Descent Speed"
         case .sleepScheduleSample: return "Sleep Schedule Sample"
@@ -1246,6 +1366,8 @@ extension SampleType: CustomStringConvertible {
         case .lossOfSmell: return "Loss Of Smell"
         case .lossOfTaste: return "Loss Of Taste"
         case .pregnancyTestResult: return "Pregnancy Test Result"
+        case .atrialFibrillationBurden: return "Atrial Fibrillation Burden"
+        case .appleWalkingSteadiness: return "Walking Steadiness"
         case .numberOfAlcoholicBeverages: return "Number Of Alcoholic Beverages"
         case .runningStrideLength: return "Running Stride Length"
         case .runningVerticalOscillation: return "Running Vertical Oscillation"
@@ -1256,6 +1378,12 @@ extension SampleType: CustomStringConvertible {
         case .environmentalSoundReduction: return "Environmental Sound Reduction"
         case .runningSpeed: return "Running Speed"
         case .waterTemperature: return "Water Temperature"
+        case .timeInDaylight: return "Time in Daylight"
+        case .cyclingPower: return "Cycling Power"
+        case .cyclingSpeed: return "Cycling Speed"
+        case .cyclingCadence: return "Cycling Cadence"
+        case .cyclingFunctionalThresholdPower: return "Cycling Functional Threshold Power"
+        case .physicalEffort: return "Physical Effort"
         }
     }
 }

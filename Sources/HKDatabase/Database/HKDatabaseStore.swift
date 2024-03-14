@@ -507,7 +507,7 @@ public final class HKDatabaseStore {
         if let categoryType = HKCategoryTypeIdentifier(sampleType: type) {
             return try samples(fromCategoryIds: dataIds, type: categoryType)
         }
-        if type == .dataSeries {
+        if type == .workoutRoute {
             print("Ignoring \(dataIds.count) location series")
         } else if type == .workout {
             print("Ignoring \(dataIds.count) associated workouts")
@@ -684,7 +684,7 @@ public final class HKDatabaseStore {
     public func route(associatedWith workout: Workout) throws -> WorkoutRoute? {
         let query = associations.query(parentId: workout.dataId)
             .join(samples.table, on: associations.childId == samples.table[samples.dataId])
-            .filter(samples.table[samples.dataType] == SampleType.dataSeries.rawValue)
+            .filter(samples.table[samples.dataType] == SampleType.workoutRoute.rawValue)
             .join(.leftOuter, objects.table, on: samples.table[samples.dataId] == objects.table[objects.dataId])
             .join(dataSeries.table, on: dataSeries.table[dataSeries.dataId] == samples.table[samples.dataId])
 
