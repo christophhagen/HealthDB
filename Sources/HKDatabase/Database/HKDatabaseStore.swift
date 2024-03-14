@@ -632,8 +632,11 @@ public final class HKDatabaseStore {
         let endTime = end.timeIntervalSinceReferenceDate
 
         let query = workouts.table
-            .join(.leftOuter, samples.table, on: workouts.table[workouts.dataId] == samples.table[samples.dataId])
-            .filter(samples.table[samples.startDate] <= endTime && 
+            .join(.leftOuter, samples.table, 
+                  on: workouts.table[workouts.dataId] == samples.table[samples.dataId])
+            .join(.leftOuter, objects.table, 
+                  on: samples.table[samples.dataId] == objects.table[objects.dataId])
+            .filter(samples.table[samples.startDate] <= endTime &&
                     samples.table[samples.endDate] >= startTime)
         return try database.prepare(query).map(workout)
     }
@@ -651,10 +654,14 @@ public final class HKDatabaseStore {
 
         // Select only workouts where the primary activity has the correct type
         let query = workouts.table
-            .join(.leftOuter, samples.table, on: workouts.table[workouts.dataId] == samples.table[samples.dataId])
+            .join(.leftOuter, samples.table, 
+                  on: workouts.table[workouts.dataId] == samples.table[samples.dataId])
             .filter(samples.table[samples.startDate] <= endTime &&
                     samples.table[samples.endDate] >= startTime)
-            .join(.leftOuter, workoutActivities.table, on: workouts.table[workouts.dataId] == workoutActivities.table[workoutActivities.ownerId])
+            .join(.leftOuter, objects.table, 
+                  on: samples.table[samples.dataId] == objects.table[objects.dataId])
+            .join(.leftOuter, workoutActivities.table, 
+                  on: workouts.table[workouts.dataId] == workoutActivities.table[workoutActivities.ownerId])
             .filter(workoutActivities.table[workoutActivities.activityType] == typeId &&
                     workoutActivities.table[workoutActivities.isPrimaryActivity] == true)
         return try database.prepare(query)
