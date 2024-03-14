@@ -162,7 +162,7 @@ public final class HKDatabaseStore {
 
     private func samples(quantity: HKQuantityTypeIdentifier, sampleType: SampleType, from start: Date, to end: Date, unit: HKUnit) throws -> [HKQuantitySample] {
         let selection = query(rawQuantity: sampleType.rawValue, from: start, to: end)
-        return try database.prepare(selection).map {
+        return try database.prepare(selection).compactMap {
             try sample(from: $0, quantity: quantity, unit: unit)
         }
     }
@@ -172,8 +172,9 @@ public final class HKDatabaseStore {
             throw HKNotSupportedError("Unit needed for the given type")
         }
         let selection = query(rawQuantity: rawQuantity, from: start, to: end)
-        return try database.prepare(selection)
-            .map { try sample(from: $0, quantity: quantity, unit: unit) }
+        return try database.prepare(selection).compactMap {
+            try sample(from: $0, quantity: quantity, unit: unit)
+        }
     }
 
     private func query(rawQuantity: Int, from start: Date, to end: Date) -> Table {
@@ -198,7 +199,7 @@ public final class HKDatabaseStore {
                   on: samples.table[samples.dataId] == quantitySamples.table[quantitySamples.dataId])
     }
 
-    private func sample(from row: Row, quantity: HKQuantityTypeIdentifier, unit: HKUnit) throws -> HKQuantitySample {
+    private func sample(from row: Row, quantity: HKQuantityTypeIdentifier, unit: HKUnit) throws -> HKQuantitySample? {
         let dataId = row[samples.table[samples.dataId]]
         let dataProvenance = row[objects.provenance]
 
@@ -207,7 +208,10 @@ public final class HKDatabaseStore {
 
         let startDate = Date(timeIntervalSinceReferenceDate: row[samples.startDate])
         let endDate = Date(timeIntervalSinceReferenceDate: row[samples.endDate])
-        let value = row[quantitySamples.quantity]!
+        guard let value = row[quantitySamples.quantity] else {
+            //print("\(quantity) sample \(dataId): No value, ignoring")
+            return nil
+        }
         return HKQuantitySample(
             type: .init(quantity),
             quantity: HKQuantity(unit: unit, doubleValue: value),
@@ -266,9 +270,12 @@ public final class HKDatabaseStore {
                   on: objects.table[objects.provenance] == dataProvenances.table[dataProvenances.rowId])
     }
 
-    private func series(from row: Row, quantity: HKQuantityTypeIdentifier, unit: HKUnit) throws -> HKQuantitySeries {
+    private func series(from row: Row, quantity: HKQuantityTypeIdentifier, unit: HKUnit) throws -> HKQuantitySeries? {
         let dataId = row[samples.table[samples.dataId]]
-        let sample = try sample(from: row, quantity: quantity, unit: unit)
+        guard let sample = try sample(from: row, quantity: quantity, unit: unit) else {
+            print("Series \(dataId) has no quantity for initial series sample")
+            return nil
+        }
         return .init(
             dataId: dataId,
             sampleCount: row[quantitySampleSeries.count],
@@ -296,25 +303,28 @@ public final class HKDatabaseStore {
         return try quantitySeriesData.quantities(for: seriesId, in: database, identifier: identifier, unit: unit)
     }
 
-    private func samplesIncludingSeries(quantity identifier: HKQuantityTypeIdentifier, sampleType: SampleType, from start: Date, to end: Date, unit: HKUnit) throws -> [HKQuantitySample] {
+    private func samplesIncludingSeries(quantity: HKQuantityTypeIdentifier, sampleType: SampleType, from start: Date, to end: Date, unit: HKUnit) throws -> [HKQuantitySample] {
         // First, select all relevant samples
         let query = query(rawQuantity: sampleType.rawValue, from: start, to: end)
 
-        return try database.prepare(query).mapAndJoin { (row: Row) in
+        return try database.prepare(query).mapAndJoin { (row: Row) -> [HKQuantitySample] in
             let dataId = row[samples.table[samples.dataId]]
-            let sample = try sample(from: row, quantity: identifier, unit: unit)
-
+            guard let sample = try sample(from: row, quantity: quantity, unit: unit) else {
+                return []
+            }
+            
             // Either select just the sample, or replace it with the samples of the series
             guard let series = try quantitySampleSeries.select(dataId: dataId, in: database) else {
                 return [sample]
             }
             // Add device and metadata of the original sample to all series entries
-            return try quantitySeriesData.quantities(for: series.hfdKey, in: database)
+            return try quantitySeriesData
+                .quantities(for: series.hfdKey, in: database)
                 .filter { $0.start <= end && $0.end >= start }
                 .map {
-                    .init(
-                        type: .init(identifier),
-                        quantity: .init(unit: unit, doubleValue: $0.value),
+                    HKQuantitySample(
+                        type: .init(quantity),
+                        quantity: HKQuantity(unit: unit, doubleValue: $0.value),
                         start: $0.start,
                         end: $0.end,
                         device: sample.device,
@@ -385,24 +395,43 @@ public final class HKDatabaseStore {
         }
     }
 
-    private func associatedSamples(with dataId: Int, identifier: HKQuantityTypeIdentifier, unit: HKUnit?) throws -> [HKQuantitySample] {
-        guard let unit = unit ?? identifier.defaultUnit else {
+    private func samples(associatedWith dataId: Int, quantity: HKQuantityTypeIdentifier, unit: HKUnit?) throws -> [HKQuantitySample] {
+        guard let unit = unit ?? quantity.defaultUnit else {
             throw HKNotSupportedError("Unit needed for the given type")
         }
-        guard let dataType = identifier.sampleType else {
+        guard let dataType = quantity.sampleType else {
             throw HKNotSupportedError("Unsupported quantity type")
         }
 
-        return try dataIds(associatedWith: dataId, dataType: dataType)
-            .compactMap { dataId in
-                try database.pluck(query(quantitySampleId: dataId))
-            }.map { row in
-                try sample(from: row, quantity: identifier, unit: unit)
+        return try dataIds(associatedWith: dataId, dataType: dataType).mapAndJoin { dataId -> [HKQuantitySample] in
+            guard let row = try database.pluck(query(quantitySampleId: dataId)) else {
+                return []
             }
+            let dataId = row[samples.table[samples.dataId]]
+            guard let sample = try sample(from: row, quantity: quantity, unit: unit) else {
+                return []
+            }
+
+            // Either select just the sample, or replace it with the samples of the series
+            guard let series = try quantitySampleSeries.select(dataId: dataId, in: database) else {
+                return [sample]
+            }
+            // Add device and metadata of the original sample to all series entries
+            return try quantitySeriesData.quantities(for: series.hfdKey, in: database)
+                .map {
+                    HKQuantitySample(
+                        type: .init(quantity),
+                        quantity: HKQuantity(unit: unit, doubleValue: $0.value),
+                        start: $0.start,
+                        end: $0.end,
+                        device: sample.device,
+                        metadata: sample.metadata)
+                }
+        }
     }
 
-    private func associatedSamples(with dataId: Int, identifier: HKCategoryTypeIdentifier) throws -> [HKCategorySample] {
-        guard let dataType = identifier.sampleType else {
+    private func samples(associatedWith dataId: Int, category: HKCategoryTypeIdentifier) throws -> [HKCategorySample] {
+        guard let dataType = category.sampleType else {
             throw HKNotSupportedError("Unsupported category type")
         }
 
@@ -410,7 +439,7 @@ public final class HKDatabaseStore {
             .compactMap { dataId in
                 try database.pluck(query(categorySampleId: dataId))
             }.map { row in
-                try sample(from: row, category: identifier)
+                try sample(from: row, category: category)
             }
     }
 
@@ -600,11 +629,11 @@ public final class HKDatabaseStore {
     }
 
     public func samples(associatedWith workout: Workout, category: HKCategoryTypeIdentifier) throws -> [HKCategorySample] {
-        try associatedSamples(with: workout.dataId, identifier: category)
+        try samples(associatedWith: workout.dataId, category: category)
     }
 
     public func samples(associatedWith workout: Workout, quantity: HKQuantityTypeIdentifier) throws -> [HKQuantitySample] {
-        try associatedSamples(with: workout.dataId, identifier: quantity, unit: nil)
+        try samples(associatedWith: workout.dataId, quantity: quantity, unit: nil)
     }
 
     /**
