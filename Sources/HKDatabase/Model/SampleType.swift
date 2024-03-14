@@ -437,6 +437,25 @@ public enum SampleType: Int, CaseIterable {
     case weeklyCalorieGoal = 67
 
     /**
+     Unknown category sample type.
+
+     - Observed samples: `1`
+     - Observed values: `1`
+     - Observed devices: `iPhone 12`
+     - Observed time span: `2022`
+
+     Raw value: 68
+     */
+    case raw68 = 68
+
+    /**
+     Stand Hour
+
+     Raw value: 70
+     */
+    case appleStandHour = 70
+
+    /**
      Forced Vital Capacity
 
      Raw value: 71
@@ -467,11 +486,9 @@ public enum SampleType: Int, CaseIterable {
     /**
      Activity
 
-     - Note: Possibly no longer in use
-
      Raw value: 76
      */
-    //case activity = 76
+    case activity = 76
 
     /**
      Dietary Caffeine
@@ -607,6 +624,20 @@ public enum SampleType: Int, CaseIterable {
     case swimmingStrokeCount = 111
 
     /**
+     Unknown category sample type.
+
+     - Note: This sample type me no longer be in use.
+
+     - Observed samples: `3`
+     - Observed values: `1`
+     - Observed devices: `iPhone 6`
+     - Observed time span: `2017`
+
+     Raw value: 112
+     */
+    case raw112 = 112
+
+    /**
      Wheelchair Distance
 
      Raw value: 113
@@ -619,6 +650,13 @@ public enum SampleType: Int, CaseIterable {
      Raw value: 114
      */
     case waistCircumference = 114
+
+    /**
+     Indicates if the apple watch is charging
+
+     Raw value: 116
+     */
+    case appleWatchIsCharging = 116
 
     /**
      Resting Heart Rate
@@ -803,6 +841,15 @@ public enum SampleType: Int, CaseIterable {
     case headphoneAudioExposureEvent = 173
 
     /**
+     Audio Exposure Event
+
+     - Note: This type is deprecated in favor of ``environmentalAudioExposureEvent``
+
+     Raw value: 178
+     */
+    case audioExposureEvent = 178
+
+    /**
      Walking Double Support Percentage
 
      Raw value: 182
@@ -885,6 +932,16 @@ public enum SampleType: Int, CaseIterable {
      Raw value: 196
      */
     case stairDescentSpeed = 196
+
+    /**
+     Unknown quantity sample
+
+     - Observed samples: `1`
+     - Observed values: `25200.0`
+     - Observed devices: `iPhone 8`
+     - Observed time: `September 2020`
+     */
+    case raw197 = 197
 
     /**
      Sleep Schedule Sample
@@ -1276,10 +1333,13 @@ extension SampleType: CustomStringConvertible {
         case .bodyTemperature: return "Body Temperature"
         case .sleepAnalysis: return "Sleep Analysis"
         case .weeklyCalorieGoal: return "Weekly Calorie Goal"
+        case .raw68: return "Unknown (68)"
         case .forcedVitalCapacity: return "Forced Vital Capacity"
+        case .appleStandHour: return "Stand Hour"
         case .forcedExpiratoryVolume1: return "Forced Expiratory Volume 1"
         case .peakExpiratoryFlowRate: return "Peak Expiratory Flow Rate"
         case .appleExerciseTime: return "Exercise Time"
+        case .activity: return "Activity"
         case .dietaryCaffeine: return "Dietary Caffeine"
         case .workout: return "Workout"
         case .bloodPressure: return "Blood Pressure"
@@ -1299,8 +1359,10 @@ extension SampleType: CustomStringConvertible {
         case .exerciseMinutesGoal: return "Exercise Minutes Goal"
         case .distanceSwimming: return "Distance Swimming"
         case .swimmingStrokeCount: return "Swimming Stroke Count"
+        case .raw112: return "Unknown (112)"
         case .distanceWheelchair: return "Distance Wheelchair"
         case .waistCircumference: return "Waist Circumference"
+        case .appleWatchIsCharging: return "Apple Watch Charging"
         case .restingHeartRate: return "Resting Heart Rate"
         case .binarySample: return "Binary Sample"
         case .vo2Max: return "VO2 Max"
@@ -1327,6 +1389,7 @@ extension SampleType: CustomStringConvertible {
         case .hotFlashes: return "Hot Flashes"
         case .environmentalAudioExposureEvent: return "Environmental Audio Exposure"
         case .headphoneAudioExposureEvent: return "Headphone Audio Exposure"
+        case .audioExposureEvent: return "Audio Exposure Event"
         case .walkingDoubleSupportPercentage: return "Walking Double Support Percentage"
         case .sixMinuteWalkTestDistance: return "Six Minute Walk Test Distance"
         case .appleStandTime: return "Stand Time"
@@ -1339,6 +1402,7 @@ extension SampleType: CustomStringConvertible {
         case .walkingAsymmetryPercentage: return "Walking Asymmetry Percentage"
         case .stairAscentSpeed: return "Stair Ascent Speed"
         case .stairDescentSpeed: return "Stair Descent Speed"
+        case .raw197: return "Unknown (197)"
         case .sleepScheduleSample: return "Sleep Schedule Sample"
         case .rapidPoundingOrFlutteringHeartbeat: return "Rapid Pounding Or Fluttering Heartbeat"
         case .skippedHeartbeat: return "Skipped Heartbeat"

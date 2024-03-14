@@ -11,7 +11,7 @@ struct CategorySamplesTable {
 
     let dataId = Expression<Int>("data_id")
 
-    let value = Expression<Int>("value")
+    let value = Expression<Int?>("value")
 
     func value(for dataId: Int, in database: Connection) throws -> Int? {
         try database.pluck(table.filter(self.dataId == dataId)).map { $0[value] }

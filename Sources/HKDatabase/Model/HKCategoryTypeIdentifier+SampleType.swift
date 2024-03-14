@@ -5,7 +5,7 @@ extension HKCategoryTypeIdentifier {
 
     init?(sampleType: SampleType) {
         switch sampleType {
-            // case .appleStandHour: self = .appleStandHour
+            case .appleStandHour: self = .appleStandHour
             // Hearing Health
             case .environmentalAudioExposureEvent: self = .environmentalAudioExposureEvent // HKCategoryValueEnvironmentalAudioExposureEvent
             case .headphoneAudioExposureEvent: self = .headphoneAudioExposureEvent // HKCategoryValueHeadphoneAudioExposureEvent
@@ -79,7 +79,8 @@ extension HKCategoryTypeIdentifier {
             case .vaginalDryness: self = .vaginalDryness // HKCategoryValueSeverity
             case .vomiting: self = .vomiting // HKCategoryValueSeverity
             case .wheezing: self = .wheezing // HKCategoryValueSeverity
-            //case .audioExposureEvent: self = .audioExposureEvent
+            /// - NOTE: Apple automatically converts this to `.environmentalAudioExposureEvent`
+            case .audioExposureEvent: self = .audioExposureEvent
             default:
                 return nil
         }
@@ -87,7 +88,7 @@ extension HKCategoryTypeIdentifier {
 
     var sampleType: SampleType? {
         switch self {
-        // case .appleStandHour: return .appleStandHour
+        case .appleStandHour: return .appleStandHour
         // Hearing Health
         case .environmentalAudioExposureEvent: return .environmentalAudioExposureEvent // HKCategoryValueEnvironmentalAudioExposureEvent
         case .headphoneAudioExposureEvent: return .headphoneAudioExposureEvent // HKCategoryValueHeadphoneAudioExposureEvent
@@ -161,7 +162,7 @@ extension HKCategoryTypeIdentifier {
         case .vaginalDryness: return .vaginalDryness // HKCategoryValueSeverity
         case .vomiting: return .vomiting // HKCategoryValueSeverity
         case .wheezing: return .wheezing // HKCategoryValueSeverity
-        //case .audioExposureEvent: return .audioExposureEvent
+        case .audioExposureEvent: return .audioExposureEvent
         default:
             return nil
         }

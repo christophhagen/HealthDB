@@ -90,7 +90,7 @@ public final class HKDatabaseStore {
             throw HKNotSupportedError("Unsupported category type")
         }
         let query = query(rawCategory: sampleType.rawValue, from: start, to: end)
-        return try database.prepare(query).map {
+        return try database.prepare(query).compactMap {
             try sample(from: $0, category: category)
         }
     }
@@ -100,7 +100,7 @@ public final class HKDatabaseStore {
      */
     public func samples(rawCategory: Int, as category: HKCategoryTypeIdentifier, from start: Date = .distantPast, to end: Date = .distantFuture) throws -> [HKCategorySample] {
         let query = query(rawCategory: rawCategory, from: start, to: end)
-        return try database.prepare(query).map {
+        return try database.prepare(query).compactMap {
             try sample(from: $0, category: category)
         }
     }
@@ -117,10 +117,12 @@ public final class HKDatabaseStore {
             .filter(samples.table[samples.dataId] == dataId)
     }
 
+    #warning("Add UUID to all samples using this query")
     private var categorySampleQuery: Table {
         samples.table
             .select(samples.table[*],
                     objects.table[objects.provenance],
+                    objects.table[objects.uuid],
                     categorySamples.table[categorySamples.value])
             .join(.leftOuter, objects.table, 
                   on: samples.table[samples.dataId] == objects.table[objects.dataId])
@@ -128,12 +130,14 @@ public final class HKDatabaseStore {
                   on: samples.table[samples.dataId] == categorySamples.table[categorySamples.dataId])
     }
 
-    private func sample(from row: Row, category: HKCategoryTypeIdentifier) throws -> HKCategorySample {
+    private func sample(from row: Row, category: HKCategoryTypeIdentifier) throws -> HKCategorySample? {
+        guard let value = row[categorySamples.value] else {
+            return nil
+        }
         let dataId = row[samples.table[samples.dataId]]
         let startDate = Date(timeIntervalSinceReferenceDate: row[samples.startDate])
         let endDate = Date(timeIntervalSinceReferenceDate: row[samples.endDate])
         let dataProvenance = row[objects.provenance]
-        let value = row [categorySamples.value]
         let device: HKDevice? = try dataProvenances.device(for: dataProvenance, in: database)
         let metadata = try metadata(for: dataId)
         return HKCategorySample(
@@ -143,6 +147,48 @@ public final class HKDatabaseStore {
             end: endDate,
             device: device,
             metadata: metadata)
+    }
+
+    /**
+     Get category values for a sample type.
+
+     Use this function to parse category samples where the ``HKCategoryType`` is not known.
+     - Note: If no quantity exists for the samples (no entry in `quantity_samples`, then the samples are skipped.
+     */
+    public func categories(_ sampleType: SampleType, from start: Date = .distantPast, to end: Date = .distantFuture) throws -> [RawCategory] {
+        try categories(rawType: sampleType.rawValue, from: start, to: end)
+    }
+
+    /**
+     Get category values for an unknown type.
+
+     Use this function to parse category samples where the ``HKCategoryType`` is not known.
+     */
+    public func categories(rawType: Int, from start: Date = .distantPast, to end: Date = .distantFuture) throws -> [RawCategory] {
+        let selection = query(rawCategory: rawType, from: start, to: end)
+        return try database.prepare(selection).compactMap { row -> RawCategory? in
+            let dataId = row[samples.table[samples.dataId]]
+            let dataProvenance = row[objects.provenance]
+            #warning("Extract common properties into function")
+            let uuid = UUID(data: row[objects.uuid]!)!
+
+            let device: HKDevice? = try dataProvenances.device(for: dataProvenance, in: database)
+            let metadata = try metadata(for: dataId)
+
+            let startDate = Date(timeIntervalSinceReferenceDate: row[samples.startDate])
+            let endDate = Date(timeIntervalSinceReferenceDate: row[samples.endDate])
+            guard let value = row[categorySamples.value] else {
+                //print("Category (\(rawType)) sample \(dataId): No value, ignoring")
+                return nil
+            }
+            return .init(
+                startDate: startDate,
+                endDate: endDate,
+                category: value,
+                uuid: uuid,
+                metadata: metadata,
+                device: device)
+        }
     }
 
     // MARK: Quantity Samples
@@ -178,9 +224,20 @@ public final class HKDatabaseStore {
     }
 
     /**
+     Get quantity values for a sample type.
+
+     Use this function to parse quantity samples where the ``HKQuantityType`` is not known.
+     - Note: If no quantity exists for the samples (no entry in `quantity_samples`, then the samples are skipped.
+     */
+    public func quantities(_ sampleType: SampleType, from start: Date = .distantPast, to end: Date = .distantFuture) throws -> [RawQuantity] {
+        try quantities(rawType: sampleType.rawValue, from: start, to: end)
+    }
+
+    /**
      Get quantity values for an unknown type.
 
      Use this function to parse quantity samples where the ``HKQuantityType`` is not known.
+     - Note: If no quantity exists for the samples (no entry in `quantity_samples`, then the samples are skipped.
      */
     public func quantities(rawType: Int, from start: Date = .distantPast, to end: Date = .distantFuture) throws -> [RawQuantity] {
         let selection = query(rawQuantity: rawType, from: start, to: end)
@@ -227,6 +284,7 @@ public final class HKDatabaseStore {
         quantitySampleQuery.filter(samples.table[samples.dataId] == dataId)
     }
 
+    #warning("Add UUID to all samples using this query")
     private var quantitySampleQuery: Table {
         samples.table
             .select(samples.table[*],
@@ -476,11 +534,8 @@ public final class HKDatabaseStore {
         }
 
         return try dataIds(associatedWith: dataId, dataType: dataType)
-            .compactMap { dataId in
-                try database.pluck(query(categorySampleId: dataId))
-            }.map { row in
-                try sample(from: row, category: category)
-            }
+            .compactMap { try database.pluck(query(categorySampleId: $0)) }
+            .compactMap { try sample(from: $0, category: category) }
     }
 
     private func dataIds(associatedWith dataId: Int, dataType: SampleType) throws -> [Int] {

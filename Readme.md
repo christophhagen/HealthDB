@@ -9,7 +9,7 @@ This library may can be useful when the original health data is lost and has to 
 
 | Feature | Status | Comment |
 |---|---|---|
-[Category samples](#category-samples) | ✅ | 55/65 types supported |
+[Category samples](#category-samples) | ✅ | 56/65 types supported |
 [Quantity samples](#quantity-samples) | ✅ | 109/112 types supported |
 [Quantity series](#quantity-sample-series) | ✅ | 109/112 types supported |
 [Workouts](#workouts) | ✅ 
@@ -103,11 +103,15 @@ The functions will fail with a `HKNotSupportedError` if the internal `SampleType
 
 The following category types are yet unsupported:
 
-AppleStandHour, HighHeartRateEvent, IrregularHeartRhythmEvent, LowCardioFitnessEvent, AppleWalkingSteadinessEvent, InfrequentMenstrualCycles, IrregularMenstrualCycles, PersistentIntermenstrualBleeding, ProgesteroneTestResult, ProlongedMenstrualPeriods
+`HighHeartRateEvent`, `IrregularHeartRhythmEvent`, `LowCardioFitnessEvent`, `AppleWalkingSteadinessEvent`, `InfrequentMenstrualCycles`, `IrregularMenstrualCycles`, `PersistentIntermenstrualBleeding`, `ProgesteroneTestResult`, `ProlongedMenstrualPeriods`.
 
-The following sample types may fit: 112, 116, 178.
+You can get a list of all unknown data types using:
 
-To access unknown samples:
+```swift
+let rawTypes = try db.store.unknownRawSampleTypes()
+```
+
+To access unknown samples if you know the corresponding HealthKit type:
 
 ```swift
 let samples = try db.store.samples(
@@ -118,7 +122,14 @@ let samples = try db.store.samples(
 ```
 
 This function will produce errors if the sample data contains invalid values, which may happen when the `SampleType` doesn't match the `HKCategoryTypeIdentifier`.
-If you figure out the identifier for a currently unknown type, please open an issue, and it will be included.
+
+It's also possible to get the raw categories from the samples:
+
+```swift
+let samples = try db.store.categories(rawType: 147)
+```
+
+**Note** If you figure out the identifier for a currently unknown type, please open an issue, and it will be included.
 
 Internally, the additional data of the samples is stored in the `category_samples` table where `samples.data_id == category_samples.data_id`
 
@@ -147,6 +158,12 @@ let samples = try db.samples(
         to: .now)
 ```
 
+Similar to category samples, it's also possible to get the raw values:
+
+```swift
+let samples = try db.quantities(rawType: 3)
+```
+
 Internally, the additional data of the samples is stored in the `quantity_samples` table where `samples.data_id == quantity_samples.data_id`.
 The database also stores an "original unit" for some samples, but this data is not exported.
 The unit is contained in the `unit_string` column of the `unit_strings` table where `quantity_samples.original_unit == unit_strings.ROWID`.
@@ -160,6 +177,25 @@ let samples: [BloodPressure] = try db.samples(from: .distantPast, to: .now)
 The samples associated with a correlation (like blood pressure values) are also stored in the `samples` table.
 They are connected with another sample (`data_type == 80` for blood pressure) through the `associations` table, which contains one entry per associated sample, where `sample.data_id == associations.parent_id` for the main sample, and `sample.data_id == associations.child_id` for the associated samples.
 
+### Private samples
+
+There are a few sample types that are normally not available through HealthKit, but still contained in the database.
+These samples can be accessed by directly querying a sample type:
+
+```swift
+let samples = try db.store.categories(.appleWatchIsCharging)
+let samples = try db.store.quantities(.exerciseMinutesGoal)
+```
+
+There are only a few of those private sample types currently known:
+
+- `.appleWatchIsCharging`: Indicates when an Apple Watch is charging (`1`) or not (`0`).
+- `.exerciseMinutesGoal`: A quantity sample for each time the exercise goal is changed (value = new goal)
+- `.standHourGoal`: A quantity sample for each time the stand goal is changed (value = new goal)
+- `.raw68`: Unknown category sample
+- `.raw112`: Unknown category sample
+- `.raw197`: Unknown quantity sample
+  
 ### Unhandled samples
 
 There are many sample tables in the database, and all appear to be linked by their `data_id` column to the `data_id` column in the `samples` table.
@@ -357,3 +393,30 @@ Related:
 - [Export/import health data to JSON](https://github.com/mkhoshpour/healthkit-sample-generator)
 - [Import record from Health App Export](https://github.com/Comocomo/HealthKitImporter/)
 - [Create Health data during UI Tests](https://github.com/StanfordBDHG/XCTHealthKit)
+
+## Investigative info
+
+## Binary samples
+
+The data contained in binary samples is currently unknown.
+They appear to collect a series of data points over a longer time span.
+There are usually several binary samples per day, each containing a different amount of data.
+
+The `payload` column seems to be organized in 16-byte chunks, presumably further divided in 2 8-byte numbers.
+
+The first 8 bytes may contain an integer number, since the first 3-4 bytes are always zero.
+
+For the last 8 bytes, only the following distinct values have been observed:
+
+- `0x00a7702700000000`
+- `0x0100000000000000`
+- `0x0057ef2600000000`
+- `0x0157ef2600000000`
+- `0x01d7ab2500000000`
+- `0x01d65b1500000000`
+- `0x01573e2600000000`
+- `0x00573e2600000000`
+
+The last 4 bytes in each chunk seem to always be zero.
+
+Byte 9 of each `payload` seems to always be `0x010`, and for all other chucks byte 9 is mostly `0x00`, and sometimes `0x01`.
