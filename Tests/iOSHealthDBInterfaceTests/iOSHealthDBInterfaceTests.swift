@@ -1,5 +1,5 @@
 import XCTest
-@testable import iOSHealthDBInterface
+@testable import HealthDB
 
 final class iOSHealthDBInterfaceTests: XCTestCase {
     func testExample() throws {
