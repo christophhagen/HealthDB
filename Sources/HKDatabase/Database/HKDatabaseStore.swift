@@ -423,7 +423,7 @@ public final class HKDatabaseStore {
 
     // MARK: Correlations
 
-    func samples(correlation: HKCorrelationTypeIdentifier) throws -> [HKCorrelation] {
+    func samples(correlation: HKCorrelationTypeIdentifier, from start: Date = .distantPast, to end: Date = .distantFuture) throws -> [HKCorrelation] {
         guard let sampleType = correlation.sampleType else {
             throw HKNotSupportedError("Unsupported correlation type")
         }
@@ -432,10 +432,14 @@ public final class HKDatabaseStore {
             .select(samples.table[*],
                     objects.table[objects.provenance],
                     objects.table[objects.uuid])
-            .filter(samples.dataType == sampleType.rawValue)
+            .filter(samples.dataType == sampleType.rawValue &&
+                    samples.table[samples.startDate] <= end.timeIntervalSinceReferenceDate &&
+                    samples.table[samples.endDate] >= start.timeIntervalSinceReferenceDate)
             .join(.leftOuter, objects.table, on: samples.table[samples.dataId] == objects.table[objects.dataId])
 
-        return try database.prepare(query).map { try sample(from: $0, correlation: correlation) }
+        return try database.prepare(query).map {
+            try sample(from: $0, correlation: correlation)
+        }
     }
 
     private func sample(from row: Row, correlation: HKCorrelationTypeIdentifier) throws -> HKCorrelation {

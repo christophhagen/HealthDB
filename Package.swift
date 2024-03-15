@@ -7,17 +7,17 @@ let package = Package(
     platforms: [.iOS(.v16), .macOS(.v13), .watchOS(.v9)],
     products: [
         .library(
-            name: "HKDatabase",
-            targets: ["HKDatabase"]),
+            name: "HealthDB",
+            targets: ["HealthDB"]),
     ],
     dependencies: [
         .package(url: "https://github.com/stephencelis/SQLite.swift.git", from: "0.14.1"),
         .package(url: "https://github.com/apple/swift-protobuf.git", from: "1.25.2"),
-        .package(url: "https://github.com/christophhagen/HealthKitExtensions", from: "0.3.3"),
+        .package(url: "https://github.com/christophhagen/HealthKitExtensions", branch: "main"), //from: "0.3.3"),
     ],
     targets: [
         .target(
-            name: "HKDatabase",
+            name: "HealthDB",
         dependencies: [
             .product(name: "SQLite", package: "sqlite.swift"),
             .product(name: "SwiftProtobuf", package: "swift-protobuf"),
@@ -25,6 +25,6 @@ let package = Package(
         ]),
         .testTarget(
             name: "HKDatabaseTests",
-            dependencies: ["HKDatabase"]),
+            dependencies: ["HealthDB"]),
     ]
 )

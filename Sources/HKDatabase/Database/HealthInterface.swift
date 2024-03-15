@@ -5,7 +5,7 @@ import HealthKitExtensions
 /**
  A health store interface to allow the use of other backing implementations for health data.
  */
-public protocol HKHealthStoreInterface {
+public protocol HealthInterface {
 
     // MARK: - Accessing HealthKit
 
@@ -174,13 +174,13 @@ public protocol HKHealthStoreInterface {
     // MARK: - Querying HealthKit data
 
     @available(iOS 15.4, *)
-    func samples<T>(ofQuantity quantity: T.Type, predicate: NSPredicate?, sortDescriptors: [SortDescriptor<HKQuantitySample>], limit: Int?) async throws -> [T] where T: HKQuantitySampleContainer
+    func samples<T>(from start: Date, to end: Date, sortedBy sortingMethod: SampleSortingMethod?, limitedTo limit: Int?) async throws -> [T] where T: HKQuantitySampleContainer
 
     @available(iOS 15.4, *)
-    func samples<T>(ofCorrelation correlation: T.Type, predicate: NSPredicate?, sortDescriptors: [SortDescriptor<HKCorrelation>], limit: Int?) async throws -> [T] where T: HKCorrelationContainer
+    func samples<T>(from start: Date, to end: Date, sortedBy sortingMethod: SampleSortingMethod?, limitedTo limit: Int?) async throws -> [T] where T: HKCorrelationContainer
 
     @available(iOS 15.4, *)
-    func samples<T>(ofCategory category: T.Type, predicate: NSPredicate?, sortDescriptors: [SortDescriptor<HKCategorySample>], limit: Int?) async throws -> [T] where T: HKCategorySampleContainer
+    func samples<T>(from start: Date, to end: Date, sortedBy sortingMethod: SampleSortingMethod?, limitedTo limit: Int?) async throws -> [T] where T: HKCategorySampleContainer
 
     /**
      Starts executing the provided query.
@@ -404,7 +404,7 @@ public protocol HKHealthStoreInterface {
 
 }
 
-extension HKHealthStoreInterface {
+extension HealthInterface {
 
     /**
      Asynchronously requests permission to save and read the specified data types.
