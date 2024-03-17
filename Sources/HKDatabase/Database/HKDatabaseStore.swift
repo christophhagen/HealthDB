@@ -423,28 +423,43 @@ public final class HKDatabaseStore {
 
     // MARK: Correlations
 
-    func samples(correlation: HKCorrelationTypeIdentifier, from start: Date = .distantPast, to end: Date = .distantFuture) throws -> [HKCorrelation] {
+    func correlations(_ correlation: HKCorrelationTypeIdentifier, from start: Date = .distantPast, to end: Date = .distantFuture) throws -> [HKCorrelation] {
         guard let sampleType = correlation.sampleType else {
             throw HKNotSupportedError("Unsupported correlation type")
         }
 
-        let query = samples.table
-            .select(samples.table[*],
-                    objects.table[objects.provenance],
-                    objects.table[objects.uuid])
-            .filter(samples.dataType == sampleType.rawValue &&
-                    samples.table[samples.startDate] <= end.timeIntervalSinceReferenceDate &&
-                    samples.table[samples.endDate] >= start.timeIntervalSinceReferenceDate)
-            .join(.leftOuter, objects.table, on: samples.table[samples.dataId] == objects.table[objects.dataId])
+        let query = correlationQuery(rawType: sampleType.rawValue, from: start, to: end)
 
-        return try database.prepare(query).map {
+        return try database.prepare(query).compactMap {
             try sample(from: $0, correlation: correlation)
         }
     }
 
-    private func sample(from row: Row, correlation: HKCorrelationTypeIdentifier) throws -> HKCorrelation {
+    public func correlations(rawType: Int, as correlation: HKCorrelationTypeIdentifier, from start: Date = .distantPast, to end: Date = .distantFuture) throws -> [HKCorrelation] {
+        let query = correlationQuery(rawType: rawType, from: start, to: end)
+        return try database.prepare(query).compactMap {
+            try sample(from: $0, correlation: correlation)
+        }
+    }
+
+    private func correlationQuery(rawType: Int, from start: Date, to end: Date) -> Table {
+        samples.table
+            .select(samples.table[*],
+                    objects.table[objects.provenance],
+                    objects.table[objects.uuid])
+            .filter(samples.dataType == rawType &&
+                    samples.table[samples.startDate] <= end.timeIntervalSinceReferenceDate &&
+                    samples.table[samples.endDate] >= start.timeIntervalSinceReferenceDate)
+            .join(.leftOuter, objects.table, on: samples.table[samples.dataId] == objects.table[objects.dataId])
+    }
+
+    private func sample(from row: Row, correlation: HKCorrelationTypeIdentifier) throws -> HKCorrelation? {
         let object = try objectData(from: row)
         let objects = try correlatedObjects(for: object.dataId)
+        guard !objects.isEmpty else {
+            print("No associated samples for correlation \(correlation) (\(object.dataId))")
+            return nil
+        }
         return HKCorrelation(
             type: .init(correlation),
             start: object.startDate,
@@ -570,7 +585,7 @@ public final class HKDatabaseStore {
      */
     private func samples(fromQuantityIds dataIds: [Int], type: HKQuantityTypeIdentifier, unit: HKUnit) throws -> [HKQuantitySample] {
         try dataIds.compactMap { dataId in
-            try database.pluck(query(categorySampleId: dataId)).map { row in
+            try database.pluck(query(quantitySampleId: dataId)).map { row in
                 try sample(from: row, quantity: type, unit: unit)
             }
         }

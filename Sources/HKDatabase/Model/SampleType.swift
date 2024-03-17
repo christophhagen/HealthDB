@@ -512,6 +512,13 @@ public enum SampleType: Int, CaseIterable {
     case bloodPressure = 80
 
     /**
+     Food
+
+     Raw value: 81
+     */
+    case food = 81
+
+    /**
      Cycling Distance
 
      Raw value: 83
@@ -1343,6 +1350,7 @@ extension SampleType: CustomStringConvertible {
         case .dietaryCaffeine: return "Dietary Caffeine"
         case .workout: return "Workout"
         case .bloodPressure: return "Blood Pressure"
+        case .food: return "Food"
         case .distanceCycling: return "Distance Cycling"
         case .dietaryWater: return "Dietary Water"
         case .uvExposure: return "UV Exposure"

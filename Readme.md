@@ -25,7 +25,7 @@ The following feature list refers to databases recovered with iOS 16 and iOS 17.
 Workout goals | ❗️ | Only `duration`
 Workout zones | ❌
 [User characteristics](#basic-user-characteristics-and-values) | ✅ | Except `HKActivityMoveMode`
-[Correlations](#correlation-samples) | ✅ | Except `Food`
+[Correlations](#correlation-samples) | ✅ |
 [ECG Samples](#ecg-samples) | ✅ | Including voltages
 Medical records and prescriptions | ❌
 Achievements | ❌
@@ -179,7 +179,7 @@ The unit is contained in the `unit_string` column of the `unit_strings` table wh
 ### Correlation samples
 
 ```swift
-let samples: [BloodPressure] = try db.samples(from: .distantPast, to: .now)
+let samples: [BloodPressure] = try db.correlations(from: .distantPast, to: .now)
 ```
 
 The samples associated with a correlation (like blood pressure values) are also stored in the `samples` table.

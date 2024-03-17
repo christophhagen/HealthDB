@@ -67,7 +67,7 @@ extension HealthDatabase: HealthInterface {
         to end: Date = .distantFuture,
         sortedBy sortingMethod: SampleSortingMethod?,
         limitedTo limit: Int?) async throws -> [T] where T : HKCorrelationContainer {
-            try store.samples(correlation: T.correlationTypeIdentifier, from: start, to: end)
+            try store.correlations(T.correlationTypeIdentifier, from: start, to: end)
                 .filtered(from: start, to: end)
                 .sorted(by: sortingMethod)
                 .limited(by: limit)

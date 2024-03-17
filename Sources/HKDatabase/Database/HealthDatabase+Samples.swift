@@ -69,12 +69,25 @@ extension HealthDatabase {
             .map(T.init(quantitySample:))
     }
 
-    public func samples<T>(ofCorrelation correlation: T.Type = T.self, predicate: NSPredicate?, sortDescriptors: [SortDescriptor<HKCorrelation>], limit: Int?) throws -> [T] where T : HKCorrelationContainer {
-        try store.samples(correlation: T.correlationTypeIdentifier)
+    // MARK: Correlations
+
+    public func correlations<T>(_ correlation: T.Type = T.self, predicate: NSPredicate?, sortDescriptors: [SortDescriptor<HKCorrelation>], limit: Int?) throws -> [T] where T : HKCorrelationContainer {
+        try store.correlations(T.correlationTypeIdentifier)
             .filtered(using: predicate)
             .sorted(using: sortDescriptors)
             .limited(by: limit)
             .map(T.init(correlation:))
+    }
+
+    /**
+     Access correlations in a date interval.
+     - Parameter type: The correlation type
+     - Parameter start: The beginning of the date range of interest
+     - Parameter end: The end of the date range
+     */
+    public func correlations<T>(_ correlation: T.Type = T.self, from start: Date = .distantPast, to end: Date = .distantFuture) throws -> [T] where T: HKCorrelationContainer {
+        try store.correlations(T.correlationTypeIdentifier, from: start, to: end)
+        .map { T.init(correlation: $0) }
     }
 
 }
