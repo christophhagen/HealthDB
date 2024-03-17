@@ -164,6 +164,13 @@ public enum HKMetadataPrivateKey {
 public enum HKMetadataKey {
 
     /**
+     - Value type: ``String``
+     - String value: `HKExternalUUID`
+     - HealthKit Constant: ``HKMetadataKeyExternalUUID``
+     */
+    public static let externalUUID = HKMetadataKeyExternalUUID
+
+    /**
      - Value type: ``NSNumber``
      - String value: `HKActivityType`
      - HealthKit Constant: ``HKMetadataKeyActivityType``
@@ -439,6 +446,7 @@ extension HKMetadataKey {
             }
         }
         switch key {
+        case externalUUID: return "External UUID"
         case wasUserEntered: return "Entered by user"
         case heartRateSensorLocation: return "Location of Heart Rate Sensor"
         case sessionId: return "Session ID"
