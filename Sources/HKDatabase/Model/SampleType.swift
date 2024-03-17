@@ -1265,6 +1265,20 @@ public enum SampleType: Int, CaseIterable {
      Raw value: 286
      */
     case physicalEffort = 286
+
+    /**
+     Anxiety Risk Questionaire
+
+     Raw value: 287
+     */
+    case anxietyRiskQuestionaire = 287
+
+    /**
+     Depression Risk Questionaire
+
+     Raw value: 288
+     */
+    case depressionRiskQuestionaire = 288
 }
 
 extension SampleType: Equatable {
@@ -1456,6 +1470,8 @@ extension SampleType: CustomStringConvertible {
         case .cyclingCadence: return "Cycling Cadence"
         case .cyclingFunctionalThresholdPower: return "Cycling Functional Threshold Power"
         case .physicalEffort: return "Physical Effort"
+        case .anxietyRiskQuestionaire: return "Anxiety Risk Questionaire"
+        case .depressionRiskQuestionaire: return "Depression Risk Questionaire"
         }
     }
 }

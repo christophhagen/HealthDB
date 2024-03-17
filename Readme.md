@@ -27,6 +27,7 @@ Workout zones | ❌
 [User characteristics](#basic-user-characteristics-and-values) | ✅ | Except `HKActivityMoveMode`
 [Correlations](#correlation-samples) | ✅ |
 [ECG Samples](#ecg-samples) | ✅ | Including voltages
+[Scored Assessments](#scored-assessments) | ✅ | Since iOS 17
 Medical records and prescriptions | ❌
 Achievements | ❌
 
@@ -203,6 +204,15 @@ There are only a few of those private sample types currently known:
 - `.raw68`: Unknown category sample
 - `.raw112`: Unknown category sample
 - `.raw197`: Unknown quantity sample
+
+### Scored assessments
+
+Additionally, Health features (as of iOS 17?) questionaires about anxiety and depression, which can also be accessed:
+
+```swift
+let samples: [DepressionRiskQuestionaire] = try db.questionaires()
+let answer = questionaire.answer(to: .suicideThoughts)
+```
   
 ### Unhandled samples
 
@@ -227,9 +237,9 @@ There are many sample tables in the database, and all appear to be linked by the
 `medication_record_samples` | ❌
 `procedure_record_samples` | ❌
 `quantity_samples` | ✅
-`scored_assessment_samples` | ❌
+`scored_assessment_samples` | ✅
 `signed_clinical_data_record_samples` | ❌
-`sleep_schedule_samples` | ✅
+`sleep_schedule_samples` | ❌
 `state_of_mind_samples` | ❌
 `unknown_record_samples` | ❌
 `vaccination_record_samples` | ❌

@@ -38,6 +38,8 @@ public final class HKDatabaseStore {
 
     private let samples = SamplesTable()
 
+    private let scoredAssessmentSamples = ScoredAssessmentSamples()
+
     private let unitStrings = UnitStringsTable()
 
     private let workouts = WorkoutsTable()
@@ -887,6 +889,53 @@ public final class HKDatabaseStore {
         }
     }
 
+    // MARK: Questionaires
+
+    public func questionaires<T>(_ type: T.Type = T.self, from start: Date = .distantPast, to end: Date = .distantFuture) throws -> [T] where T: Questionaire {
+        let query = questionaireQuery(rawType: type.sampleType.rawValue, from: start, to: end)
+        return try database.prepare(query).compactMap { row in
+            try questionaire(from: row)
+        }
+    }
+
+    private func questionaireQuery(rawType: Int, from start: Date, to end: Date) -> Table {
+        samples.table
+            .select(samples.table[*],
+                    objects.table[objects.provenance],
+                    objects.table[objects.uuid],
+                    scoredAssessmentSamples.table[*])
+            .join(.leftOuter, objects.table,
+                  on: samples.table[samples.dataId] == objects.table[objects.dataId])
+            .join(.leftOuter, scoredAssessmentSamples.table,
+                  on: samples.table[samples.dataId] == scoredAssessmentSamples.table[scoredAssessmentSamples.dataId])
+            .filter(samples.table[samples.dataType] == rawType &&
+                    samples.table[samples.startDate] <= end.timeIntervalSinceReferenceDate &&
+                    samples.table[samples.endDate] >= start.timeIntervalSinceReferenceDate)
+    }
+
+    private func questionaire<T>(from row: Row) throws -> T where T: Questionaire {
+        let object = try objectData(from: row)
+        let answers = try questionaireAnswers(from: row[scoredAssessmentSamples.answers])
+        return try T.init(
+            score: row[scoredAssessmentSamples.score],
+            risk: .init(rawValue: row[scoredAssessmentSamples.risk])!,
+            answers: answers,
+            startDate: object.startDate,
+            endDate: object.endDate,
+            uuid: object.uuid,
+            metadata: object.metadata,
+            device: object.device)
+    }
+
+    private func questionaireAnswers(from data: Data) throws -> [Int] {
+        let decoder = try NSKeyedUnarchiver(forReadingFrom: data)
+        decoder.requiresSecureCoding = false
+        guard let values = decoder.decodeObject(of: NSArray.self, forKey: NSKeyedArchiveRootObjectKey) as? [Int] else {
+            throw HKError(.unknownError)
+        }
+        return values
+    }
+
     // MARK: Testing
 
     public convenience init(database: Connection) {
@@ -917,6 +966,7 @@ public final class HKDatabaseStore {
         try quantitySamples.create(in: database, referencing: unitStrings)
         try quantitySampleSeries.create(in: database)
         try quantitySeriesData.create(in: database, referencing: samples)
+        try scoredAssessmentSamples.create(in: database, referencing: samples)
         try workouts.create(in: database)
         try workoutActivities.create(in: database, referencing: workouts)
         try workoutEvents.create(in: database, referencing: workouts)
