@@ -11,8 +11,8 @@ extension HealthDatabase {
      - Parameter start: The start of the date range of interest
      - Parameter end: The end of the date range of interest
      */
-    public func workouts(from start: Date = .distantPast, to end: Date = .distantFuture) throws -> [Workout] {
-        try store.workouts(from: start, to: end)
+    public func workouts(from start: Date = .distantPast, to end: Date = .distantFuture, includePrivateMetadata: Bool = false) throws -> [Workout] {
+        try store.workouts(from: start, to: end, includePrivateMetadata: includePrivateMetadata)
     }
 
     /**
@@ -21,8 +21,8 @@ extension HealthDatabase {
      - Parameter start: The start of the date range of interest
      - Parameter end: The end of the date range of interest
      */
-    public func workouts(type: HKWorkoutActivityType, from start: Date = .distantPast, to end: Date = .distantFuture) throws -> [Workout] {
-        try store.workouts(type: type, from: start, to: end)
+    public func workouts(type: HKWorkoutActivityType, from start: Date = .distantPast, to end: Date = .distantFuture, includePrivateMetadata: Bool = false) throws -> [Workout] {
+        try store.workouts(type: type, from: start, to: end, includePrivateMetadata: includePrivateMetadata)
     }
 
     /**
@@ -31,8 +31,8 @@ extension HealthDatabase {
      - Parameter workout: The workout for which to get the samples
      - Returns: The category samples of the given type associated with the workout
      */
-    public func samples<T>(ofType type: T.Type = T.self, associatedWith workout: Workout) throws -> [T] where T: HKCategorySampleContainer {
-        try store.samples(associatedWith: workout, category: T.categoryTypeIdentifier)
+    public func samples<T>(ofType type: T.Type = T.self, associatedWith workout: Workout, includePrivateMetadata: Bool = false) throws -> [T] where T: HKCategorySampleContainer {
+        try store.samples(associatedWith: workout, category: T.categoryTypeIdentifier, includePrivateMetadata: includePrivateMetadata)
             .map(T.init(sample:))
     }
 
@@ -42,8 +42,8 @@ extension HealthDatabase {
      - Parameter workout: The workout for which to get the samples
      - Returns: The quantity samples of the given type associated with the workout
      */
-    public func samples<T>(ofType type: T.Type = T.self, associatedWith workout: Workout) throws -> [T] where T: HKQuantitySampleContainer {
-        try store.samples(associatedWith: workout, quantity: T.quantityTypeIdentifier)
+    public func samples<T>(ofType type: T.Type = T.self, associatedWith workout: Workout, includePrivateMetadata: Bool = false) throws -> [T] where T: HKQuantitySampleContainer {
+        try store.samples(associatedWith: workout, quantity: T.quantityTypeIdentifier, includePrivateMetadata: includePrivateMetadata)
             .map(T.init(sample:))
     }
 
@@ -52,8 +52,8 @@ extension HealthDatabase {
      - Parameter workout: The workout for which to select the route
      - Returns: The route associated with the workout, if available
      */
-    public func route(associatedWith workout: Workout) throws -> WorkoutRoute? {
-        try store.route(associatedWith: workout)
+    public func route(associatedWith workout: Workout, includePrivateMetadata: Bool = false) throws -> WorkoutRoute? {
+        try store.route(associatedWith: workout, includePrivateMetadata: includePrivateMetadata)
     }
 
     /**
