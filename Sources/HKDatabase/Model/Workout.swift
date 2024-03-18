@@ -66,35 +66,66 @@ public struct Workout {
         self.device = device
     }
 
-    public func insert(into store: HKHealthStore, samples: [HKSample], route: [CLLocation]? = nil, removingPrivateMetadataFields: Bool = true) async throws -> HKWorkout {
-        guard let configuration = workoutActivities.first?.workoutConfiguration else {
+    /**
+     Insert a workout into the Health store.
+
+     - Parameter store: The health store where the workout should be inserted
+     - Parameter samples: Additional samples to associate with the workout
+     - Parameter route: The workout route to associate with the workout
+     - Parameter removeMetadata:Indicate that metadata with known private keys should be stripped from events, activities, and the workout itself
+     - Returns: The inserted workout
+     - Note: No metadata is altered on associated samples, ven if `removeMetadata` is set to `true`. Be sure to remove all offending keys from sample metadata before inserting a workout, or the insertion will fail.
+     */
+    public func insert(into store: HKHealthStore, samples: [HKSample] = [], route: [CLLocation] = [], removingPrivateMetadataFields removeMetadata: Bool = false) async throws -> HKWorkout {
+        guard removeMetadata else {
+            return try await insert(
+                into: store,
+                activities: workoutActivities,
+                events: workoutEvents,
+                metadata: metadata,
+                samples: samples,
+                route: route)
+        }
+        let metadata = metadata.removingPrivateFields()
+        let events = workoutEvents.map {
+            HKWorkoutEvent(type: $0.type, dateInterval: $0.dateInterval, metadata: $0.metadata?.removingPrivateFields())
+        }
+        let activities = workoutActivities.map {
+            HKWorkoutActivity(
+                workoutConfiguration: $0.workoutConfiguration,
+                start: $0.startDate,
+                end: $0.endDate,
+                metadata: $0.metadata?.removingPrivateFields())
+        }
+
+        return try await insert(
+            into: store,
+            activities: activities,
+            events: events,
+            metadata: metadata,
+            samples: samples,
+            route: route)
+    }
+
+    private func insert(into store: HKHealthStore, activities: [HKWorkoutActivity], events: [HKWorkoutEvent], metadata: [String : Any], samples: [HKSample], route: [CLLocation]) async throws -> HKWorkout {
+        guard let configuration = activities.first?.workoutConfiguration else {
             throw WorkoutInsertionError.noWorkoutActivity
         }
         let builder = HKWorkoutBuilder(healthStore: store, configuration: configuration, device: nil)
         try await builder.beginCollection(at: startDate)
-        
-        if removingPrivateMetadataFields {
-            try await builder.addMetadata(metadata.removingPrivateFields())
-            let cleanEvents = workoutEvents.map {
-                HKWorkoutEvent(type: $0.type, dateInterval: $0.dateInterval, metadata: $0.metadata?.removingPrivateFields())
-            }
-            try await builder.addWorkoutEvents(cleanEvents)
-            try await builder.addSamples(samples)
 
-            let cleanActivities = workoutActivities.map {
-                HKWorkoutActivity(workoutConfiguration: $0.workoutConfiguration, start: $0.startDate, end: $0.endDate, metadata: $0.metadata?.removingPrivateFields())
-            }
-            for activity in cleanActivities {
-                try await builder.addWorkoutActivity(activity)
-            }
-        } else {
+        for activity in activities {
+            try await builder.addWorkoutActivity(activity)
+        }
+
+        if !events.isEmpty {
+            try await builder.addWorkoutEvents(events)
+        }
+        if !metadata.isEmpty {
             try await builder.addMetadata(metadata)
-            try await builder.addWorkoutEvents(workoutEvents)
+        }
+        if !samples.isEmpty {
             try await builder.addSamples(samples)
-
-            for activity in workoutActivities {
-                try await builder.addWorkoutActivity(activity)
-            }
         }
 
         try await builder.endCollection(at: endDate)
@@ -102,11 +133,13 @@ public struct Workout {
             throw WorkoutInsertionError.failedToFinishWorkout
         }
 
-        if let route, !route.isEmpty {
-            let routeBuilder = HKWorkoutRouteBuilder(healthStore: store, device: workout.device)
-            try await routeBuilder.insertRouteData(route)
-            try await routeBuilder.finishRoute(with: workout, metadata: nil)
+        guard !route.isEmpty else {
+            return workout
         }
+
+        let routeBuilder = HKWorkoutRouteBuilder(healthStore: store, device: workout.device)
+        try await routeBuilder.insertRouteData(route)
+        try await routeBuilder.finishRoute(with: workout, metadata: nil)
         return workout
     }
 }
