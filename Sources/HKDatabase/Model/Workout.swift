@@ -71,7 +71,6 @@ public struct Workout {
             throw WorkoutInsertionError.noWorkoutActivity
         }
         let builder = HKWorkoutBuilder(healthStore: store, configuration: configuration, device: nil)
-        let startDate = workoutActivities.compactMap { $0.startDate }.min() ?? Date()
         try await builder.beginCollection(at: startDate)
         
         if removingPrivateMetadataFields {
@@ -98,7 +97,6 @@ public struct Workout {
             }
         }
 
-        let endDate = workoutActivities.compactMap { $0.endDate }.max() ?? Date()
         try await builder.endCollection(at: endDate)
         guard let workout = try await builder.finishWorkout() else {
             throw WorkoutInsertionError.failedToFinishWorkout
