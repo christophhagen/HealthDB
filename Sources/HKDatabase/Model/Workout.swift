@@ -73,14 +73,26 @@ public struct Workout {
         let builder = HKWorkoutBuilder(healthStore: store, configuration: configuration, device: nil)
         if removingPrivateMetadataFields {
             try await builder.addMetadata(metadata.removingPrivateFields())
+            let cleanEvents = workoutEvents.map {
+                HKWorkoutEvent(type: $0.type, dateInterval: $0.dateInterval, metadata: $0.metadata?.removingPrivateFields())
+            }
+            try await builder.addWorkoutEvents(cleanEvents)
+            try await builder.addSamples(samples)
+
+            let cleanActivities = workoutActivities.map {
+                HKWorkoutActivity(workoutConfiguration: $0.workoutConfiguration, start: $0.startDate, end: $0.endDate, metadata: $0.metadata?.removingPrivateFields())
+            }
+            for activity in cleanActivities {
+                try await builder.addWorkoutActivity(activity)
+            }
         } else {
             try await builder.addMetadata(metadata)
-        }
-        try await builder.addWorkoutEvents(workoutEvents)
-        try await builder.addSamples(samples)
+            try await builder.addWorkoutEvents(workoutEvents)
+            try await builder.addSamples(samples)
 
-        for activity in workoutActivities {
-            try await builder.addWorkoutActivity(activity)
+            for activity in workoutActivities {
+                try await builder.addWorkoutActivity(activity)
+            }
         }
 
         let endDate = workoutActivities.compactMap { $0.endDate }.max() ?? Date()
