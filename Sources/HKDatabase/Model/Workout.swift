@@ -71,6 +71,9 @@ public struct Workout {
             throw WorkoutInsertionError.noWorkoutActivity
         }
         let builder = HKWorkoutBuilder(healthStore: store, configuration: configuration, device: nil)
+        let startDate = workoutActivities.compactMap { $0.startDate }.min() ?? Date()
+        try await builder.beginCollection(at: startDate)
+        
         if removingPrivateMetadataFields {
             try await builder.addMetadata(metadata.removingPrivateFields())
             let cleanEvents = workoutEvents.map {
