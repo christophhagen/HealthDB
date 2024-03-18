@@ -4,218 +4,240 @@ import HealthKit
 /**
  A collection of private metadata keys used in the SQLite database
  */
-public enum HKMetadataPrivateKey {
-
-    /// Value type: ``String``
-    public static let mediaSourceBundleIdentifier = "_HKPrivateMediaSourceBundleIdentifier"
-
-    /// Value type: ``Date``
-    public static let sleepAlarmUserWakeTime = "_HKPrivateSleepAlarmUserWakeTime"
-
-    /// Value type: ``Date``
-    public static let sleepAlarmUserSetBedtime = "_HKPrivateSleepAlarmUserSetBedtime"
+public enum HKMetadataPrivateKey: String {
 
     /// Value type: ``NSNumber``
-    public static let headphoneAudioDataIsTransient = "_HKPrivateMetadataKeyHeadphoneAudioDataIsTransient"
-
-    /// Value type: ``String``
-    public static let coreMotionSourceIdentifier = "_HKPrivateCoreMotionSourceIdentifier"
+    case activitySummaryIndex = "_HKPrivateActivitySummaryIndex"
 
     /// Value type: ``NSNumber``
-    public static let heartRateContext = "_HKPrivateHeartRateContext"
-
-    /// Value type: ``NSNumber``
-    public static let appleHeartbeatSeriesAlgorithmVersion = "_HKPrivateMetadataKeyAppleHeartbeatSeriesAlgorithmVersion"
-
-    /// Value type: ``NSNumber``
-    public static let bloodOxygenContext = "_HKPrivateBloodOxygenContext"
-
-    /// Value type: ``NSNumber``
-    public static let heartbeatSequenceContext = "_HKPrivateHeartbeatSequenceContext"
-
-    /// Value type: ``NSNumber``
-    public static let regulatedUpdateVersion = "_HKPrivateMetadataKeyRegulatedUpdateVersion"
-
-    /// Value type: ``NSNumber``
-    public static let activitySummaryIndex = "_HKPrivateActivitySummaryIndex"
-
-    /// Value type: ``NSNumber``
-    public static let deepBreathingEndReason = "_HKPrivateDeepBreathingEndReason"
-
-    /// Value type: ``NSNumber``
-    public static let deepBreathingFinalHeartRate = "_HKPrivateDeepBreathingFinalHeartRate"
-
-    /// Value type: ``NSNumber``
-    public static let mindfulnessSessionType = "_HKPrivateMetadataMindfulnessSessionType"
-
-    /// Value type: ``Quantity``, unit count/s
-    public static let workoutAverageHeartRate = "_HKPrivateWorkoutAverageHeartRate"
-
-    /// Value type: ``Quantity``, unit count/s
-    public static let workoutMaxHeartRate = "_HKPrivateWorkoutMaxHeartRate"
-
-    /// Value type: ``NSNumber``
-    public static let weatherCondition = "_HKPrivateWeatherCondition"
-
-    /// Value type: ``NSNumber``
-    public static let workoutWeatherLocationCoordinatesLongitude = "_HKPrivateWorkoutWeatherLocationCoordinatesLongitude"
-
-    /// Value type: ``Quantity``, unit count/s
-    public static let workoutMinHeartRate = "_HKPrivateWorkoutMinHeartRate"
-
-    /// Value type: ``NSNumber``
-    public static let workoutWasInDaytime = "_HKPrivateWorkoutWasInDaytime"
-
-    /// Value type: ``NSNumber``
-    public static let workoutActivityMoveMode = "_HKPrivateWorkoutActivityMoveMode"
-
-    /// Value type: ``NSNumber``
-    public static let workoutWeatherLocationCoordinatesLatitude = "_HKPrivateWorkoutWeatherLocationCoordinatesLatitude"
-
-    /// Value type: ``NSNumber``
-    public static let lostGPSAtSomePoint = "_HKPrivateMetadataKeyLostGPSAtSomePoint"
-
-    /// Value type: ``Quantity``, unit m
-    public static let workoutMinGroundElevation = "_HKPrivateWorkoutMinGroundElevation"
-
-    /// Value type: ``Quantity``, unit m
-    public static let workoutMaxGroundElevation = "_HKPrivateWorkoutMaxGroundElevation"
-
-    /// Value type: ``Quantity``, unit count/min
-    public static let workoutAverageCadence = "_HKPrivateWorkoutAverageCadence"
-
-    /// Value type: ``NSNumber``
-    public static let userOnBetaBlocker = "_HKPrivateMetadataKeyUserOnBetaBlocker"
+    case appleHeartbeatSeriesAlgorithmVersion = "_HKPrivateMetadataKeyAppleHeartbeatSeriesAlgorithmVersion"
 
     /// Value type: ``Quantity``, unit dBASPL
-    public static let audioExposureLimit = "_HKPrivateMetadataKeyAudioExposureLimit"
+    case audioExposureLimit = "_HKPrivateMetadataKeyAudioExposureLimit"
+
+    /// Value type: ``NSNumber``
+    case bloodOxygenContext = "_HKPrivateBloodOxygenContext"
+
+    /// Value type: ``String``
+    case coreMotionSourceIdentifier = "_HKPrivateCoreMotionSourceIdentifier"
+
+    /// Value type: ``NSNumber``
+    case deepBreathingEndReason = "_HKPrivateDeepBreathingEndReason"
+
+    /// Value type: ``NSNumber``
+    case deepBreathingFinalHeartRate = "_HKPrivateDeepBreathingFinalHeartRate"
+
+    /// Value type: ``NSNumber``
+    case fallActionRequested = "_HKPrivateFallActionRequested"
+
+    /// Value type: ``NSNumber``
+    case fastestPace = "_HKPrivateMetadataKeyFastestPace"
+
+    /// Value type: ``NSNumber``
+    case headphoneAudioDataIsTransient = "_HKPrivateMetadataKeyHeadphoneAudioDataIsTransient"
+
+    /// Value type: ``NSNumber``
+    case heartbeatSequenceContext = "_HKPrivateHeartbeatSequenceContext"
+
+    /// Value type: ``NSNumber``
+    case heartRateContext = "_HKPrivateHeartRateContext"
 
     /// Value type: ``Quantity``, unit count/min
-    public static let heartRateEventThreshold = "_HKPrivateMetadataKeyHeartRateEventThreshold"
+    case heartRateEventThreshold = "_HKPrivateMetadataKeyHeartRateEventThreshold"
 
-    /// Value type: `` ``
-    public static let workoutTargetZoneMax = "_HKPrivateWorkoutTargetZoneMax"
-
-    /// Value type: `` ``
-    public static let workoutTargetZoneType = "_HKPrivateWorkoutTargetZoneType"
-
-    /// Value type: `` ``
-    public static let workoutTargetZoneMin = "_HKPrivateWorkoutTargetZoneMin"
+    /// Value type: ``Int`` (``Bool``)
+    case isPartialSplit = "_HKPrivateMetadataIsPartialSplit"
 
     /// Value type: ``NSNumber``
-    public static let fallActionRequested = "_HKPrivateFallActionRequested"
+    case lostGPSAtSomePoint = "_HKPrivateMetadataKeyLostGPSAtSomePoint"
+
+    /// Value type: ``String``
+    case mediaSourceBundleIdentifier = "_HKPrivateMediaSourceBundleIdentifier"
+
+    /// Value type: ``String``
+    case metricPlatterStatistics = "_HKPrivateMetadataKeyMetricPlatterStatistics"
+
+    /// Value type: ``NSNumber``
+    case mindfulnessSessionType = "_HKPrivateMetadataMindfulnessSessionType"
+
+    /// Value type: ``NSNumber``
+    case mirroredWorkout = "_HKPrivateMetadataKeyMirroredWorkout"
+
+    /// Value type: ``NSNumber``
+    case regulatedUpdateVersion = "_HKPrivateMetadataKeyRegulatedUpdateVersion"
+
+    /// Value type: ``String``
+    case sessionID = "_HKPrivateMetadataKeySessionID"
 
     /// Value type: ``Date``
-    public static let workoutElapsedTimeInHeartRateZones = "_HKPrivateWorkoutElapsedTimeInHeartRateZones"
+    case sleepAlarmUserSetBedtime = "_HKPrivateSleepAlarmUserSetBedtime"
 
-    /// Value type: ``String``
-    public static let workoutWeatherSourceName = "_HKPrivateWorkoutWeatherSourceName"
+    /// Value type: ``Date``
+    case sleepAlarmUserWakeTime = "_HKPrivateSleepAlarmUserWakeTime"
 
-    /// Value type: ``Data``
-    public static let workoutHeartRateZones = "_HKPrivateWorkoutHeartRateZones"
+    /// Value type ``HKQuantity``, unit `s`
+    case splitActiveDurationQuantity = "_HKPrivateMetadataSplitActiveDurationQuantity"
 
-    /// Value type: ``Data``
-    public static let workoutConfiguration = "_HKPrivateWorkoutConfiguration"
+    /// Value type ``HKQuantity``, unit `m`
+    case splitDistanceQuantity = "_HKPrivateMetadataSplitDistanceQuantity"
+
+    /// Value type ``Int``
+    case splitMeasuringSystem = "_HKPrivateMetadataSplitMeasuringSystem"
+
+    /// Value type ``HKQuantity``, unit `m`
+    case totalDistanceQuantity = "_HKPrivateMetadataTotalDistanceQuantity"
 
     /// Value type: ``NSNumber``
-    public static let workoutHeartRateZonesConfigurationType = "_HKPrivateWorkoutHeartRateZonesConfigurationType"
+    case userOnBetaBlocker = "_HKPrivateMetadataKeyUserOnBetaBlocker"
 
-    /// Value type: ``Data``
-    public static let workoutHeartRateZonesCurrentZoneIndex = "_HKPrivateWorkoutHeartRateZonesCurrentZoneIndex"
+    /// Value type: ``NSNumber``
+    case weatherCondition = "_HKPrivateWeatherCondition"
 
-    /// Value type: ``Data``
-    public static let workoutHeartRateZonesLastProcessedEntryDate = "_HKPrivateWorkoutHeartRateZonesLastProcessedEntryDate"
+    /// Value type: ``NSNumber``
+    case workoutActivityMoveMode = "_HKPrivateWorkoutActivityMoveMode"
 
-    /// Value type: ``Data``
-    public static let workoutHeartRateZonesLastProcessedEventDate = "_HKPrivateWorkoutHeartRateZonesLastProcessedEventDate"
+    /// Value type: ``Quantity``, unit count/min
+    case workoutAverageCadence = "_HKPrivateWorkoutAverageCadence"
 
-    /// Value type: ``Data``
-    public static let workoutCyclingPowerZonesAutomaticFTP = "_HKPrivateWorkoutCyclingPowerZonesAutomaticFTP"
-
-    /// Value type: ``Data``
-    public static let workoutCyclingPowerZonesConfiguration = "_HKPrivateWorkoutCyclingPowerZonesConfiguration"
-
-    /// Value type: ``Data``
-    public static let workoutElapsedTimeInCyclingPowerZones = "_HKPrivateWorkoutElapsedTimeInCyclingPowerZones"
+    /// Value type: ``Quantity``, unit count/s
+    case workoutAverageHeartRate = "_HKPrivateWorkoutAverageHeartRate"
 
     /// Value type: ``Quantity``, unit W
-    public static let workoutAveragePower = "_HKPrivateWorkoutAveragePower"
+    case workoutAveragePower = "_HKPrivateWorkoutAveragePower"
+
+    /// Value type: ``Data``
+    case workoutConfiguration = "_HKPrivateWorkoutConfiguration"
+
+    /// Value type: ``Data``
+    case workoutCyclingPowerZonesAutomaticFTP = "_HKPrivateWorkoutCyclingPowerZonesAutomaticFTP"
+
+    /// Value type: ``Data``
+    case workoutCyclingPowerZonesConfiguration = "_HKPrivateWorkoutCyclingPowerZonesConfiguration"
+
+    /// Value type: ``Data``
+    case workoutElapsedTimeInCyclingPowerZones = "_HKPrivateWorkoutElapsedTimeInCyclingPowerZones"
+
+    /// Value type: ``Date``
+    case workoutElapsedTimeInHeartRateZones = "_HKPrivateWorkoutElapsedTimeInHeartRateZones"
+
+    /// Value type: ``NSNumber``
+    case workoutExtendedMode = "_HKPrivateWorkoutExtendedMode"
+
+    /// Value type: ``Data``
+    case workoutHeartRateZones = "_HKPrivateWorkoutHeartRateZones"
+
+    /// Value type: ``NSNumber``
+    case workoutHeartRateZonesConfigurationType = "_HKPrivateWorkoutHeartRateZonesConfigurationType"
+
+    /// Value type: ``Data``
+    case workoutHeartRateZonesCurrentZoneIndex = "_HKPrivateWorkoutHeartRateZonesCurrentZoneIndex"
+
+    /// Value type: ``Data``
+    case workoutHeartRateZonesLastProcessedEntryDate = "_HKPrivateWorkoutHeartRateZonesLastProcessedEntryDate"
+
+    /// Value type: ``Data``
+    case workoutHeartRateZonesLastProcessedEventDate = "_HKPrivateWorkoutHeartRateZonesLastProcessedEventDate"
+
+    /// Value type: ``Quantity``, unit m
+    case workoutMaxGroundElevation = "_HKPrivateWorkoutMaxGroundElevation"
+
+    /// Value type: ``Quantity``, unit count/s
+    case workoutMaxHeartRate = "_HKPrivateWorkoutMaxHeartRate"
+
+    /// Value type: ``Quantity``, unit m
+    case workoutMinGroundElevation = "_HKPrivateWorkoutMinGroundElevation"
+
+    /// Value type: ``Quantity``, unit count/s
+    case workoutMinHeartRate = "_HKPrivateWorkoutMinHeartRate"
+
+    /// value type: ``Int``
+    case workoutSegmentEventSubtype = "_HKPrivateWorkoutSegmentEventSubtype"
+
+    /// Value type: `` ``
+    case workoutTargetZoneMax = "_HKPrivateWorkoutTargetZoneMax"
+
+    /// Value type: `` ``
+    case workoutTargetZoneMin = "_HKPrivateWorkoutTargetZoneMin"
+
+    /// Value type: `` ``
+    case workoutTargetZoneType = "_HKPrivateWorkoutTargetZoneType"
+
+    /// Value type: ``NSNumber``
+    case workoutWasInDaytime = "_HKPrivateWorkoutWasInDaytime"
+
+    /// Value type: ``NSNumber``
+    case workoutWeatherLocationCoordinatesLatitude = "_HKPrivateWorkoutWeatherLocationCoordinatesLatitude"
+
+    /// Value type: ``NSNumber``
+    case workoutWeatherLocationCoordinatesLongitude = "_HKPrivateWorkoutWeatherLocationCoordinatesLongitude"
 
     /// Value type: ``String``
-    public static let metricPlatterStatistics = "_HKPrivateMetadataKeyMetricPlatterStatistics"
-
-    /// Value type: ``NSNumber``
-    public static let workoutExtendedMode = "_HKPrivateWorkoutExtendedMode"
-
-    /// Value type: ``String``
-    public static let sessionID = "_HKPrivateMetadataKeySessionID"
-
-    /// Value type: ``NSNumber``
-    public static let fastestPace = "_HKPrivateMetadataKeyFastestPace"
-
-    /// Value type: ``NSNumber``
-    public static let mirroredWorkout = "_HKPrivateMetadataKeyMirroredWorkout"
-
+    case workoutWeatherSourceName = "_HKPrivateWorkoutWeatherSourceName"
 }
 
-extension HKMetadataPrivateKey {
+extension HKMetadataPrivateKey: CustomStringConvertible {
 
     /**
      Provide a nicer description of a private metadata key.
      */
-    public static func describe(key: String) -> String? {
-        switch key {
-        case mediaSourceBundleIdentifier: return "Media Source Bundle Identifier"
-        case sleepAlarmUserWakeTime: return "Sleep Alarm User Wake Time"
-        case sleepAlarmUserSetBedtime: return "Sleep Alarm User Set Bedtime"
-        case headphoneAudioDataIsTransient: return "Headphone Audio Data is Transient"
-        case coreMotionSourceIdentifier: return "Core Motion Source Identifier"
-        case heartRateContext: return "Heart Rate Context"
-        case appleHeartbeatSeriesAlgorithmVersion: return "Apple Heartbeat Series Algorithm Version"
-        case bloodOxygenContext: return "Blood Oxygen Context"
-        case heartbeatSequenceContext: return "Heartbeat Sequence Context"
-        case regulatedUpdateVersion: return "Regulated Update Version"
-        case activitySummaryIndex: return "Activity Summary Index"
-        case deepBreathingEndReason: return "Reason for End of Deep Breathing"
-        case deepBreathingFinalHeartRate: return "Deep Breathing Final Heart Rate"
-        case mindfulnessSessionType: return "Mindfulness Session Type"
-        case workoutAverageHeartRate: return "Average Workout Heart Rate"
-        case workoutMaxHeartRate: return "Maximum Workout Heart Rate"
-        case workoutMinHeartRate: return "Minimum Workout Heart Rate"
-        case workoutWasInDaytime: return "Workout Was in Daytime"
-        case workoutActivityMoveMode: return "Workout Activity Move Mode"
-        case workoutWeatherLocationCoordinatesLatitude: return "Workout Weather Location Latitude"
-        case workoutWeatherLocationCoordinatesLongitude: return "Workout Weather Location Longitude"
-        case lostGPSAtSomePoint: return "Lost GPS At Some Point"
-        case weatherCondition: return "Weather Condition"
-        case workoutMinGroundElevation: return "Minimum Ground Elevation for Workout"
-        case workoutMaxGroundElevation: return "Maximum Ground Elevation for Workout"
-        case workoutAverageCadence: return "Average Workout Cadence"
-        case userOnBetaBlocker: return "User is on Beta Blocker"
-        case audioExposureLimit: return "Audio Exposure Limit"
-        case heartRateEventThreshold: return "Heart Rate Event Threshold"
-        case workoutTargetZoneMax: return "Workout Target Zone Maximum"
-        case workoutTargetZoneType: return "Workout Target Zone Type"
-        case workoutTargetZoneMin: return "Workout Target Zone Minimum"
-        case fallActionRequested: return "Requested Fall Action"
-        case workoutElapsedTimeInHeartRateZones: return "Workout Elapsed Time in Heart Rate Zones"
-        case workoutWeatherSourceName: return "Workout Weather Source Name"
-        case workoutHeartRateZones: return "Workout Heart Rate Zones"
-        case workoutConfiguration: return "Workout Configuration"
-        case workoutHeartRateZonesConfigurationType: return "Workout Heart Rate Zones Configuration Type"
-        case workoutHeartRateZonesCurrentZoneIndex: return "Workout Heart Rate Zones Current Zone Index"
-        case workoutHeartRateZonesLastProcessedEntryDate: return "Workout Heart Rate Zones Last Processed Entry Date"
-        case workoutHeartRateZonesLastProcessedEventDate: return "Workout Heart Rate Zones Last Processed Event Date"
-        case workoutCyclingPowerZonesAutomaticFTP: return "Workout Cycling Power Zones Automatic FTP"
-        case workoutCyclingPowerZonesConfiguration: return "Workout Cycling Power Zones Configuration"
-        case workoutElapsedTimeInCyclingPowerZones: return "Workout Elapsed Time In Cycling Power Zones"
-        case workoutAveragePower: return "Average Workout Power"
-        case metricPlatterStatistics: return "Metric Platter Statistics"
-        case workoutExtendedMode: return "Extended Workout Mode"
-        case sessionID: return "Session ID"
-        case fastestPace: return "Fastest Pace"
-        case mirroredWorkout: return "Mirrored Workout"
-        default: return nil
+    public var description: String {
+        switch self {
+        case .activitySummaryIndex: return "Activity Summary Index"
+        case .appleHeartbeatSeriesAlgorithmVersion: return "Apple Heartbeat Series Algorithm Version"
+        case .audioExposureLimit: return "Audio Exposure Limit"
+        case .bloodOxygenContext: return "Blood Oxygen Context"
+        case .coreMotionSourceIdentifier: return "Core Motion Source Identifier"
+        case .deepBreathingEndReason: return "Reason for End of Deep Breathing"
+        case .deepBreathingFinalHeartRate: return "Deep Breathing Final Heart Rate"
+        case .fallActionRequested: return "Requested Fall Action"
+        case .fastestPace: return "Fastest Pace"
+        case .headphoneAudioDataIsTransient: return "Headphone Audio Data is Transient"
+        case .heartbeatSequenceContext: return "Heartbeat Sequence Context"
+        case .heartRateContext: return "Heart Rate Context"
+        case .heartRateEventThreshold: return "Heart Rate Event Threshold"
+        case .isPartialSplit: return "Is Partial Split"
+        case .lostGPSAtSomePoint: return "Lost GPS At Some Point"
+        case .mediaSourceBundleIdentifier: return "Media Source Bundle Identifier"
+        case .metricPlatterStatistics: return "Metric Platter Statistics"
+        case .mindfulnessSessionType: return "Mindfulness Session Type"
+        case .mirroredWorkout: return "Mirrored Workout"
+        case .regulatedUpdateVersion: return "Regulated Update Version"
+        case .sessionID: return "Session ID"
+        case .sleepAlarmUserSetBedtime: return "Sleep Alarm User Set Bedtime"
+        case .sleepAlarmUserWakeTime: return "Sleep Alarm User Wake Time"
+        case .splitActiveDurationQuantity: return "Split Active Duration Quantity"
+        case .splitDistanceQuantity: return "Split Distance Quantity"
+        case .splitMeasuringSystem: return "Split Measuring System"
+        case .totalDistanceQuantity: return "Total Distance"
+        case .userOnBetaBlocker: return "User is on Beta Blocker"
+        case .weatherCondition: return "Weather Condition"
+        case .workoutActivityMoveMode: return "Workout Activity Move Mode"
+        case .workoutAverageCadence: return "Average Workout Cadence"
+        case .workoutAverageHeartRate: return "Average Workout Heart Rate"
+        case .workoutAveragePower: return "Average Workout Power"
+        case .workoutConfiguration: return "Workout Configuration"
+        case .workoutCyclingPowerZonesAutomaticFTP: return "Workout Cycling Power Zones Automatic FTP"
+        case .workoutCyclingPowerZonesConfiguration: return "Workout Cycling Power Zones Configuration"
+        case .workoutElapsedTimeInCyclingPowerZones: return "Workout Elapsed Time In Cycling Power Zones"
+        case .workoutElapsedTimeInHeartRateZones: return "Workout Elapsed Time in Heart Rate Zones"
+        case .workoutExtendedMode: return "Extended Workout Mode"
+        case .workoutHeartRateZones: return "Workout Heart Rate Zones"
+        case .workoutHeartRateZonesConfigurationType: return "Workout Heart Rate Zones Configuration Type"
+        case .workoutHeartRateZonesCurrentZoneIndex: return "Workout Heart Rate Zones Current Zone Index"
+        case .workoutHeartRateZonesLastProcessedEntryDate: return "Workout Heart Rate Zones Last Processed Entry Date"
+        case .workoutHeartRateZonesLastProcessedEventDate: return "Workout Heart Rate Zones Last Processed Event Date"
+        case .workoutMaxGroundElevation: return "Maximum Ground Elevation for Workout"
+        case .workoutMaxHeartRate: return "Maximum Workout Heart Rate"
+        case .workoutMinGroundElevation: return "Minimum Ground Elevation for Workout"
+        case .workoutMinHeartRate: return "Minimum Workout Heart Rate"
+        case .workoutSegmentEventSubtype: return "Workout Segment Event Subtype"
+        case .workoutTargetZoneMax: return "Workout Target Zone Maximum"
+        case .workoutTargetZoneMin: return "Workout Target Zone Minimum"
+        case .workoutTargetZoneType: return "Workout Target Zone Type"
+        case .workoutWasInDaytime: return "Workout Was in Daytime"
+        case .workoutWeatherLocationCoordinatesLatitude: return "Workout Weather Location Latitude"
+        case .workoutWeatherLocationCoordinatesLongitude: return "Workout Weather Location Longitude"
+        case .workoutWeatherSourceName: return "Workout Weather Source Name"
         }
     }
 }
