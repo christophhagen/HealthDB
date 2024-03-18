@@ -66,12 +66,16 @@ public struct Workout {
         self.device = device
     }
 
-    public func insert(into store: HKHealthStore, samples: [HKSample], route: [CLLocation]? = nil) async throws -> HKWorkout {
+    public func insert(into store: HKHealthStore, samples: [HKSample], route: [CLLocation]? = nil, removingPrivateMetadataFields: Bool = true) async throws -> HKWorkout {
         guard let configuration = workoutActivities.first?.workoutConfiguration else {
             throw WorkoutInsertionError.noWorkoutActivity
         }
         let builder = HKWorkoutBuilder(healthStore: store, configuration: configuration, device: nil)
-        try await builder.addMetadata(metadata)
+        if removingPrivateMetadataFields {
+            try await builder.addMetadata(metadata.removingPrivateFields())
+        } else {
+            try await builder.addMetadata(metadata)
+        }
         try await builder.addWorkoutEvents(workoutEvents)
         try await builder.addSamples(samples)
 
