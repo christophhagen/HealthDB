@@ -89,10 +89,10 @@ public final class HKDatabaseStore {
      */
     private func objectData(from row: Row) throws -> (dataId: Int, startDate: Date, endDate: Date, uuid: UUID, device: HKDevice?, metadata: [String : Any]) {
         let dataId = row[samples.table[samples.dataId]]
-        let startDate = Date(timeIntervalSinceReferenceDate: row[samples.startDate])
-        let endDate = Date(timeIntervalSinceReferenceDate: row[samples.endDate])
+        let startDate = Date(timeIntervalSinceReferenceDate: row[samples.table[samples.startDate]])
+        let endDate = Date(timeIntervalSinceReferenceDate: row[samples.table[samples.endDate]])
         let dataProvenance = row[objects.provenance]
-        let uuid = UUID(data: row[objects.uuid]!)!
+        let uuid = UUID(data: row[objects.table[objects.uuid]]!)!
         let device = try dataProvenances.device(for: dataProvenance, in: database)
         var metadata = try metadata(for: dataId)
         metadata[.externalUUID] = uuid.uuidString
