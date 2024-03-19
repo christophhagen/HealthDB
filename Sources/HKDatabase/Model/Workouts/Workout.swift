@@ -17,7 +17,7 @@ public struct Workout {
     /// The distance in km (?)
     public let totalDistance: Double?
 
-    public let goal: Goal?
+    public let goal: HKQuantity?
 
     public let startDate: Date
 
@@ -61,7 +61,7 @@ public struct Workout {
         self.startDate = startDate
         self.endDate = endDate
         self.totalDistance = totalDistance
-        self.goal = .init(goalType: goalType, goal: goal)
+        self.goal = Workout.goal(type: goalType, value: goal)
         self.workoutEvents = events
         self.workoutActivities = activities
         self.metadata = metadata
@@ -144,6 +144,39 @@ public struct Workout {
         try await routeBuilder.insertRouteData(route)
         try await routeBuilder.finishRoute(with: workout, metadata: nil)
         return workout
+    }
+
+    private static func goal(type: Int?, value: Double?) -> HKQuantity? {
+        guard let value else {
+            return nil
+        }
+        switch type {
+        case .none:
+            return nil
+        case 0: return nil
+        case 1: return .init(unit: .meterUnit(with: .kilo), doubleValue: value) // Distance
+        case 2: return .init(unit: .second(), doubleValue: value) // Duration
+        case 3: return .init(unit: .kilocalorie(), doubleValue: value) // Calorie
+        default:
+            print("Unknown workout goal type \(type!) (value: \(value))")
+            return nil
+        }
+    }
+
+    func goalValues() -> (type: Int?, goal: Double?) {
+        guard let goal else {
+            return (nil, nil)
+        }
+        if goal.is(compatibleWith: .meter()) {
+            return (1, goal.doubleValue(for: .meterUnit(with: .kilo)))
+        }
+        if goal.is(compatibleWith: .second()) {
+            return (2, goal.doubleValue(for: .second()))
+        }
+        if goal.is(compatibleWith: .kilocalorie()) {
+            return (3, goal.doubleValue(for: .kilocalorie()))
+        }
+        return (nil, nil)
     }
 }
 

@@ -770,10 +770,11 @@ public final class HKDatabaseStore {
     }
 
     public func insert(workout: Workout) throws {
+        let (goalType, goalValue) = workout.goalValues()
         let rowid = try database.run(workouts.table.insert(
             workouts.totalDistance <- workout.totalDistance,
-            workouts.goalType <- workout.goal?.goalType,
-            workouts.goal <- workout.goal?.goal)
+            workouts.goalType <- goalType,
+            workouts.goal <- goalValue)
         )
         let dataId = Int(rowid)
         for event in workout.workoutEvents {

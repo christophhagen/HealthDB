@@ -22,7 +22,7 @@ The following feature list refers to databases recovered with iOS 16 and iOS 17.
 [Workout activities](#workouts) | ✅ 
 [Workout events](#workouts) | ✅ 
 [Workout statistics](#workouts) | ✅ | Average + min/max
-Workout goals | ❗️ | Only `duration`
+Workout goals | ✅ | Duration, Distance, Calories
 Workout zones | ❌
 [User characteristics](#basic-user-characteristics-and-values) | ✅ | Except `HKActivityMoveMode`
 [Correlations](#correlation-samples) | ✅ |
