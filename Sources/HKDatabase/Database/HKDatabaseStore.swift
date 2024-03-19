@@ -670,6 +670,39 @@ public final class HKDatabaseStore {
     // MARK: Workouts
 
     /**
+     Get a list of all workout activity types in the database.
+     */
+    public func storedWorkoutTypes() throws -> [HKWorkoutActivityType] {
+        let query = workoutActivities.table
+            .select(workoutActivities.activityType.distinct)
+        return try database.prepare(query).compactMap { row in
+            let raw = row[workoutActivities.activityType.distinct]
+            return HKWorkoutActivityType(rawValue: UInt(raw))
+        }
+    }
+
+    /**
+     Get a list of all workout activity types in the database including their count
+     */
+    public func workoutTypeFrequencies() throws -> [HKWorkoutActivityType: Int] {
+        let query = workoutActivities.table
+            .select(workoutActivities.activityType)
+        return try database.prepare(query).reduce(into: [:]) { result, row in
+            let raw = row[workoutActivities.activityType]
+            guard raw >= 0 else {
+                print("Found unknown activity type \(raw)")
+                return
+            }
+            guard let type = HKWorkoutActivityType(rawValue: UInt(raw)) else {
+                print("Found unknown activity type \(raw)")
+                return
+            }
+            let oldCount = result[type] ?? 0
+            result[type] = oldCount + 1
+        }
+    }
+
+    /**
      All workouts in the database, regardless of type.
      - Parameter start: The start of the date range of interest
      - Parameter end: The end of the date range of interest
