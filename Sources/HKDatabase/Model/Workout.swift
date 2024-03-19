@@ -26,7 +26,9 @@ public struct Workout {
     public let device: HKDevice?
 
     public let metadata: [String : Any]
-    
+
+    public let uuid: UUID
+
     public let workoutEvents: [HKWorkoutEvent]
 
     public let workoutActivities: [HKWorkoutActivity]
@@ -54,7 +56,7 @@ public struct Workout {
         workoutActivities.first?.workoutConfiguration.activityType.description ?? "Unknown activity"
     }
     
-    public init(dataId: Int, startDate: Date, endDate: Date, totalDistance: Double? = nil, goalType: Int? = nil, goal: Double? = nil, events: [HKWorkoutEvent] = [], activities: [HKWorkoutActivity] = [], metadata: [String : Any] = [:], device: HKDevice? = nil) {
+    public init(dataId: Int, startDate: Date, endDate: Date, totalDistance: Double? = nil, goalType: Int? = nil, goal: Double? = nil, events: [HKWorkoutEvent] = [], activities: [HKWorkoutActivity] = [], uuid: UUID? = nil, metadata: [String : Any] = [:], device: HKDevice? = nil) {
         self.dataId = dataId
         self.startDate = startDate
         self.endDate = endDate
@@ -64,6 +66,7 @@ public struct Workout {
         self.workoutActivities = activities
         self.metadata = metadata
         self.device = device
+        self.uuid = uuid ?? UUID()
     }
 
     /**

@@ -731,7 +731,9 @@ public final class HKDatabaseStore {
             goal:  row[workouts.goal],
             events: events,
             activities: activities,
-            metadata: object.metadata)
+            uuid: object.uuid,
+            metadata: object.metadata.withoutUUID(),
+            device: object.device)
     }
 
     public func insert(workout: Workout) throws {
