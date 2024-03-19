@@ -30,6 +30,7 @@ Workout zones | ❌
 [Scored Assessments](#scored-assessments) | ✅ | Since iOS 17
 Medical records and prescriptions | ❌
 Achievements | ❌
+Sleep schedule | ❌
 
 ### Caveats
 
