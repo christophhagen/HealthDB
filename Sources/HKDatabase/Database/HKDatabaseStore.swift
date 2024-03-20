@@ -40,6 +40,8 @@ public final class HKDatabaseStore {
 
     private let scoredAssessmentSamples = ScoredAssessmentSamples()
 
+    private let sleepScheduleSamples = SleepScheduleSamples()
+
     private let unitStrings = UnitStringsTable()
 
     private let workouts = WorkoutsTable()
@@ -993,7 +995,7 @@ public final class HKDatabaseStore {
     private func questionaire<T>(from row: Row) throws -> T where T: Questionaire {
         let object = try objectData(from: row)
         let answers = try questionaireAnswers(from: row[scoredAssessmentSamples.answers])
-        return try T.init(
+        return T.init(
             score: row[scoredAssessmentSamples.score],
             risk: .init(rawValue: row[scoredAssessmentSamples.risk])!,
             answers: answers,
@@ -1011,6 +1013,35 @@ public final class HKDatabaseStore {
             throw HKError(.unknownError)
         }
         return values
+    }
+
+    // MARK: Sleep Schedules
+
+    public func sleepSchedules(from start: Date = .distantPast, to end: Date = .distantFuture) throws -> [SleepScheduleSample] {
+        let query = samples.table
+            .select(samples.table[*],
+                    objects.table[objects.provenance],
+                    objects.table[objects.uuid],
+                    sleepScheduleSamples.table[*])
+            .join(.leftOuter, objects.table,
+                  on: samples.table[samples.dataId] == objects.table[objects.dataId])
+            .join(.leftOuter, sleepScheduleSamples.table,
+                  on: samples.table[samples.dataId] == sleepScheduleSamples.table[sleepScheduleSamples.dataId])
+            .filter(samples.table[samples.dataType] == SampleType.sleepScheduleSample.rawValue &&
+                    samples.table[samples.startDate] <= end.timeIntervalSinceReferenceDate &&
+                    samples.table[samples.endDate] >= start.timeIntervalSinceReferenceDate)
+
+        return try database.prepare(query).map { row in
+            let object = try objectData(from: row)
+            let schedule = sleepScheduleSamples.sleepSchedule(from: row)
+            return .init(
+                sleepSchedule: schedule,
+                startDate: object.startDate,
+                endDate: object.endDate,
+                uuid: object.uuid,
+                metadata: object.metadata.withoutUUID(),
+                device: object.device)
+        }
     }
 
     // MARK: Testing

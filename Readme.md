@@ -28,9 +28,9 @@ Workout zones | ❌
 [Correlations](#correlation-samples) | ✅ |
 [ECG Samples](#ecg-samples) | ✅ | Including voltages
 [Scored Assessments](#scored-assessments) | ✅ | Since iOS 17
+[Sleep schedules](#sleep-schedules) | ✅
 Medical records and prescriptions | ❌
 Achievements | ❌
-Sleep schedule | ❌
 
 ### Caveats
 
@@ -405,6 +405,14 @@ ECG Samples have the `data_type` 144.
 The samples have associated `voltage_payload` (SQLite `BLOB`), which is encoded using [protobuf](https://protobuf.dev).
 The concrete specification can be viewed in the [ECGVoltageData.proto](Sources/HKDatabase/Model/ECGVoltageData.proto) file.
 It contains an array of the voltage samples in microvolts, as well as the sampling frequency and an unknown property.
+
+### Sleep schedules
+
+The database includes a list of sleep schedules, which represent the bed time and wake time specified for the different weekdays.
+
+```swift
+let samples = try store.sleepSchedules(from: .distantPast, to: .now)
+```
 
 ## Related projects and info
 
