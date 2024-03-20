@@ -50,6 +50,9 @@ public final class HKDatabaseStore {
 
     private let workoutStatistics = WorkoutStatisticsTable()
 
+    /// Enable some debug statements
+    public var printDebugOutput = false
+
     /**
      Open a Health database at the given url.
      */
@@ -61,6 +64,13 @@ public final class HKDatabaseStore {
     init(fileUrl: URL, database: Connection) {
         self.fileUrl = fileUrl
         self.database = database
+    }
+
+    private func print(_ message: String) {
+        guard printDebugOutput else {
+            return
+        }
+        Swift.print(message)
     }
 
     // MARK: Key-Value
@@ -569,7 +579,7 @@ public final class HKDatabaseStore {
             return try samples(fromCategoryIds: dataIds, type: categoryType)
         }
         if type == .workoutRoute {
-            print("Ignoring \(dataIds.count) location series")
+            return []
         } else if type == .workout {
             print("Ignoring \(dataIds.count) associated workouts")
         } else {
