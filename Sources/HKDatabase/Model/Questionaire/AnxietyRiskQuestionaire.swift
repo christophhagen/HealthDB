@@ -36,7 +36,7 @@ public struct AnxietyRiskQuestionaire: Questionaire {
 
     // MARK: Questionaire
 
-    public init(score: Int, risk: Risk, answers: [Int], startDate: Date, endDate: Date, uuid: UUID, metadata: [String : Any]?, device: HKDevice?) throws {
+    public init(score: Int, risk: Risk, answers: [Int], startDate: Date, endDate: Date, uuid: UUID, metadata: [String : Any]?, device: HKDevice?) {
         self.score = score
         self.risk = risk
         self.answers = answers

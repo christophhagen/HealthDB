@@ -13,7 +13,7 @@ public protocol Questionaire: HKSampleProtocol {
 
     var answers: [Int] { get }
 
-    init(score: Int, risk: Risk, answers: [Int], startDate: Date, endDate: Date, uuid: UUID, metadata: [String : Any]?, device: HKDevice?) throws
+    init(score: Int, risk: Risk, answers: [Int], startDate: Date, endDate: Date, uuid: UUID, metadata: [String : Any]?, device: HKDevice?)
 }
 
 extension Questionaire {
