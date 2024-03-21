@@ -25,6 +25,8 @@ extension HealthDatabase {
         try store.workouts(type: type, from: start, to: end)
     }
 
+    // MARK: Samples
+
     /**
      Get all category samples of a single type associated with a workout.
      - Parameter type: The type of category samples to retrieve
@@ -46,6 +48,8 @@ extension HealthDatabase {
         try store.samples(associatedWith: workout, quantity: T.quantityTypeIdentifier)
             .map(T.init(sample:))
     }
+
+    // MARK: Locations
 
     /**
      Get the route associated with a workout.
@@ -74,6 +78,8 @@ extension HealthDatabase {
         try route(associatedWith: workout)
             .map { try store.locations(associatedWith: $0) } ?? []
     }
+
+    // MARK: Statistics
 
     /**
      Get the statistics associated with a workout activity.
@@ -125,5 +131,16 @@ extension HealthDatabase {
     public func maximum<T>(for type: T.Type = T.self, associatedWith workoutActivity: HKWorkoutActivity) throws -> HKQuantity? where T: HKQuantitySampleContainer {
         try store.statistics(T.quantityTypeIdentifier, associatedWith: workoutActivity, unit: T.defaultUnit)
             .map { $0.maximum }
+    }
+
+    // MARK: Configuration
+
+    /**
+     Get the workout configuration for a workout.
+     - Parameter workout: The workout for which to get the configuration
+     - Returns: The workout configuration, if the workout metadata contains it.
+     */
+    public func configuration(associatedWith workout: Workout) throws -> WorkoutConfiguration? {
+        try store.configuration(associatedWith: workout)
     }
 }

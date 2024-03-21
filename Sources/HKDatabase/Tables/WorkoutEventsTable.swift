@@ -45,7 +45,7 @@ struct WorkoutEventsTable {
         let type = HKWorkoutEventType(rawValue: row[type])!
         // let sessionUUID = row[sessionUUID]
         // let error = row[error]
-        return .init(type:  type, dateInterval: interval, metadata: metadata)
+        return .init(type: type, dateInterval: interval, metadata: metadata)
     }
 
     private func metadata(_ data: Data?) -> [String : Any] {

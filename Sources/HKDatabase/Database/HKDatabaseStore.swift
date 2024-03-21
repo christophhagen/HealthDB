@@ -782,7 +782,7 @@ public final class HKDatabaseStore {
     }
 
     public func insert(workout: Workout) throws {
-        let (goalType, goalValue) = workout.goalValues()
+        let (goalType, goalValue) = WorkoutGoalType.values(for: workout.goal)
         let rowid = try database.run(workouts.table.insert(
             workouts.totalDistance <- workout.totalDistance,
             workouts.goalType <- goalType,
@@ -847,6 +847,17 @@ public final class HKDatabaseStore {
                 device: object.device,
                 metadata: object.metadata.withoutUUID())
         }
+    }
+
+    /**
+     Get the workout configuration for a workout.
+     - Parameter workout: The workout for which to get the configuration
+     - Returns: The workout configuration, if the workout metadata contains it.
+     */
+    public func configuration(associatedWith workout: Workout) throws -> WorkoutConfiguration? {
+        try metadata(for: workout.uuid, includePrivateMetadata: true)
+            .value(forPrivateKey: .workoutConfiguration, as: Data.self)
+            .map(WorkoutConfiguration.init)
     }
 
     /**

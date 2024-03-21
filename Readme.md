@@ -368,6 +368,25 @@ let minSpeed = try db.minimum(for: RunningSpeed.self, associatedWith: activity)
 Statistics are stored in the `workout_statistics` table.
 They are linked to workout activities by `workout_activities.ROWID == workout_statistics.workout_activity_id`.
 
+### Workout configuration
+
+Health stores configuration data as metadata with every workout, which can be accessed:
+
+```swift
+let config = try db.configuration(associatedWith: workout)
+```
+
+It's not fully clear what each property of the configuration represents, since the format has been reconstructed from a private field where no documentation exists.
+Apple may change the data structures at any time, so this feature may or may not work for you.
+
+Workout configuration is stored as metadata on `HKWorkout` samples using the key `HKMetadataPrivateKey.workoutConfiguration` (raw value `_HKPrivateWorkoutConfiguration`).
+The configuration is stored as binary data, which can be decoded as `JSON` (using the internal type `RawWorkoutConfiguration`).
+This struct contains a few values, and another `data` field, which again contains a JSON payload.
+Decoding this data using `RawConfigurationData` yields more properties and two more binary fields (`goal` and `activityType`).
+Both of these are encoded using `NSKeyedArchiver`, and the underlying encoded classes are unknown.
+They are internally reconstructed based on available samples as `NLSessionActivityGoal` and `FIUIWorkoutActivityType`.
+All of that data is then combined into a public type for convenience.
+
 ### Converting workouts
 
 It's possible to insert `Workout`s into a proper `HKHealthStore`:
