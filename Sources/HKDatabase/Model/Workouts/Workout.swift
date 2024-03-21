@@ -33,6 +33,9 @@ public struct Workout {
 
     public let workoutActivities: [HKWorkoutActivity]
 
+    /// Information about how and when the workout samples were condensed to quantity series
+    public let condensed: CondenserInfo?
+
     var firstActivityDate: Date? {
         workoutActivities.map { $0.startDate }.min()
     }
@@ -56,7 +59,7 @@ public struct Workout {
         workoutActivities.first?.workoutConfiguration.activityType.description ?? "Unknown activity"
     }
     
-    public init(dataId: Int, startDate: Date, endDate: Date, totalDistance: Double? = nil, goalType: Int? = nil, goal: Double? = nil, events: [HKWorkoutEvent] = [], activities: [HKWorkoutActivity] = [], uuid: UUID? = nil, metadata: [String : Any] = [:], device: HKDevice? = nil) {
+    public init(dataId: Int, startDate: Date, endDate: Date, totalDistance: Double? = nil, goalType: Int? = nil, goal: Double? = nil, events: [HKWorkoutEvent] = [], activities: [HKWorkoutActivity] = [], condensed: CondenserInfo? = nil, uuid: UUID? = nil, metadata: [String : Any] = [:], device: HKDevice? = nil) {
         self.dataId = dataId
         self.startDate = startDate
         self.endDate = endDate
@@ -67,6 +70,7 @@ public struct Workout {
         self.metadata = metadata
         self.device = device
         self.uuid = uuid ?? UUID()
+        self.condensed = condensed
     }
 
     /**

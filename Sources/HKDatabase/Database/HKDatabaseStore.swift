@@ -776,9 +776,18 @@ public final class HKDatabaseStore {
             goal:  row[workouts.goal],
             events: events,
             activities: activities,
+            condensed: condenserInfo(from: row),
             uuid: object.uuid,
             metadata: object.metadata.withoutUUID(),
             device: object.device)
+    }
+
+    private func condenserInfo(from row: Row) -> Workout.CondenserInfo? {
+        guard let date = row[workouts.condenserDate],
+           let version = row[workouts.condenserVersion] else {
+            return nil
+        }
+        return .init(version: version, date: Date(timeIntervalSinceReferenceDate: date))
     }
 
     public func insert(workout: Workout) throws {
