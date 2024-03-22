@@ -809,8 +809,10 @@ public final class HKDatabaseStore {
             try workoutActivities.insert(activity, isPrimaryActivity: false, dataId: dataId, in: database)
         }
 
-        for (key, value) in workout.metadata {
-            try insert(value, for: key, of: dataId)
+        if let metadata = workout.metadata {
+            for (key, value) in metadata {
+                try insert(value, for: key, of: dataId)
+            }
         }
     }
 

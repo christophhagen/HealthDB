@@ -10,7 +10,7 @@ private let df: DateFormatter = {
     return df
 }()
 
-public struct Workout {
+public struct Workout: HKSampleProtocol {
 
     public let dataId: Int
 
@@ -19,16 +19,6 @@ public struct Workout {
 
     public let goal: HKQuantity?
 
-    public let startDate: Date
-
-    public let endDate: Date
-
-    public let device: HKDevice?
-
-    public let metadata: [String : Any]
-
-    public let uuid: UUID
-
     public let workoutEvents: [HKWorkoutEvent]
 
     public let workoutActivities: [HKWorkoutActivity]
@@ -36,29 +26,22 @@ public struct Workout {
     /// Information about how and when the workout samples were condensed to quantity series
     public let condensed: CondenserInfo?
 
-    var firstActivityDate: Date? {
-        workoutActivities.map { $0.startDate }.min()
-    }
-    
-    var firstEventDate: Date? {
-        workoutEvents.map { $0.dateInterval.start }.min()
-    }
-    
-    var firstAvailableDate: Date? {
-        [firstEventDate, firstActivityDate].compactMap { $0 }.min()
-    }
-    
-    var dateString: String {
-        guard let firstAvailableDate else {
-            return "No date"
-        }
-        return df.string(from: firstAvailableDate)
-    }
-    
-    var typeString: String {
-        workoutActivities.first?.workoutConfiguration.activityType.description ?? "Unknown activity"
-    }
-    
+    // MARK: HKSampleProtocol
+
+    public let startDate: Date
+
+    public let endDate: Date
+
+    public var sampleType: HKSampleType { .workoutType() }
+
+    // MARK: HKObjectProtocol
+
+    public let device: HKDevice?
+
+    public let metadata: [String : Any]?
+
+    public let uuid: UUID
+
     public init(dataId: Int, startDate: Date, endDate: Date, totalDistance: Double? = nil, goalType: Int? = nil, goal: Double? = nil, events: [HKWorkoutEvent] = [], activities: [HKWorkoutActivity] = [], condensed: CondenserInfo? = nil, uuid: UUID? = nil, metadata: [String : Any] = [:], device: HKDevice? = nil) {
         self.dataId = dataId
         self.startDate = startDate
@@ -93,7 +76,7 @@ public struct Workout {
                 samples: samples,
                 route: route)
         }
-        let metadata = metadata.removingPrivateFields()
+        let metadata = metadata?.removingPrivateFields()
         let events = workoutEvents.map {
             HKWorkoutEvent(type: $0.type, dateInterval: $0.dateInterval, metadata: $0.metadata?.removingPrivateFields())
         }
@@ -114,7 +97,7 @@ public struct Workout {
             route: route)
     }
 
-    private func insert(into store: HKHealthStore, activities: [HKWorkoutActivity], events: [HKWorkoutEvent], metadata: [String : Any], samples: [HKSample], route: [CLLocation]) async throws -> HKWorkout {
+    private func insert(into store: HKHealthStore, activities: [HKWorkoutActivity], events: [HKWorkoutEvent], metadata: [String : Any]?, samples: [HKSample], route: [CLLocation]) async throws -> HKWorkout {
         guard let configuration = activities.first?.workoutConfiguration else {
             throw WorkoutInsertionError.noWorkoutActivity
         }
@@ -128,7 +111,7 @@ public struct Workout {
         if !events.isEmpty {
             try await builder.addWorkoutEvents(events)
         }
-        if !metadata.isEmpty {
+        if let metadata, !metadata.isEmpty {
             try await builder.addMetadata(metadata)
         }
         if !samples.isEmpty {
