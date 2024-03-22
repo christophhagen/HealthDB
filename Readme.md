@@ -23,7 +23,7 @@ The following feature list refers to databases recovered with iOS 16 and iOS 17.
 [Workout events](#workouts) | ✅ 
 [Workout statistics](#workouts) | ✅ | Average + min/max
 Workout goals | ✅ | Duration, Distance, Calories
-Workout zones | ❌
+[Workout zones](#workout-heart-rate-zones) | ✅
 [User characteristics](#basic-user-characteristics-and-values) | ✅ | Except `HKActivityMoveMode`
 [Correlations](#correlation-samples) | ✅ |
 [ECG Samples](#ecg-samples) | ✅ | Including voltages
@@ -367,6 +367,26 @@ let minSpeed = try db.minimum(for: RunningSpeed.self, associatedWith: activity)
 
 Statistics are stored in the `workout_statistics` table.
 They are linked to workout activities by `workout_activities.ROWID == workout_statistics.workout_activity_id`.
+
+### Workout heart rate zones
+
+Health stores heart rate zone data for workouts.
+This data contains the configured heart rate intervals for the zones, as well as the time spent in them.
+
+```swift
+let zoneData = try db.heartRateZones(associatedWith: workout)
+print(zoneData.zones[0].lowerBound) // BPM
+print(zoneData.times[0]) // Time in seconds
+```
+
+The data is stored in binary format in two private metadata fields `HKPrivateMetadataKey.workoutHeartRateZones` and `HKPrivateMetadataKey.workoutElapsedTimeInHeartRateZones`.
+The first can be decoded as an array of `RawZone` objects containing upper and lower heart rate bounds using a `PropertyListDecoder`.
+The second is also a property list, containing a dictionairy of integer keys and double values, representing the duration associated with each zone index.
+There are additional private metadata fields apparently assocaited with workout zones, but their use is currently unknown:
+- `HKPrivateMetadataKey.workoutHeartRateZonesConfigurationType`: Int
+- `HKPrivateMetadataKey.workoutHeartRateZonesCurrentZoneIndex`: Int
+- `HKPrivateMetadataKey.workoutHeartRateZonesLastProcessedEntryDate`: Date
+- `HKPrivateMetadataKey.workoutHeartRateZonesLastProcessedEventDate`: Date
 
 ### Workout configuration
 

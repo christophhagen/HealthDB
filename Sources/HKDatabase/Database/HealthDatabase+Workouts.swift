@@ -143,4 +143,15 @@ extension HealthDatabase {
     public func configuration(associatedWith workout: Workout) throws -> WorkoutConfiguration? {
         try store.configuration(associatedWith: workout)
     }
+
+    // MARK: Heart rate zones
+
+    /**
+     Get the heart rate zone configuration and the time spent in the different zones for a workout.
+     - Parameter workout: The workout of interest
+     - Returns: The heart rate zones of the workout
+     */
+    public func heartRateZones(associatedWith workout: Workout) throws -> [HeartRateZone] {
+        try store.heartRateZones(associatedWith: workout)
+    }
 }

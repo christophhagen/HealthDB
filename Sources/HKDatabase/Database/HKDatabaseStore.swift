@@ -870,6 +870,16 @@ public final class HKDatabaseStore {
     }
 
     /**
+     Get the heart rate zone configuration and the time spent in the different zones for a workout.
+     - Parameter workout: The workout of interest
+     - Returns: The heart rate zones of the workout
+     */
+    public func heartRateZones(associatedWith workout: Workout) throws -> [HeartRateZone] {
+        let metadata = try metadata(for: workout.uuid, includePrivateMetadata: true)
+        return try HeartRateZone.from(metadata: metadata)
+    }
+
+    /**
      Get the locations associated with a workout route.
      - Parameter route: The route for which locations are requested
      - Returns: The locations contained in the route
