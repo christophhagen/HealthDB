@@ -57,9 +57,11 @@ public final class HKDatabaseStore {
 
     /**
      Open a Health database at the given url.
+     - Parameter fileUrl: The url to the sqlite file
+     - Parameter readOnly: Indicate if the database should be writable
      */
-    public convenience init(fileUrl: URL) throws {
-        let database = try Connection(fileUrl.path)
+    public convenience init(fileUrl: URL, readOnly: Bool = true) throws {
+        let database = try Connection(fileUrl.path, readonly: readOnly)
         self.init(fileUrl: fileUrl, database: database)
     }
 

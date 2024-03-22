@@ -14,7 +14,12 @@ public final class HealthDatabase {
         self.store = store
     }
 
-    public init(fileUrl: URL) throws {
+    /**
+     Open a health database.
+     - Parameter fileUrl: The url to the sqlite file
+     - Parameter readOnly: Indicate if the database should be writable
+     */
+    public init(fileUrl: URL, readOnly: Bool = true) throws {
         self.store = try .init(fileUrl: fileUrl)
     }
 
