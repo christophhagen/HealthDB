@@ -26,15 +26,15 @@ extension HKCategoryTypeIdentifier {
             case .contraceptive: self = .contraceptive // HKCategoryValueContraceptive
             // case .infrequentMenstrualCycles: self = .infrequentMenstrualCycles // HKCategoryValue
             case .intermenstrualBleeding: self = .intermenstrualBleeding // HKCategoryValue
-            // case .irregularMenstrualCycles: self = .irregularMenstrualCycles // HKCategoryValue
+            case .irregularMenstrualCycles: self = .irregularMenstrualCycles // HKCategoryValue
             case .lactation: self = .lactation // HKCategoryValue
             case .menstrualFlow: self = .menstrualFlow // HKCategoryValueMenstrualFlow
             case .ovulationTestResult: self = .ovulationTestResult // HKCategoryValueOvulationTestResult
-            //case .persistentIntermenstrualBleeding: self = .persistentIntermenstrualBleeding // HKCategoryValue
+            case .persistentIntermenstrualBleeding: self = .persistentIntermenstrualBleeding // HKCategoryValue
             case .pregnancy: self = .pregnancy // HKCategoryValue
             case .pregnancyTestResult: self = .pregnancyTestResult // HKCategoryValuePregnancyTestResult
-            // case .progesteroneTestResult: self = .progesteroneTestResult // HKCategoryValueProgesteroneTestResult
-            // case .prolongedMenstrualPeriods: self = .prolongedMenstrualPeriods // HKCategoryValue
+            case .progesteroneTestResult: self = .progesteroneTestResult // HKCategoryValueProgesteroneTestResult
+            case .prolongedMenstrualPeriods: self = .prolongedMenstrualPeriods // HKCategoryValue
             case .sexualActivity: self = .sexualActivity // HKCategoryValue
             // Respiratory
             // Sleep
@@ -109,15 +109,15 @@ extension HKCategoryTypeIdentifier {
         case .contraceptive: return .contraceptive // HKCategoryValueContraceptive
         // case .infrequentMenstrualCycles: return .infrequentMenstrualCycles // HKCategoryValue
         case .intermenstrualBleeding: return .intermenstrualBleeding // HKCategoryValue
-        // case .irregularMenstrualCycles: return .irregularMenstrualCycles // HKCategoryValue
+        case .irregularMenstrualCycles: return .irregularMenstrualCycles // HKCategoryValue
         case .lactation: return .lactation // HKCategoryValue
         case .menstrualFlow: return .menstrualFlow // HKCategoryValueMenstrualFlow
         case .ovulationTestResult: return .ovulationTestResult // HKCategoryValueOvulationTestResult
-        //case .persistentIntermenstrualBleeding: return .persistentIntermenstrualBleeding // HKCategoryValue
+        case .persistentIntermenstrualBleeding: return .persistentIntermenstrualBleeding // HKCategoryValue
         case .pregnancy: return .pregnancy // HKCategoryValue
         case .pregnancyTestResult: return .pregnancyTestResult // HKCategoryValuePregnancyTestResult
-        // case .progesteroneTestResult: return .progesteroneTestResult // HKCategoryValueProgesteroneTestResult
-        // case .prolongedMenstrualPeriods: return .prolongedMenstrualPeriods // HKCategoryValue
+        case .progesteroneTestResult: return .progesteroneTestResult // HKCategoryValueProgesteroneTestResult
+        case .prolongedMenstrualPeriods: return .prolongedMenstrualPeriods // HKCategoryValue
         case .sexualActivity: return .sexualActivity // HKCategoryValue
         // Respiratory
         // Sleep

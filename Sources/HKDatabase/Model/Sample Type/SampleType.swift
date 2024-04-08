@@ -1142,6 +1142,13 @@ public enum SampleType: Int, CaseIterable {
     case pregnancyTestResult = 243
 
     /**
+     Progesterone Test Result
+
+     Raw value: 244
+     */
+    case progesteroneTestResult = 244
+
+    /**
      Atrial Fibrillation Burden
 
      Raw value: 248
@@ -1181,6 +1188,27 @@ public enum SampleType: Int, CaseIterable {
      Raw value: 260
      */
     case runningGroundContactTime = 260
+
+    /**
+     Irregular cycles
+
+     Raw value: 262
+     */
+    case irregularMenstrualCycles = 262
+
+    /**
+     Prolonged Periods
+
+     Raw value: 263
+     */
+    case prolongedMenstrualPeriods = 263
+
+    /**
+     Persistent intermenstrual bleeding
+
+     Raw value: 264
+     */
+    case persistentIntermenstrualBleeding = 264
 
     /**
      Heart Rate Recovery One Minute
@@ -1452,12 +1480,16 @@ extension SampleType: CustomStringConvertible {
         case .lossOfSmell: return "Loss Of Smell"
         case .lossOfTaste: return "Loss Of Taste"
         case .pregnancyTestResult: return "Pregnancy Test Result"
+        case .progesteroneTestResult: return "Progesterone Test Result"
         case .atrialFibrillationBurden: return "Atrial Fibrillation Burden"
         case .appleWalkingSteadiness: return "Walking Steadiness"
         case .numberOfAlcoholicBeverages: return "Number Of Alcoholic Beverages"
         case .runningStrideLength: return "Running Stride Length"
         case .runningVerticalOscillation: return "Running Vertical Oscillation"
         case .runningGroundContactTime: return "Running Ground Contact Time"
+        case .irregularMenstrualCycles: return "Irregular Menstrual Cycles"
+        case .prolongedMenstrualPeriods: return "Prolonged Menstrual Periods"
+        case .persistentIntermenstrualBleeding: return "Persistent Intermenstrual Bleeding"
         case .heartRateRecoveryOneMinute: return "Heart Rate Recovery One Minute"
         case .underwaterDepth: return "Underwater Depth"
         case .runningPower: return "Running Power"
