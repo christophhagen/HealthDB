@@ -20,7 +20,7 @@ public final class HealthDatabase {
      - Parameter readOnly: Indicate if the database should be writable
      */
     public init(fileUrl: URL, readOnly: Bool = true) throws {
-        self.store = try .init(fileUrl: fileUrl)
+        self.store = try .init(fileUrl: fileUrl, readOnly: readOnly)
     }
 
 }
