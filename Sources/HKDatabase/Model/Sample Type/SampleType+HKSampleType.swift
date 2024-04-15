@@ -22,6 +22,9 @@ extension SampleType {
         if self == .workoutRoute {
             return HKSeriesType.workoutRoute()
         }
+        if self == .heartBeatSeries {
+            return HKSeriesType.heartbeat()
+        }
         // return .audiogramSampleType()
         // return .clinicalType(forIdentifier: <#T##HKClinicalTypeIdentifier#>)
         // return .documentType(forIdentifier: <#T##HKDocumentTypeIdentifier#>)

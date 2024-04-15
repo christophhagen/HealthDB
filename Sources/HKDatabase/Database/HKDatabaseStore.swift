@@ -12,6 +12,8 @@ public final class HKDatabaseStore {
 
     private let associations = AssociationsTable()
 
+    private let binarySamples = BinarySamplesTable()
+
     private let categorySamples = CategorySamplesTable()
 
     private let dataProvenances = DataProvenancesTable()
@@ -1078,6 +1080,40 @@ public final class HKDatabaseStore {
         }
     }
 
+    // MARK: Heartbeat Series
+
+    public func heartBeatSeries(from start: Date = .distantPast, to end: Date = .distantFuture) throws -> [HeartbeatSeries] {
+        let query = samples.table
+            .select(samples.table[*],
+                    objects.table[objects.provenance],
+                    objects.table[objects.uuid],
+                    binarySamples.table[binarySamples.payload])
+            .join(.leftOuter, objects.table,
+                  on: samples.table[samples.dataId] == objects.table[objects.dataId])
+            .join(.leftOuter, binarySamples.table,
+                  on: samples.table[samples.dataId] == binarySamples.table[binarySamples.dataId])
+            .filter(samples.table[samples.dataType] == SampleType.heartBeatSeries.rawValue &&
+                    samples.table[samples.startDate] <= end.timeIntervalSinceReferenceDate &&
+                    samples.table[samples.endDate] >= start.timeIntervalSinceReferenceDate)
+
+        return try database.prepare(query).compactMap { row in
+            let object = try objectData(from: row)
+            guard let data = try binarySamples.payload(for: object.dataId, in: database) else {
+                return nil
+            }
+            guard let samples = HeartbeatSeries.samples(from: data) else {
+                return nil
+            }
+            return .init(
+                samples: samples,
+                startDate: object.startDate,
+                endDate: object.endDate,
+                uuid: object.uuid,
+                metadata: object.metadata.withoutUUID(),
+                device: object.device)
+        }
+    }
+
     // MARK: Testing
 
     public convenience init(database: Connection) {
@@ -1090,12 +1126,13 @@ public final class HKDatabaseStore {
      Use this function only to create a new database for testing.
      */
     public func createTables() throws {
-        // Referenced by dataSeries, ecgSamples, quantitySeriesData
+        // Referenced by dataSeries, ecgSamples, quantitySeriesData, binarySamples
         try samples.create(in: database)
         // Referenced by quantitySamples
         try unitStrings.create(in: database)
 
         try associations.create(in: database)
+        try binarySamples.create(in: database, referencing: samples)
         try categorySamples.create(in: database)
         try dataProvenances.create(in: database)
         try dataSeries.create(in: database, referencing: samples)

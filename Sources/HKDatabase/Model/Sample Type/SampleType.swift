@@ -673,11 +673,11 @@ public enum SampleType: Int, CaseIterable {
     case restingHeartRate = 118
 
     /**
-     Binary Sample
+     Heartbeat Series
 
      Raw value: 119
      */
-    case binarySample = 119
+    case heartBeatSeries = 119
 
     /**
      VO2 Max
@@ -1414,7 +1414,7 @@ extension SampleType: CustomStringConvertible {
         case .waistCircumference: return "Waist Circumference"
         case .appleWatchIsCharging: return "Apple Watch Charging"
         case .restingHeartRate: return "Resting Heart Rate"
-        case .binarySample: return "Binary Sample"
+        case .heartBeatSeries: return "Heartbeat Series"
         case .vo2Max: return "VO2 Max"
         case .insulinDelivery: return "Insulin Delivery"
         case .walkingHeartRateAverage: return "Walking Heart Rate Average"
