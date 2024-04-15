@@ -1,7 +1,7 @@
 import Foundation
 import HealthKit
 
-public struct SleepScheduleSample {
+public struct SleepScheduleSample: HKSampleProtocol {
 
     public static let sampleType: SampleType = .sleepScheduleSample
 

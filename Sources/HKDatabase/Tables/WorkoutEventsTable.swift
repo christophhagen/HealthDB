@@ -140,7 +140,7 @@ private extension WorkoutEventMetadata.Element {
             }
         }
         guard let value = value as? HKQuantity else {
-            print("Unknown value type for metadata key \(key): \(value)")
+            print("Unknown value type \(type(of: value)) for metadata key \(key): \(value)")
             return nil
         }
 
