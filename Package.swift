@@ -25,8 +25,8 @@ let package = Package(
             .product(name: "HealthKitExtensions", package: "HealthKitExtensions"),
         ],
         exclude: [
-            "Model/ECG/ECGVoltageData.proto",
-            "Model/Workouts/EventMetadata.proto",
+            "HealthDB/Model/ECG/ECGVoltageData.proto",
+            "HealthDB/Model/Workouts/EventMetadata.proto",
         ]),
         .testTarget(
             name: "HKDatabaseTests",
