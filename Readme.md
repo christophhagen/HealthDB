@@ -29,8 +29,10 @@ Workout goals | ✅ | Duration, Distance, Calories
 [ECG Samples](#ecg-samples) | ✅ | Including voltages
 [Scored Assessments](#scored-assessments) | ✅ | Since iOS 17
 [Sleep schedules](#sleep-schedules) | ✅
+[HeartbeatSeries](#heartbeat-series) | ✅
 Medical records and prescriptions | ❌
 Achievements | ❌
+Audiogram samples | ❌
 
 ### Caveats
 
@@ -223,7 +225,7 @@ There are many sample tables in the database, and all appear to be linked by the
 |---|---|
 `account_owner_samples` | ❌
 `allergy_record_samples` | ❌
-`binary_samples` | ❌ [Note](#binary-samples)
+`binary_samples` | ✅
 `category_samples` | ✅
 `clinical_note_record_samples` | ❌
 `clinical_record_samples` | ❌
@@ -240,7 +242,7 @@ There are many sample tables in the database, and all appear to be linked by the
 `quantity_samples` | ✅
 `scored_assessment_samples` | ✅
 `signed_clinical_data_record_samples` | ❌
-`sleep_schedule_samples` | ❌
+`sleep_schedule_samples` | ✅
 `state_of_mind_samples` | ❌
 `unknown_record_samples` | ❌
 `vaccination_record_samples` | ❌
@@ -286,6 +288,26 @@ The `value` is scaled in the default unit of the sample type.
 It's not obvious from the entry in `samples`, if a data series is linked to it.
 
 For each data series, there is also an entry in `quantity_sample_statistics` where the `owner_id == samples.data_id`.
+
+### Heartbeat Series
+
+Samples about `Heart Rate Variability` are usually associated with a heartbeat series, which contains beat-by-beat measurements over a longer timespan.
+These series can be queried by using:
+
+```swift
+let series: [HeartbeatSeries] = try db.heartbeatSeries(from: start, to: end)
+```
+
+Each series consists of the usual sample information (`start` and `end` date, UUID, device, ...) as well as an array of heart beat samples, which consist of a time interval indicating the offset to the start of the measurement, as well an indicator to show whether there may have been missed heartbeats before this one.
+This structure is similar to [HKHeartbeatSeriesQuery](https://developer.apple.com/documentation/healthkit/hkheartbeatseriesquery/3113764-init).
+
+The heartbeat data is stored in the `binary_samples` table, linked to an entry in the `samples` table through the `associations` table, where `samples.data_id == associations.child_id` and `associations.parent_id == binary_samples.data_id`.
+
+The data in the `payload` column is organized in 16-byte chunks, where the first 8 bytes are a double indicating the `timeSinceSeriesStart` property. 
+The 9th byte seems to indicate the `isPrecededByGap` property.
+The meaning of the last seven bytes is currently unknown.
+Most of these values are zeroes, but occasionally there are values like `0xa770270`, `0x57ef26`, `0xd7ab25`, `0xd65b15`, or `0x573e26`.
+These values have no apparent meaning, and can occur with both `true` or `false` for `isPrecededByGap`.
 
 ### Workouts
 
@@ -453,36 +475,12 @@ The database includes a list of sleep schedules, which represent the bed time an
 let samples = try store.sleepSchedules(from: .distantPast, to: .now)
 ```
 
+Sleep schedule samples are stored in the `sleep_schedule_samples` table, which contains the days for which the schedule is relevant, plus the sleep and wake time.
+The samples are linked to entries in the `samples` table via the `dataId` column. 
+
 ## Related projects and info
 
 Related: 
 - [Export/import health data to JSON](https://github.com/mkhoshpour/healthkit-sample-generator)
 - [Import record from Health App Export](https://github.com/Comocomo/HealthKitImporter/)
 - [Create Health data during UI Tests](https://github.com/StanfordBDHG/XCTHealthKit)
-
-## Investigative info
-
-## Binary samples
-
-The data contained in binary samples is currently unknown.
-They appear to collect a series of data points over a longer time span.
-There are usually several binary samples per day, each containing a different amount of data.
-
-The `payload` column seems to be organized in 16-byte chunks, presumably further divided in 2 8-byte numbers.
-
-The first 8 bytes may contain an integer number, since the first 3-4 bytes are always zero.
-
-For the last 8 bytes, only the following distinct values have been observed:
-
-- `0x00a7702700000000`
-- `0x0100000000000000`
-- `0x0057ef2600000000`
-- `0x0157ef2600000000`
-- `0x01d7ab2500000000`
-- `0x01d65b1500000000`
-- `0x01573e2600000000`
-- `0x00573e2600000000`
-
-The last 4 bytes in each chunk seem to always be zero.
-
-Byte 9 of each `payload` seems to always be `0x010`, and for all other chucks byte 9 is mostly `0x00`, and sometimes `0x01`.
