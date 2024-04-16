@@ -15,7 +15,7 @@ The following feature list refers to databases recovered with iOS 16 and iOS 17.
 
 | Feature | Status | Comment |
 |---|---|---|
-[Category samples](#category-samples) | ✅ | 60/65 types supported |
+[Category samples](#category-samples) | ✅ | 59/65 types supported |
 [Quantity samples](#quantity-samples) | ✅ | 109/112 types supported |
 [Quantity series](#quantity-sample-series) | ✅ | 109/112 types supported |
 [Workouts](#workouts) | ✅ 
@@ -115,7 +115,7 @@ The functions will fail with a `HKNotSupportedError` if the internal `SampleType
 
 The following category types are yet unsupported:
 
-`HighHeartRateEvent`, `IrregularHeartRhythmEvent`, `LowCardioFitnessEvent`, `AppleWalkingSteadinessEvent`, `InfrequentMenstrualCycles`.
+`HighHeartRateEvent`, `IrregularHeartRhythmEvent`, `LowCardioFitnessEvent`, `AppleWalkingSteadinessEvent`, `InfrequentMenstrualCycles`, `HeadphoneAudioExposureEvent`.
 
 You can get a list of all unknown data types using:
 

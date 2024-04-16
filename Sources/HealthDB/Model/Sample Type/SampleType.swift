@@ -834,7 +834,7 @@ public enum SampleType: Int, CaseIterable {
     case hotFlashes = 171
 
     /**
-     Environmental Audio Exposure
+     Environmental Audio Exposure Event
 
      Raw value: 172
      */
@@ -845,16 +845,14 @@ public enum SampleType: Int, CaseIterable {
 
      Raw value: 173
      */
-    case headphoneAudioExposureEvent = 173
+    case headphoneAudioExposure = 173
 
     /**
      Audio Exposure Event
 
-     - Note: This type is deprecated in favor of ``environmentalAudioExposureEvent``
-
      Raw value: 178
      */
-    case audioExposureEvent = 178
+    case environmentalAudioExposure = 178
 
     /**
      Walking Double Support Percentage
@@ -1437,9 +1435,9 @@ extension SampleType: CustomStringConvertible {
         case .sleepChanges: return "Sleep Changes"
         case .appetiteChanges: return "Appetite Changes"
         case .hotFlashes: return "Hot Flashes"
-        case .environmentalAudioExposureEvent: return "Environmental Audio Exposure"
-        case .headphoneAudioExposureEvent: return "Headphone Audio Exposure"
-        case .audioExposureEvent: return "Audio Exposure Event"
+        case .environmentalAudioExposureEvent: return "Environmental Audio Exposure Event"
+        case .headphoneAudioExposure: return "Headphone Audio Exposure"
+        case .environmentalAudioExposure: return "Environmental Audio Exposure"
         case .walkingDoubleSupportPercentage: return "Walking Double Support Percentage"
         case .sixMinuteWalkTestDistance: return "Six Minute Walk Test Distance"
         case .appleStandTime: return "Stand Time"

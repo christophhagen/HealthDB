@@ -64,9 +64,9 @@ extension HKQuantityTypeIdentifier {
             case .underwaterDepth: return .underwaterDepth
 
             // Hearing Health
-            case .environmentalAudioExposureEvent: return .environmentalAudioExposure
+            //case .environmentalAudioExposureEvent: return .environmentalAudioExposureEvent
             case .environmentalSoundReduction: return .environmentalSoundReduction
-            case .headphoneAudioExposureEvent: return .headphoneAudioExposure
+            //case .headphoneAudioExposureEvent: return .headphoneAudioExposureEvent
 
             // Heart
             case .atrialFibrillationBurden: return .atrialFibrillationBurden
@@ -209,9 +209,9 @@ extension HKQuantityTypeIdentifier {
         case .underwaterDepth: return .underwaterDepth
 
         // Hearing Health
-        case .environmentalAudioExposure: return .environmentalAudioExposureEvent
+        case .environmentalAudioExposure: return .environmentalAudioExposure
         case .environmentalSoundReduction: return .environmentalSoundReduction
-        case .headphoneAudioExposure: return .headphoneAudioExposureEvent
+        case .headphoneAudioExposure: return .headphoneAudioExposure
 
         // Heart
         case .atrialFibrillationBurden: return .atrialFibrillationBurden

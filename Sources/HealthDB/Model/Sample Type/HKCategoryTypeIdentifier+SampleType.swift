@@ -8,7 +8,7 @@ extension HKCategoryTypeIdentifier {
             case .appleStandHour: self = .appleStandHour
             // Hearing Health
             case .environmentalAudioExposureEvent: self = .environmentalAudioExposureEvent // HKCategoryValueEnvironmentalAudioExposureEvent
-            case .headphoneAudioExposureEvent: self = .headphoneAudioExposureEvent // HKCategoryValueHeadphoneAudioExposureEvent
+            //case .headphoneAudioExposureEvent: self = .headphoneAudioExposureEvent // HKCategoryValueHeadphoneAudioExposureEvent
             // Heart
             // case .highHeartRateEvent: self = .highHeartRateEvent // HKCategoryValue
             // case .irregularHeartRhythmEvent: self = .irregularHeartRhythmEvent // HKCategoryValue
@@ -79,8 +79,6 @@ extension HKCategoryTypeIdentifier {
             case .vaginalDryness: self = .vaginalDryness // HKCategoryValueSeverity
             case .vomiting: self = .vomiting // HKCategoryValueSeverity
             case .wheezing: self = .wheezing // HKCategoryValueSeverity
-            /// - NOTE: Apple automatically converts this to `.environmentalAudioExposureEvent`
-            case .audioExposureEvent: self = .audioExposureEvent
             default:
                 return nil
         }
@@ -91,7 +89,7 @@ extension HKCategoryTypeIdentifier {
         case .appleStandHour: return .appleStandHour
         // Hearing Health
         case .environmentalAudioExposureEvent: return .environmentalAudioExposureEvent // HKCategoryValueEnvironmentalAudioExposureEvent
-        case .headphoneAudioExposureEvent: return .headphoneAudioExposureEvent // HKCategoryValueHeadphoneAudioExposureEvent
+        //case .headphoneAudioExposureEvent: return .headphoneAudioExposureEvent // HKCategoryValueHeadphoneAudioExposureEvent
         // Heart
         // case .highHeartRateEvent: return .highHeartRateEvent // HKCategoryValue
         // case .irregularHeartRhythmEvent: return .irregularHeartRhythmEvent // HKCategoryValue
@@ -162,7 +160,6 @@ extension HKCategoryTypeIdentifier {
         case .vaginalDryness: return .vaginalDryness // HKCategoryValueSeverity
         case .vomiting: return .vomiting // HKCategoryValueSeverity
         case .wheezing: return .wheezing // HKCategoryValueSeverity
-        case .audioExposureEvent: return .audioExposureEvent
         default:
             return nil
         }
