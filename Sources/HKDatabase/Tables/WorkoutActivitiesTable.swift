@@ -45,14 +45,12 @@ struct WorkoutActivitiesTable {
         let end = Date(timeIntervalSinceReferenceDate: row[endDate])
         let uuid = row[uuid].uuidString
 
-        var metadata: [String : Any] = [ : ]
+        var metadata: [String : Any] = try Self.metadata(from: row[self.metadata])
         metadata[HKMetadataKeyExternalUUID] = uuid
         
         // duration: row[columnDuration]
         // isPrimaryActivity: row[columnIsPrimaryActivity]
 
-        // metadata: row[columnMetadata]
-        // TODO: Decode activity metadata
         return .init(
             workoutConfiguration: configuration,
             start: start,
@@ -110,5 +108,22 @@ private extension WorkoutActivitiesTable {
     static func lapLength(from data: Data?) throws -> HKQuantity? {
         guard let data else { return nil }
         return try NSKeyedUnarchiver.unarchivedObject(ofClass: HKQuantity.self, from: data)
+    }
+}
+
+private extension WorkoutActivitiesTable {
+
+    static func metadata(from data: Data?) throws -> [String: Any] {
+        guard let data else {
+            return [:]
+        }
+        let decoder = try NSKeyedUnarchiver(forReadingFrom: data)
+        decoder.requiresSecureCoding = false
+
+        guard let values = decoder.decodeObject(of: NSDictionary.self, forKey: NSKeyedArchiveRootObjectKey) as? [String: Any] else {
+            print("Failed to decode workout activity metadata as [String : Any]")
+            throw HKError(.unknownError)
+        }
+        return values
     }
 }
