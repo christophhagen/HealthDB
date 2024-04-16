@@ -15,17 +15,8 @@ final class FIUIWorkoutActivityType: NSObject, NSSecureCoding {
             print("Could not find dictionary 'FIUIWorkoutActivityTypeMetadata' while decoding workout configuration activity type")
             return nil
         }
-        if let uuidString = dict["PredictionSessionUUID"] as? String,
-           let uuid = UUID(uuidString: uuidString) {
-            self.uuid = uuid
-        } else {
-            self.uuid = nil
-        }
-        if let backdatedStartDate = dict["BackdatedStartDate"] as? Date {
-            self.backdatedStartDate = backdatedStartDate
-        } else {
-            self.backdatedStartDate = nil
-        }
+        self.uuid = (dict["PredictionSessionUUID"] as? String).map(UUID.init)
+        self.backdatedStartDate = dict["BackdatedStartDate"] as? Date
         self.isPartOfMultisport = coder.decodeBool(forKey: "FIUIWorkoutActivityTypePartOfMultisport")
         self.isIndoorWorkout = coder.decodeBool(forKey: "FIUIWorkoutActivityTypeIsIndoor")
         self.auxiliaryActivityType = coder.decodeInteger(forKey: "NLSessionAuxiliaryActivityTypeIdentifier")
