@@ -60,3 +60,18 @@ extension HeartbeatSeries {
     }
 }
 
+extension HeartbeatSeries: BinarySample {
+
+    static func from(object: ObjectData, data: Data) -> HeartbeatSeries? {
+        guard let samples = HeartbeatSeries.samples(from: data) else {
+            return nil
+        }
+        return .init(
+            samples: samples,
+            startDate: object.startDate,
+            endDate: object.endDate,
+            uuid: object.uuid,
+            metadata: object.metadata.withoutUUID(),
+            device: object.device)
+    }
+}

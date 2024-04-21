@@ -225,7 +225,7 @@ There are many sample tables in the database, and all appear to be linked by the
 |---|---|
 `account_owner_samples` | ❌
 `allergy_record_samples` | ❌
-`binary_samples` | ✅
+`binary_samples` | ✅ (Heartbeat series, audiograms)
 `category_samples` | ✅
 `clinical_note_record_samples` | ❌
 `clinical_record_samples` | ❌
@@ -308,6 +308,17 @@ The 9th byte seems to indicate the `isPrecededByGap` property.
 The meaning of the last seven bytes is currently unknown.
 Most of these values are zeroes, but occasionally there are values like `0xa770270`, `0x57ef26`, `0xd7ab25`, `0xd65b15`, or `0x573e26`.
 These values have no apparent meaning, and can occur with both `true` or `false` for `isPrecededByGap`.
+
+### Audiograms
+
+Stored `HKAudiogramSample`s can also be queried.
+
+```swift
+let samples: [HKAudiogramSample] = try db.audiograms(from: start, to: end)
+```
+
+Like heartbeat series data, the binary data associated with each sample is stored in `binary_samples`.
+The `payload` column consists of an array of `HKAudiogramSensitivityPoint`s, encoded with an `NSKeyedArchiver`.
 
 ### Workouts
 

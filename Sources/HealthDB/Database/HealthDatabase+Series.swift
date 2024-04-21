@@ -28,4 +28,21 @@ extension HealthDatabase {
             .map(T.init(quantitySample:))
     }
 
+    // MARK: Heartbeat Series
+
+    /**
+     Query for heartbeat series samples within a date interval.
+     */
+    public func heartBeatSeries(from start: Date = .distantPast, to end: Date = .distantFuture) throws -> [HeartbeatSeries] {
+        try store.heartBeatSeries(from: start, to: end)
+    }
+
+    // MARK: Audiograms
+
+    /**
+     Query for audiogram samples within a date interval.
+     */
+    public func audiograms(from start: Date = .distantPast, to end: Date = .distantFuture) throws -> [HKAudiogramSample] {
+        try store.audiograms(from: start, to: end)
+    }
 }

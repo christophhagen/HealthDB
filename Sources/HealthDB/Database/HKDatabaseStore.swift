@@ -4,6 +4,8 @@ import CoreLocation
 import HealthKit
 import HealthKitExtensions
 
+typealias ObjectData = (dataId: Int, startDate: Date, endDate: Date, uuid: UUID, device: HKDevice?, metadata: [String : Any])
+
 public final class HKDatabaseStore {
 
     private let fileUrl: URL
@@ -103,7 +105,7 @@ public final class HKDatabaseStore {
     /**
      Extract common object properties from a row.
      */
-    private func objectData(from row: Row) throws -> (dataId: Int, startDate: Date, endDate: Date, uuid: UUID, device: HKDevice?, metadata: [String : Any]) {
+    private func objectData(from row: Row) throws -> ObjectData {
         let dataId = row[samples.table[samples.dataId]]
         let startDate = Date(timeIntervalSinceReferenceDate: row[samples.table[samples.startDate]])
         let endDate = Date(timeIntervalSinceReferenceDate: row[samples.table[samples.endDate]])
@@ -1077,7 +1079,25 @@ public final class HKDatabaseStore {
 
     // MARK: Heartbeat Series
 
+    /**
+     Query for heartbeat series samples within a date interval.
+     */
     public func heartBeatSeries(from start: Date = .distantPast, to end: Date = .distantFuture) throws -> [HeartbeatSeries] {
+        try binarySamples(type: SampleType.Other.heartbeatSeries.rawValue, from: start, to: end)
+    }
+
+    // MARK: Audiograms
+
+    /**
+     Query for audiogram samples within a date interval.
+     */
+    public func audiograms(from start: Date = .distantPast, to end: Date = .distantFuture) throws -> [HKAudiogramSample] {
+        try binarySamples(type: SampleType.Other.audiogram.rawValue, from: start, to: end)
+    }
+
+    // MARK: Binary samples
+
+    private func binarySamples<T: BinarySample>(type: Int, from start: Date, to end: Date) throws -> [T] {
         let query = samples.table
             .select(samples.table[*],
                     objects.table[objects.provenance],
@@ -1087,25 +1107,15 @@ public final class HKDatabaseStore {
                   on: samples.table[samples.dataId] == objects.table[objects.dataId])
             .join(.leftOuter, binarySamples.table,
                   on: samples.table[samples.dataId] == binarySamples.table[binarySamples.dataId])
-            .filter(samples.table[samples.dataType] == SampleType.Other.heartbeatSeries.rawValue &&
+            .filter(samples.table[samples.dataType] == type &&
                     samples.table[samples.startDate] <= end.timeIntervalSinceReferenceDate &&
                     samples.table[samples.endDate] >= start.timeIntervalSinceReferenceDate)
-
         return try database.prepare(query).compactMap { row in
             let object = try objectData(from: row)
             guard let data = try binarySamples.payload(for: object.dataId, in: database) else {
                 return nil
             }
-            guard let samples = HeartbeatSeries.samples(from: data) else {
-                return nil
-            }
-            return .init(
-                samples: samples,
-                startDate: object.startDate,
-                endDate: object.endDate,
-                uuid: object.uuid,
-                metadata: object.metadata.withoutUUID(),
-                device: object.device)
+            return T.from(object: object, data: data)
         }
     }
 
