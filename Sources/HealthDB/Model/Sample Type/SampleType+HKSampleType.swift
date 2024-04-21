@@ -4,31 +4,33 @@ import HealthKit
 extension SampleType {
 
     public var hkSampleType: HKSampleType? {
-        if let type = HKQuantityTypeIdentifier(sampleType: self) {
-            return HKQuantityType(type)
+        switch self {
+        case .category(let hKCategoryTypeIdentifier):
+            return HKCategoryType(hKCategoryTypeIdentifier)
+        case .quantity(let hKQuantityTypeIdentifier):
+            return HKQuantityType(hKQuantityTypeIdentifier)
+        case .correlation(let hKCorrelationTypeIdentifier):
+            return HKCorrelationType(hKCorrelationTypeIdentifier)
+        case .other(let otherSampleType):
+            switch otherSampleType {
+            case .workout:
+                return .workoutType()
+            case .workoutRoute:
+                return HKSeriesType.workoutRoute()
+            case .heartbeatSeries:
+                return HKSeriesType.heartbeat()
+            case .ecgSample:
+                return .electrocardiogramType()
+            case .audiogram:
+                return .audiogramSampleType()
+            default:
+                return nil
+            }
+        case .unknown:
+            return nil
         }
-        if let type = HKCategoryTypeIdentifier(sampleType: self) {
-            return HKCategoryType(type)
-        }
-        if let type = HKCorrelationTypeIdentifier(sampleType: self) {
-            return HKCorrelationType(type)
-        }
-        if self == .workout {
-            return .workoutType()
-        }
-        if self == .ecgSample {
-            return .electrocardiogramType()
-        }
-        if self == .workoutRoute {
-            return HKSeriesType.workoutRoute()
-        }
-        if self == .heartBeatSeries {
-            return HKSeriesType.heartbeat()
-        }
-        // return .audiogramSampleType()
         // return .clinicalType(forIdentifier: <#T##HKClinicalTypeIdentifier#>)
         // return .documentType(forIdentifier: <#T##HKDocumentTypeIdentifier#>)
         // return .visionPrescriptionType()
-        return nil
     }
 }

@@ -3,7 +3,7 @@ import HealthKit
 
 public struct HeartbeatSeries: HKSampleProtocol {
 
-    public static let sampleType: SampleType = .sleepScheduleSample
+    public static let sampleType: SampleType = .other(.heartbeatSeries)
 
     /// The measured heart beats
     public let samples: [Sample]

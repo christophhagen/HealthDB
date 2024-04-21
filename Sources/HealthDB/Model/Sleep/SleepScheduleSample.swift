@@ -3,7 +3,7 @@ import HealthKit
 
 public struct SleepScheduleSample: HKSampleProtocol {
 
-    public static let sampleType: SampleType = .sleepScheduleSample
+    public static let sampleType: SampleType = .other(.sleepSchedule)
 
     public let sleepSchedule: SleepSchedule?
 

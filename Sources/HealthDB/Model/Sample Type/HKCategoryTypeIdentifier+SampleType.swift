@@ -3,165 +3,103 @@ import HealthKit
 
 extension HKCategoryTypeIdentifier {
 
-    init?(sampleType: SampleType) {
-        switch sampleType {
-            case .appleStandHour: self = .appleStandHour
-            // Hearing Health
-            case .environmentalAudioExposureEvent: self = .environmentalAudioExposureEvent // HKCategoryValueEnvironmentalAudioExposureEvent
-            //case .headphoneAudioExposureEvent: self = .headphoneAudioExposureEvent // HKCategoryValueHeadphoneAudioExposureEvent
-            // Heart
-            // case .highHeartRateEvent: self = .highHeartRateEvent // HKCategoryValue
-            // case .irregularHeartRhythmEvent: self = .irregularHeartRhythmEvent // HKCategoryValue
-            // case .lowCardioFitnessEvent: self = .lowCardioFitnessEvent // HKCategoryValueLowCardioFitnessEvent
-            case .lowHeartRateEvent: self = .lowHeartRateEvent // HKCategoryValue
-            // Mindfulness
-            case .mindfulSession: self = .mindfulSession // HKCategoryValue
-            // Mobility
-            // case .appleWalkingSteadinessEvent: self = .appleWalkingSteadinessEvent // HKCategoryValueAppleWalkingSteadinessEvent
-            // Other
-            case .handwashingEvent: self = .handwashingEvent // HKCategoryValue
-            case .toothbrushingEvent: self = .toothbrushingEvent // HKCategoryValue
-            // Reproductive Health
-            case .cervicalMucusQuality: self = .cervicalMucusQuality // HKCategoryValueCervicalMucusQuality
-            case .contraceptive: self = .contraceptive // HKCategoryValueContraceptive
-            // case .infrequentMenstrualCycles: self = .infrequentMenstrualCycles // HKCategoryValue
-            case .intermenstrualBleeding: self = .intermenstrualBleeding // HKCategoryValue
-            case .irregularMenstrualCycles: self = .irregularMenstrualCycles // HKCategoryValue
-            case .lactation: self = .lactation // HKCategoryValue
-            case .menstrualFlow: self = .menstrualFlow // HKCategoryValueMenstrualFlow
-            case .ovulationTestResult: self = .ovulationTestResult // HKCategoryValueOvulationTestResult
-            case .persistentIntermenstrualBleeding: self = .persistentIntermenstrualBleeding // HKCategoryValue
-            case .pregnancy: self = .pregnancy // HKCategoryValue
-            case .pregnancyTestResult: self = .pregnancyTestResult // HKCategoryValuePregnancyTestResult
-            case .progesteroneTestResult: self = .progesteroneTestResult // HKCategoryValueProgesteroneTestResult
-            case .prolongedMenstrualPeriods: self = .prolongedMenstrualPeriods // HKCategoryValue
-            case .sexualActivity: self = .sexualActivity // HKCategoryValue
-            // Respiratory
-            // Sleep
-            case .sleepAnalysis: self = .sleepAnalysis // HKCategoryValueSleepAnalysis
-            // Symptoms
-            case .abdominalCramps: self = .abdominalCramps // HKCategoryValueSeverity
-            case .acne: self = .acne // HKCategoryValueSeverity
-            case .appetiteChanges: self = .appetiteChanges // HKCategoryValueAppetiteChanges
-            case .bladderIncontinence: self = .bladderIncontinence // HKCategoryValueSeverity
-            case .bloating: self = .bloating // HKCategoryValueSeverity
-            case .breastPain: self = .breastPain // HKCategoryValueSeverity
-            case .chestTightnessOrPain: self = .chestTightnessOrPain // HKCategoryValueSeverity
-            case .chills: self = .chills // HKCategoryValueSeverity
-            case .constipation: self = .constipation // HKCategoryValueSeverity
-            case .coughing: self = .coughing // HKCategoryValueSeverity
-            case .diarrhea: self = .diarrhea // HKCategoryValueSeverity
-            case .dizziness: self = .dizziness // HKCategoryValueSeverity
-            case .drySkin: self = .drySkin // HKCategoryValueSeverity
-            case .fainting: self = .fainting // HKCategoryValueSeverity
-            case .fatigue: self = .fatigue // HKCategoryValueSeverity
-            case .fever: self = .fever // HKCategoryValueSeverity
-            case .generalizedBodyAche: self = .generalizedBodyAche // HKCategoryValueSeverity
-            case .hairLoss: self = .hairLoss // HKCategoryValueSeverity
-            case .headache: self = .headache // HKCategoryValueSeverity
-            case .heartburn: self = .heartburn // HKCategoryValueSeverity
-            case .hotFlashes: self = .hotFlashes // HKCategoryValueSeverity
-            case .lossOfSmell: self = .lossOfSmell // HKCategoryValueSeverity
-            case .lossOfTaste: self = .lossOfTaste // HKCategoryValueSeverity
-            case .lowerBackPain: self = .lowerBackPain // HKCategoryValueSeverity
-            case .memoryLapse: self = .memoryLapse // HKCategoryValueSeverity
-            case .moodChanges: self = .moodChanges // HKCategoryValuePresence
-            case .nausea: self = .nausea // HKCategoryValueSeverity
-            case .nightSweats: self = .nightSweats // HKCategoryValueSeverity
-            case .pelvicPain: self = .pelvicPain // HKCategoryValueSeverity
-            case .rapidPoundingOrFlutteringHeartbeat: self = .rapidPoundingOrFlutteringHeartbeat // HKCategoryValueSeverity
-            case .runnyNose: self = .runnyNose // HKCategoryValueSeverity
-            case .shortnessOfBreath: self = .shortnessOfBreath // HKCategoryValueSeverity
-            case .sinusCongestion: self = .sinusCongestion // HKCategoryValueSeverity
-            case .skippedHeartbeat: self = .skippedHeartbeat // HKCategoryValueSeverity
-            case .sleepChanges: self = .sleepChanges // HKCategoryValuePresence
-            case .soreThroat: self = .soreThroat // HKCategoryValueSeverity
-            case .vaginalDryness: self = .vaginalDryness // HKCategoryValueSeverity
-            case .vomiting: self = .vomiting // HKCategoryValueSeverity
-            case .wheezing: self = .wheezing // HKCategoryValueSeverity
-            default:
-                return nil
-        }
+    var sampleType: SampleType {
+        .category(self)
     }
+}
 
-    var sampleType: SampleType? {
-        switch self {
-        case .appleStandHour: return .appleStandHour
+extension HKCategoryTypeIdentifier: LosslessIntegerConvertible {
+
+    static let map: BiDictionary<HKCategoryTypeIdentifier, Int> = [
+        .appleStandHour: 70,
+
         // Hearing Health
-        case .environmentalAudioExposureEvent: return .environmentalAudioExposureEvent // HKCategoryValueEnvironmentalAudioExposureEvent
-        //case .headphoneAudioExposureEvent: return .headphoneAudioExposureEvent // HKCategoryValueHeadphoneAudioExposureEvent
+
+        // - NOTE: Apple automatically converts this to `.environmentalAudioExposureEvent`
+        //.audioExposureEvent: 178,
+        .environmentalAudioExposureEvent: 178,
+        //.headphoneAudioExposureEvent: <#T##Int#>,
+
         // Heart
-        // case .highHeartRateEvent: return .highHeartRateEvent // HKCategoryValue
-        // case .irregularHeartRhythmEvent: return .irregularHeartRhythmEvent // HKCategoryValue
-        // case .lowCardioFitnessEvent: return .lowCardioFitnessEvent // HKCategoryValueLowCardioFitnessEvent
-        case .lowHeartRateEvent: return .lowHeartRateEvent // HKCategoryValue
+        // .highHeartRateEvent: <#T##Int#>,
+        // .irregularHeartRhythmEvent: <#T##Int#>,
+        // .lowCardioFitnessEvent: <#T##Int#>,
+        .lowHeartRateEvent: 147,
+
         // Mindfulness
-        case .mindfulSession: return .mindfulSession // HKCategoryValue
+        .mindfulSession: 99,
+
         // Mobility
-        // case .appleWalkingSteadinessEvent: return .appleWalkingSteadinessEvent // HKCategoryValueAppleWalkingSteadinessEvent
+
+        // .appleWalkingSteadinessEvent: <#T##Int#>,
+
         // Other
-        case .handwashingEvent: return .handwashingEvent // HKCategoryValue
-        case .toothbrushingEvent: return .toothbrushingEvent // HKCategoryValue
+        .handwashingEvent: 237,
+        .toothbrushingEvent: 189,
+
         // Reproductive Health
-        case .cervicalMucusQuality: return .cervicalMucusQuality // HKCategoryValueCervicalMucusQuality
-        case .contraceptive: return .contraceptive // HKCategoryValueContraceptive
-        // case .infrequentMenstrualCycles: return .infrequentMenstrualCycles // HKCategoryValue
-        case .intermenstrualBleeding: return .intermenstrualBleeding // HKCategoryValue
-        case .irregularMenstrualCycles: return .irregularMenstrualCycles // HKCategoryValue
-        case .lactation: return .lactation // HKCategoryValue
-        case .menstrualFlow: return .menstrualFlow // HKCategoryValueMenstrualFlow
-        case .ovulationTestResult: return .ovulationTestResult // HKCategoryValueOvulationTestResult
-        case .persistentIntermenstrualBleeding: return .persistentIntermenstrualBleeding // HKCategoryValue
-        case .pregnancy: return .pregnancy // HKCategoryValue
-        case .pregnancyTestResult: return .pregnancyTestResult // HKCategoryValuePregnancyTestResult
-        case .progesteroneTestResult: return .progesteroneTestResult // HKCategoryValueProgesteroneTestResult
-        case .prolongedMenstrualPeriods: return .prolongedMenstrualPeriods // HKCategoryValue
-        case .sexualActivity: return .sexualActivity // HKCategoryValue
+
+        .cervicalMucusQuality: 91,
+        .contraceptive: 193,
+        // .infrequentMenstrualCycles: <#T##Int#>,
+        .intermenstrualBleeding: 96,
+        .irregularMenstrualCycles: 262,
+        .lactation: 192,
+        .menstrualFlow: 95,
+        .ovulationTestResult: 92,
+        .persistentIntermenstrualBleeding: 264,
+        .pregnancy: 191,
+        .pregnancyTestResult: 243,
+        .progesteroneTestResult: 244,
+        .prolongedMenstrualPeriods: 263,
+        .sexualActivity: 97,
+
         // Respiratory
+
         // Sleep
-        case .sleepAnalysis: return .sleepAnalysis // HKCategoryValueSleepAnalysis
+
+        .sleepAnalysis: 63,
+
         // Symptoms
-        case .abdominalCramps: return .abdominalCramps // HKCategoryValueSeverity
-        case .acne: return .acne // HKCategoryValueSeverity
-        case .appetiteChanges: return .appetiteChanges // HKCategoryValueAppetiteChanges
-        case .bladderIncontinence: return .bladderIncontinence // HKCategoryValueSeverity
-        case .bloating: return .bloating // HKCategoryValueSeverity
-        case .breastPain: return .breastPain // HKCategoryValueSeverity
-        case .chestTightnessOrPain: return .chestTightnessOrPain // HKCategoryValueSeverity
-        case .chills: return .chills // HKCategoryValueSeverity
-        case .constipation: return .constipation // HKCategoryValueSeverity
-        case .coughing: return .coughing // HKCategoryValueSeverity
-        case .diarrhea: return .diarrhea // HKCategoryValueSeverity
-        case .dizziness: return .dizziness // HKCategoryValueSeverity
-        case .drySkin: return .drySkin // HKCategoryValueSeverity
-        case .fainting: return .fainting // HKCategoryValueSeverity
-        case .fatigue: return .fatigue // HKCategoryValueSeverity
-        case .fever: return .fever // HKCategoryValueSeverity
-        case .generalizedBodyAche: return .generalizedBodyAche // HKCategoryValueSeverity
-        case .hairLoss: return .hairLoss // HKCategoryValueSeverity
-        case .headache: return .headache // HKCategoryValueSeverity
-        case .heartburn: return .heartburn // HKCategoryValueSeverity
-        case .hotFlashes: return .hotFlashes // HKCategoryValueSeverity
-        case .lossOfSmell: return .lossOfSmell // HKCategoryValueSeverity
-        case .lossOfTaste: return .lossOfTaste // HKCategoryValueSeverity
-        case .lowerBackPain: return .lowerBackPain // HKCategoryValueSeverity
-        case .memoryLapse: return .memoryLapse // HKCategoryValueSeverity
-        case .moodChanges: return .moodChanges // HKCategoryValuePresence
-        case .nausea: return .nausea // HKCategoryValueSeverity
-        case .nightSweats: return .nightSweats // HKCategoryValueSeverity
-        case .pelvicPain: return .pelvicPain // HKCategoryValueSeverity
-        case .rapidPoundingOrFlutteringHeartbeat: return .rapidPoundingOrFlutteringHeartbeat // HKCategoryValueSeverity
-        case .runnyNose: return .runnyNose // HKCategoryValueSeverity
-        case .shortnessOfBreath: return .shortnessOfBreath // HKCategoryValueSeverity
-        case .sinusCongestion: return .sinusCongestion // HKCategoryValueSeverity
-        case .skippedHeartbeat: return .skippedHeartbeat // HKCategoryValueSeverity
-        case .sleepChanges: return .sleepChanges // HKCategoryValuePresence
-        case .soreThroat: return .soreThroat // HKCategoryValueSeverity
-        case .vaginalDryness: return .vaginalDryness // HKCategoryValueSeverity
-        case .vomiting: return .vomiting // HKCategoryValueSeverity
-        case .wheezing: return .wheezing // HKCategoryValueSeverity
-        default:
-            return nil
-        }
-    }
+
+        .abdominalCramps: 157,
+        .acne: 161,
+        .appetiteChanges: 170,
+        .bladderIncontinence: 234,
+        .bloating: 159,
+        .breastPain: 158,
+        .chestTightnessOrPain: 205,
+        .chills: 231,
+        .constipation: 165,
+        .coughing: 222,
+        .diarrhea: 166,
+        .dizziness: 207,
+        .drySkin: 233,
+        .fainting: 206,
+        .fatigue: 167,
+        .fever: 203,
+        .generalizedBodyAche: 240,
+        .hairLoss: 232,
+        .headache: 160,
+        .heartburn: 221,
+        .hotFlashes: 171,
+        .lossOfSmell: 241,
+        .lossOfTaste: 242,
+        .lowerBackPain: 162,
+        .memoryLapse: 235,
+        .moodChanges: 164,
+        .nausea: 168,
+        .nightSweats: 230,
+        .pelvicPain: 163,
+        .rapidPoundingOrFlutteringHeartbeat: 201,
+        .runnyNose: 226,
+        .shortnessOfBreath: 204,
+        .sinusCongestion: 225,
+        .skippedHeartbeat: 202,
+        .sleepChanges: 169,
+        .soreThroat: 224,
+        .vaginalDryness: 229,
+        .vomiting: 220,
+        .wheezing: 223,
+    ]
 }

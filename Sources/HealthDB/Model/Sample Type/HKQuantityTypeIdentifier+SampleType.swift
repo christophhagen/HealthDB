@@ -3,306 +3,160 @@ import HealthKit
 
 extension HKQuantityTypeIdentifier {
 
-
-    init?(sampleType: SampleType) {
-        if let type = HKQuantityTypeIdentifier.type(for: sampleType) {
-            self = type
-            return
-        }
-        guard #available(macOS 14.0, iOS 17.0, watchOS 10.0, *) else {
-            return nil
-        }
-        guard let type = HKQuantityTypeIdentifier.newType(for: sampleType) else {
-            return nil
-        }
-        self = type
+    var sampleType: SampleType {
+        .quantity(self)
     }
+}
+
+extension HKQuantityTypeIdentifier: LosslessIntegerConvertible {
 
     @available(macOS 14.0, iOS 17.0, watchOS 10.0, *)
-    private static func newType(for sampleType: SampleType) -> HKQuantityTypeIdentifier? {
-        switch sampleType {
-        case .cyclingCadence: return .cyclingCadence
-        case .cyclingFunctionalThresholdPower: return .cyclingFunctionalThresholdPower
-        case .cyclingPower: return .cyclingPower
-        case .cyclingSpeed: return .cyclingSpeed
-        case .physicalEffort: return .physicalEffort
-        case .timeInDaylight: return .timeInDaylight
-        default: return nil
-        }
+    private static var newTypes: BiDictionary<HKQuantityTypeIdentifier, Int> {
+        [
+            .cyclingCadence: 282,
+            .cyclingFunctionalThresholdPower: 283,
+            .cyclingPower: 280,
+            .cyclingSpeed: 281,
+            .physicalEffort: 286,
+            .timeInDaylight: 279,
+        ]
     }
 
-    private static func type(for sampleType: SampleType) -> HKQuantityTypeIdentifier? {
-        switch sampleType {
-            //case .appleSleepingWristTemperature: return .appleSleepingWristTemperature
+    static let map: BiDictionary<HKQuantityTypeIdentifier, Int> = {
+        guard #available(macOS 14.0, iOS 17.0, watchOS 10.0, *)else {
+            return oldTypes
+        }
+        var all = oldTypes
+        for newType in newTypes {
+            all[key: newType.key] = newType.value
+        }
+        return all
+    }()
 
-            case .bodyFatPercentage: return .bodyFatPercentage
-            case .bodyMass: return .bodyMass
-            case .bodyMassIndex: return .bodyMassIndex
-            case .electrodermalActivity: return .electrodermalActivity
-            case .height: return .height
-            case .leanBodyMass: return .leanBodyMass
-            case .waistCircumference: return .waistCircumference
+    private static var oldTypes: BiDictionary<HKQuantityTypeIdentifier, Int> {
+        [
+            //.appleSleepingWristTemperature: <#T##Int#>,
+            .bodyFatPercentage: 1,
+            .bodyMass: 3,
+            .bodyMassIndex: 0,
+            .electrodermalActivity: 58,
+            .height: 2,
+            .leanBodyMass: 4,
+            .waistCircumference: 114,
 
             // Fitness
-            case .activeEnergyBurned: return .activeEnergyBurned
-            case .appleExerciseTime: return .appleExerciseTime
-            //case .appleMoveTime: return .appleMoveTime
-            case .appleStandTime: return .appleStandTime
-            case .basalEnergyBurned: return .basalEnergyBurned
-            case .distanceCycling: return .distanceCycling
-            case .distanceDownhillSnowSports: return .distanceDownhillSnowSports
-            case .distanceSwimming: return .distanceSwimming
-            case .distanceWalkingRunning: return .distanceWalkingRunning
-            case .distanceWheelchair: return .distanceWheelchair
-            case .flightsClimbed: return .flightsClimbed
-            //case .nikeFuel: return .nikeFuel
-            case .pushCount: return .pushCount
-            case .runningPower: return .runningPower
-            case .runningSpeed: return .runningSpeed
-            case .stepCount: return .stepCount
-            case .swimmingStrokeCount: return .swimmingStrokeCount
-            case .underwaterDepth: return .underwaterDepth
+            .activeEnergyBurned: 10,
+            .appleExerciseTime: 75,
+            //.appleMoveTime: <#T##Int#>,
+            .appleStandTime: 186,
+            .basalEnergyBurned: 9,
+            .distanceCycling: 83,
+            .distanceDownhillSnowSports: 138,
+            .distanceSwimming: 110,
+            .distanceWalkingRunning: 8,
+            .distanceWheelchair: 113,
+            .flightsClimbed: 12,
+            //.nikeFuel: <#T##Int#>,
+            .pushCount: 101,
+            .runningPower: 270,
+            .runningSpeed: 274,
+            .stepCount: 7,
+            .swimmingStrokeCount: 111,
+            .underwaterDepth: 269,
 
             // Hearing Health
-            //case .environmentalAudioExposureEvent: return .environmentalAudioExposureEvent
-            case .environmentalSoundReduction: return .environmentalSoundReduction
-            //case .headphoneAudioExposureEvent: return .headphoneAudioExposureEvent
+            .environmentalAudioExposure: 172,
+            .environmentalSoundReduction: 272,
+            .headphoneAudioExposure: 173,
 
             // Heart
-            case .atrialFibrillationBurden: return .atrialFibrillationBurden
-            case .heartRate: return .heartRate
-            case .heartRateRecoveryOneMinute: return .heartRateRecoveryOneMinute
-            case .heartRateVariabilitySDNN: return .heartRateVariabilitySDNN
-            case .peripheralPerfusionIndex: return .peripheralPerfusionIndex
-            case .restingHeartRate: return .restingHeartRate
-            case .vo2Max: return .vo2Max
-            case .walkingHeartRateAverage: return .walkingHeartRateAverage
+            .atrialFibrillationBurden: 248,
+            .heartRate: 5,
+            .heartRateRecoveryOneMinute: 266,
+            .heartRateVariabilitySDNN: 139,
+            .peripheralPerfusionIndex: 19,
+            .restingHeartRate: 118,
+            .vo2Max: 124,
+            .walkingHeartRateAverage: 137,
 
             // Mobility
-            case .appleWalkingSteadiness: return .appleWalkingSteadiness
-            case .runningGroundContactTime: return .runningGroundContactTime
-            case .runningStrideLength: return .runningStrideLength
-            case .runningVerticalOscillation: return .runningVerticalOscillation
-            case .sixMinuteWalkTestDistance: return .sixMinuteWalkTestDistance
-            case .stairAscentSpeed: return .stairAscentSpeed
-            case .stairDescentSpeed: return .stairDescentSpeed
-            case .walkingAsymmetryPercentage: return .walkingAsymmetryPercentage
-            case .walkingDoubleSupportPercentage: return .walkingDoubleSupportPercentage
-            case .walkingSpeed: return .walkingSpeed
-            case .walkingStepLength: return .walkingStepLength
+            .appleWalkingSteadiness: 249,
+            .runningGroundContactTime: 260,
+            .runningStrideLength: 258,
+            .runningVerticalOscillation: 259,
+            .sixMinuteWalkTestDistance: 183,
+            .stairAscentSpeed: 195,
+            .stairDescentSpeed: 196,
+            .walkingAsymmetryPercentage: 194,
+            .walkingDoubleSupportPercentage: 182,
+            .walkingSpeed: 187,
+            .walkingStepLength: 188,
 
             // Nutrition
-            case .dietaryBiotin: return .dietaryBiotin
-            case .dietaryCaffeine: return .dietaryCaffeine
-            case .dietaryCalcium: return .dietaryCalcium
-            case .dietaryCarbohydrates: return .dietaryCarbohydrates
-            case .dietaryChloride: return .dietaryChloride
-            case .dietaryCholesterol: return .dietaryCholesterol
-            case .dietaryChromium: return .dietaryChromium
-            case .dietaryCopper: return .dietaryCopper
-            case .dietaryEnergyConsumed: return .dietaryEnergyConsumed
-            case .dietaryFatMonounsaturated: return .dietaryFatMonounsaturated
-            case .dietaryFatPolyunsaturated: return .dietaryFatPolyunsaturated
-            case .dietaryFatSaturated: return .dietaryFatSaturated
-            case .dietaryFatTotal: return .dietaryFatTotal
-            case .dietaryFiber: return .dietaryFiber
-            case .dietaryFolate: return .dietaryFolate
-            case .dietaryIodine: return .dietaryIodine
-            case .dietaryIron: return .dietaryIron
-            case .dietaryMagnesium: return .dietaryMagnesium
-            case .dietaryManganese: return .dietaryManganese
-            case .dietaryMolybdenum: return .dietaryMolybdenum
-            case .dietaryNiacin: return .dietaryNiacin
-            case .dietaryPantothenicAcid: return .dietaryPantothenicAcid
-            case .dietaryPhosphorus: return .dietaryPhosphorus
-            case .dietaryPotassium: return .dietaryPotassium
-            case .dietaryProtein: return .dietaryProtein
-            case .dietaryRiboflavin: return .dietaryRiboflavin
-            case .dietarySelenium: return .dietarySelenium
-            case .dietarySodium: return .dietarySodium
-            case .dietarySugar: return .dietarySugar
-            case .dietaryThiamin: return .dietaryThiamin
-            case .dietaryVitaminA: return .dietaryVitaminA
-            case .dietaryVitaminB12: return .dietaryVitaminB12
-            case .dietaryVitaminB6: return .dietaryVitaminB6
-            case .dietaryVitaminC: return .dietaryVitaminC
-            case .dietaryVitaminD: return .dietaryVitaminD
-            case .dietaryVitaminE: return .dietaryVitaminE
-            case .dietaryVitaminK: return .dietaryVitaminK
-            case .dietaryWater: return .dietaryWater
-            case .dietaryZinc: return .dietaryZinc
+            .dietaryBiotin: 44,
+            .dietaryCaffeine: 78,
+            .dietaryCalcium: 38,
+            .dietaryCarbohydrates: 26,
+            .dietaryChloride: 55,
+            .dietaryCholesterol: 24,
+            .dietaryChromium: 53,
+            .dietaryCopper: 51,
+            .dietaryEnergyConsumed: 29,
+            .dietaryFatMonounsaturated: 22,
+            .dietaryFatPolyunsaturated: 21,
+            .dietaryFatSaturated: 23,
+            .dietaryFatTotal: 20,
+            .dietaryFiber: 27,
+            .dietaryFolate: 43,
+            .dietaryIodine: 47,
+            .dietaryIron: 39,
+            .dietaryMagnesium: 48,
+            .dietaryManganese: 52,
+            .dietaryMolybdenum: 54,
+            .dietaryNiacin: 42,
+            .dietaryPantothenicAcid: 45,
+            .dietaryPhosphorus: 46,
+            .dietaryPotassium: 56,
+            .dietaryProtein: 30,
+            .dietaryRiboflavin: 41,
+            .dietarySelenium: 50,
+            .dietarySodium: 25,
+            .dietarySugar: 28,
+            .dietaryThiamin: 40,
+            .dietaryVitaminA: 31,
+            .dietaryVitaminB12: 33,
+            .dietaryVitaminB6: 32,
+            .dietaryVitaminC: 34,
+            .dietaryVitaminD: 35,
+            .dietaryVitaminE: 36,
+            .dietaryVitaminK: 37,
+            .dietaryWater: 87,
+            .dietaryZinc: 49,
 
             // Other
-            case .bloodAlcoholContent: return .bloodAlcoholContent
-            case .bloodPressureDiastolic: return .bloodPressureDiastolic
-            case .bloodPressureSystolic: return .bloodPressureSystolic
-            case .insulinDelivery: return .insulinDelivery
-            case .numberOfAlcoholicBeverages: return .numberOfAlcoholicBeverages
-            case .numberOfTimesFallen: return .numberOfTimesFallen
-            case .uvExposure: return .uvExposure
-            case .waterTemperature: return .waterTemperature
+            .bloodAlcoholContent: 18,
+            .bloodPressureDiastolic: 17,
+            .bloodPressureSystolic: 16,
+            .insulinDelivery: 125,
+            .numberOfAlcoholicBeverages: 251,
+            .numberOfTimesFallen: 57,
+            .uvExposure: 89,
+            .waterTemperature: 277,
 
             // Reproductive Health
-            case .basalBodyTemperature: return .basalBodyTemperature
+            .basalBodyTemperature: 90,
 
             // Respiratory
-            case .forcedExpiratoryVolume1: return .forcedExpiratoryVolume1
-            case .forcedVitalCapacity: return .forcedVitalCapacity
-            case .inhalerUsage: return .inhalerUsage
-            case .oxygenSaturation: return .oxygenSaturation
-            case .peakExpiratoryFlowRate: return .peakExpiratoryFlowRate
-            case .respiratoryRate: return .respiratoryRate
+            .forcedExpiratoryVolume1: 72,
+            .forcedVitalCapacity: 71,
+            .inhalerUsage: 60,
+            .oxygenSaturation: 14,
+            .peakExpiratoryFlowRate: 73,
+            .respiratoryRate: 61,
 
             // Vital Signs
-            case .bloodGlucose: return .bloodGlucose
-            case .bodyTemperature: return .bodyTemperature
-        default:
-            return nil
-        }
-    }
-
-    var sampleType: SampleType? {
-
-        if #available(macOS 14.0, iOS 17.0, watchOS 10.0, *) {
-            switch self {
-            case .cyclingCadence: return .cyclingCadence
-            case .cyclingFunctionalThresholdPower: return .cyclingFunctionalThresholdPower
-            case .cyclingPower: return .cyclingPower
-            case .cyclingSpeed: return .cyclingSpeed
-            case .physicalEffort: return .physicalEffort
-            case .timeInDaylight: return .timeInDaylight
-
-            default:
-            break
-            }
-        }
-
-        switch self {
-        //case .appleSleepingWristTemperature: return .appleSleepingWristTemperature
-
-        case .bodyFatPercentage: return .bodyFatPercentage
-        case .bodyMass: return .bodyMass
-        case .bodyMassIndex: return .bodyMassIndex
-        case .electrodermalActivity: return .electrodermalActivity
-        case .height: return .height
-        case .leanBodyMass: return .leanBodyMass
-        case .waistCircumference: return .waistCircumference
-
-        // Fitness
-        case .activeEnergyBurned: return .activeEnergyBurned
-        case .appleExerciseTime: return .appleExerciseTime
-        //case .appleMoveTime: return .appleMoveTime
-        case .appleStandTime: return .appleStandTime
-        case .basalEnergyBurned: return .basalEnergyBurned
-        case .distanceCycling: return .distanceCycling
-        case .distanceDownhillSnowSports: return .distanceDownhillSnowSports
-        case .distanceSwimming: return .distanceSwimming
-        case .distanceWalkingRunning: return .distanceWalkingRunning
-        case .distanceWheelchair: return .distanceWheelchair
-        case .flightsClimbed: return .flightsClimbed
-        //case .nikeFuel: return .nikeFuel
-        case .pushCount: return .pushCount
-        case .runningPower: return .runningPower
-        case .runningSpeed: return .runningSpeed
-        case .stepCount: return .stepCount
-        case .swimmingStrokeCount: return .swimmingStrokeCount
-        case .underwaterDepth: return .underwaterDepth
-
-        // Hearing Health
-        case .environmentalAudioExposure: return .environmentalAudioExposure
-        case .environmentalSoundReduction: return .environmentalSoundReduction
-        case .headphoneAudioExposure: return .headphoneAudioExposure
-
-        // Heart
-        case .atrialFibrillationBurden: return .atrialFibrillationBurden
-        case .heartRate: return .heartRate
-        case .heartRateRecoveryOneMinute: return .heartRateRecoveryOneMinute
-        case .heartRateVariabilitySDNN: return .heartRateVariabilitySDNN
-        case .peripheralPerfusionIndex: return .peripheralPerfusionIndex
-        case .restingHeartRate: return .restingHeartRate
-        case .vo2Max: return .vo2Max
-        case .walkingHeartRateAverage: return .walkingHeartRateAverage
-
-        // Mobility
-        case .appleWalkingSteadiness: return .appleWalkingSteadiness
-        case .runningGroundContactTime: return .runningGroundContactTime
-        case .runningStrideLength: return .runningStrideLength
-        case .runningVerticalOscillation: return .runningVerticalOscillation
-        case .sixMinuteWalkTestDistance: return .sixMinuteWalkTestDistance
-        case .stairAscentSpeed: return .stairAscentSpeed
-        case .stairDescentSpeed: return .stairDescentSpeed
-        case .walkingAsymmetryPercentage: return .walkingAsymmetryPercentage
-        case .walkingDoubleSupportPercentage: return .walkingDoubleSupportPercentage
-        case .walkingSpeed: return .walkingSpeed
-        case .walkingStepLength: return .walkingStepLength
-
-        // Nutrition
-        case .dietaryBiotin: return .dietaryBiotin
-        case .dietaryCaffeine: return .dietaryCaffeine
-        case .dietaryCalcium: return .dietaryCalcium
-        case .dietaryCarbohydrates: return .dietaryCarbohydrates
-        case .dietaryChloride: return .dietaryChloride
-        case .dietaryCholesterol: return .dietaryCholesterol
-        case .dietaryChromium: return .dietaryChromium
-        case .dietaryCopper: return .dietaryCopper
-        case .dietaryEnergyConsumed: return .dietaryEnergyConsumed
-        case .dietaryFatMonounsaturated: return .dietaryFatMonounsaturated
-        case .dietaryFatPolyunsaturated: return .dietaryFatPolyunsaturated
-        case .dietaryFatSaturated: return .dietaryFatSaturated
-        case .dietaryFatTotal: return .dietaryFatTotal
-        case .dietaryFiber: return .dietaryFiber
-        case .dietaryFolate: return .dietaryFolate
-        case .dietaryIodine: return .dietaryIodine
-        case .dietaryIron: return .dietaryIron
-        case .dietaryMagnesium: return .dietaryMagnesium
-        case .dietaryManganese: return .dietaryManganese
-        case .dietaryMolybdenum: return .dietaryMolybdenum
-        case .dietaryNiacin: return .dietaryNiacin
-        case .dietaryPantothenicAcid: return .dietaryPantothenicAcid
-        case .dietaryPhosphorus: return .dietaryPhosphorus
-        case .dietaryPotassium: return .dietaryPotassium
-        case .dietaryProtein: return .dietaryProtein
-        case .dietaryRiboflavin: return .dietaryRiboflavin
-        case .dietarySelenium: return .dietarySelenium
-        case .dietarySodium: return .dietarySodium
-        case .dietarySugar: return .dietarySugar
-        case .dietaryThiamin: return .dietaryThiamin
-        case .dietaryVitaminA: return .dietaryVitaminA
-        case .dietaryVitaminB12: return .dietaryVitaminB12
-        case .dietaryVitaminB6: return .dietaryVitaminB6
-        case .dietaryVitaminC: return .dietaryVitaminC
-        case .dietaryVitaminD: return .dietaryVitaminD
-        case .dietaryVitaminE: return .dietaryVitaminE
-        case .dietaryVitaminK: return .dietaryVitaminK
-        case .dietaryWater: return .dietaryWater
-        case .dietaryZinc: return .dietaryZinc
-
-        // Other
-        case .bloodAlcoholContent: return .bloodAlcoholContent
-        case .bloodPressureDiastolic: return .bloodPressureDiastolic
-        case .bloodPressureSystolic: return .bloodPressureSystolic
-        case .insulinDelivery: return .insulinDelivery
-        case .numberOfAlcoholicBeverages: return .numberOfAlcoholicBeverages
-        case .numberOfTimesFallen: return .numberOfTimesFallen
-        case .uvExposure: return .uvExposure
-        case .waterTemperature: return .waterTemperature
-
-        // Reproductive Health
-        case .basalBodyTemperature: return .basalBodyTemperature
-
-        // Respiratory
-        case .forcedExpiratoryVolume1: return .forcedExpiratoryVolume1
-        case .forcedVitalCapacity: return .forcedVitalCapacity
-        case .inhalerUsage: return .inhalerUsage
-        case .oxygenSaturation: return .oxygenSaturation
-        case .peakExpiratoryFlowRate: return .peakExpiratoryFlowRate
-        case .respiratoryRate: return .respiratoryRate
-
-        // Vital Signs
-        case .bloodGlucose: return .bloodGlucose
-        case .bodyTemperature: return .bodyTemperature
-
-        default: return nil
-        }
+            .bloodGlucose: 15,
+            .bodyTemperature: 62,
+        ]
     }
 }

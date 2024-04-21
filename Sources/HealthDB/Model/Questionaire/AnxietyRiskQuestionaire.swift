@@ -8,7 +8,7 @@ public struct AnxietyRiskQuestionaire: Questionaire {
 
     public typealias Question = AnxietyRiskQuestion
 
-    public static let sampleType: SampleType = .anxietyRiskQuestionaire
+    public static let otherSampleType: SampleType.Other = .anxietyRiskQuestionaire
 
     public let score: Int
 

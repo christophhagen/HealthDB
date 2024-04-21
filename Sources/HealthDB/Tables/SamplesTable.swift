@@ -24,7 +24,7 @@ struct SamplesTable {
         let start = start.timeIntervalSinceReferenceDate
         let end = end.timeIntervalSinceReferenceDate
         return table
-            .filter(dataType == type.rawValue)
+            .filter(dataType == type.rawValue ?? -1)
             .filter(startDate <= end && endDate >= start)
     }
 }

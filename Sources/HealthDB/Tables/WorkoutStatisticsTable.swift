@@ -30,10 +30,7 @@ struct WorkoutStatisticsTable {
 
     func createStatistics(from row: Row) throws -> Statistics {
         let rawType = row[dataType]
-        guard let sampleType = SampleType(rawValue: rawType) else {
-            throw HKNotSupportedError("Unknown quantity type \(rawType) for statistics")
-        }
-        guard let identifier = HKQuantityTypeIdentifier(sampleType: sampleType) else {
+        guard let identifier = HKQuantityTypeIdentifier(intValue: rawType) else {
             throw HKNotSupportedError("Unknown quantity type \(rawType) for statistics")
         }
         guard let unit = identifier.defaultUnit else {

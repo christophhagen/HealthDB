@@ -5,7 +5,7 @@ public protocol Questionaire: HKSampleProtocol {
 
     associatedtype Question: RawRepresentable where Question.RawValue == Int
 
-    static var sampleType: SampleType { get }
+    static var otherSampleType: SampleType.Other { get }
 
     var score: Int { get }
 
@@ -17,6 +17,10 @@ public protocol Questionaire: HKSampleProtocol {
 }
 
 extension Questionaire {
+
+    static var sampleType: SampleType {
+        .other(otherSampleType)
+    }
 
     public func answer(to question: Question) -> QuestionaireAnswer? {
         let index = question.rawValue
