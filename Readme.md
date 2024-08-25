@@ -30,9 +30,9 @@ Workout goals | ✅ | Duration, Distance, Calories
 [Scored Assessments](#scored-assessments) | ✅ | Since iOS 17
 [Sleep schedules](#sleep-schedules) | ✅
 [HeartbeatSeries](#heartbeat-series) | ✅
+[Audiogram samples](#audiograms) | ✅
 Medical records and prescriptions | ❌
 Achievements | ❌
-Audiogram samples | ❌
 
 ### Caveats
 
