@@ -1,4 +1,3 @@
-import Foundation
 import SQLite
 
 struct CategorySamplesTable {
@@ -9,9 +8,9 @@ struct CategorySamplesTable {
         try database.execute("CREATE TABLE category_samples (data_id INTEGER PRIMARY KEY, value INTEGER)")
     }
 
-    let dataId = Expression<Int>("data_id")
+    let dataId = SQLite.Expression<Int>("data_id")
 
-    let value = Expression<Int?>("value")
+    let value = SQLite.Expression<Int?>("value")
 
     func value(for dataId: Int, in database: Connection) throws -> Int? {
         try database.pluck(table.filter(self.dataId == dataId)).map { $0[value] }

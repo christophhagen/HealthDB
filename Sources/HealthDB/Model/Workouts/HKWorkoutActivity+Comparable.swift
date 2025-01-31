@@ -8,7 +8,7 @@ extension HKWorkoutActivity {
     }
 }
 
-extension HKWorkoutActivity: Comparable {
+extension HKWorkoutActivity: @retroactive Comparable {
 
     public static func < (lhs: HKWorkoutActivity, rhs: HKWorkoutActivity) -> Bool {
         lhs.startDate < rhs.startDate

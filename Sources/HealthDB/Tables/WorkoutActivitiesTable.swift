@@ -6,29 +6,29 @@ struct WorkoutActivitiesTable {
 
     let table = Table("workout_activities")
 
-    let rowId = Expression<Int>("ROWID")
+    let rowId = SQLite.Expression<Int>("ROWID")
 
-    let uuid = Expression<Data>("uuid")
+    let uuid = SQLite.Expression<Data>("uuid")
 
-    let ownerId = Expression<Int>("owner_id")
+    let ownerId = SQLite.Expression<Int>("owner_id")
 
-    let isPrimaryActivity = Expression<Bool>("is_primary_activity")
+    let isPrimaryActivity = SQLite.Expression<Bool>("is_primary_activity")
 
-    let activityType = Expression<Int>("activity_type")
+    let activityType = SQLite.Expression<Int>("activity_type")
 
-    let locationType = Expression<Int>("location_type")
+    let locationType = SQLite.Expression<Int>("location_type")
 
-    let swimmingLocationType = Expression<Int>("swimming_location_type")
+    let swimmingLocationType = SQLite.Expression<Int>("swimming_location_type")
 
-    let lapLength = Expression<Data?>("lap_length")
+    let lapLength = SQLite.Expression<Data?>("lap_length")
 
-    let startDate = Expression<Double>("start_date")
+    let startDate = SQLite.Expression<Double>("start_date")
 
-    let endDate = Expression<Double>("end_date")
+    let endDate = SQLite.Expression<Double>("end_date")
 
-    let duration = Expression<Double>("duration")
+    let duration = SQLite.Expression<Double>("duration")
 
-    let metadata = Expression<Data?>("metadata")
+    let metadata = SQLite.Expression<Data?>("metadata")
 
     func activities(in database: Connection) throws -> [HKWorkoutActivity] {
         try database.prepare(table).map(activity)

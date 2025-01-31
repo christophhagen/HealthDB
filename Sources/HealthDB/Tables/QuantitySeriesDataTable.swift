@@ -10,13 +10,13 @@ struct QuantitySeriesDataTable {
         try database.execute("CREATE TABLE quantity_series_data (series_identifier INTEGER NOT NULL REFERENCES quantity_sample_series(hfd_key) DEFERRABLE INITIALLY DEFERRED, timestamp REAL NOT NULL, value REAL NOT NULL, duration REAL NOT NULL, PRIMARY KEY (series_identifier, timestamp)) WITHOUT ROWID")
     }
 
-    let seriesIdentifier = Expression<Int>("series_identifier")
+    let seriesIdentifier = SQLite.Expression<Int>("series_identifier")
 
-    let timestamp = Expression<Double>("timestamp")
+    let timestamp = SQLite.Expression<Double>("timestamp")
 
-    let value = Expression<Double>("value")
+    let value = SQLite.Expression<Double>("value")
 
-    let duration = Expression<Double>("duration")
+    let duration = SQLite.Expression<Double>("duration")
 
     func quantities(for dataId: Int, in database: Connection, identifier: HKQuantityTypeIdentifier, unit: HKUnit) throws -> [HKQuantitySample] {
         let query = table.filter(seriesIdentifier == dataId)

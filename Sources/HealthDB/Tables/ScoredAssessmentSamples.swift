@@ -9,13 +9,13 @@ struct ScoredAssessmentSamples {
 
     let table = Table("scored_assessment_samples")
 
-    let dataId = Expression<Int>("data_id")
+    let dataId = SQLite.Expression<Int>("data_id")
 
     // NOTE: Technically optional
-    let score = Expression<Int>("score")
+    let score = SQLite.Expression<Int>("score")
 
     // NOTE: Technically optional
-    let answers = Expression<Data>("answers")
+    let answers = SQLite.Expression<Data>("answers")
 
-    let risk = Expression<Int>("risk")
+    let risk = SQLite.Expression<Int>("risk")
 }

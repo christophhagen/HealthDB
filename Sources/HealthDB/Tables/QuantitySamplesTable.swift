@@ -9,14 +9,14 @@ struct QuantitySamplesTable {
 
     let table = Table("quantity_samples")
 
-    let dataId = Expression<Int>("data_id")
+    let dataId = SQLite.Expression<Int>("data_id")
 
-    let quantity = Expression<Double?>("quantity")
+    let quantity = SQLite.Expression<Double?>("quantity")
 
-    let originalQuantity = Expression<Double?>("original_quantity")
+    let originalQuantity = SQLite.Expression<Double?>("original_quantity")
 
     /// References `ROWID` on table `unit_strings`
-    let originalUnit = Expression<Int?>("original_unit")
+    let originalUnit = SQLite.Expression<Int?>("original_unit")
 
     func quantity(for id: Int, in database: Connection) throws -> (quantity: Double?, original: Double?, unit: Int?) {
         try database.prepare(table.filter(dataId == id).limit(1)).map {

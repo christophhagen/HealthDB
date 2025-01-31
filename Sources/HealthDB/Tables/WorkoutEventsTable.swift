@@ -7,28 +7,28 @@ struct WorkoutEventsTable {
     let table = Table("workout_events")
 
     // INTEGER PRIMARY KEY AUTOINCREMENT
-    let rowId = Expression<Int>("ROWID")
+    let rowId = SQLite.Expression<Int>("ROWID")
 
     // owner_id INTEGER NOT NULL REFERENCES workouts (data_id) ON DELETE CASCADE
-    let ownerId = Expression<Int>("owner_id")
+    let ownerId = SQLite.Expression<Int>("owner_id")
 
     // date REAL NOT NULL
-    let date = Expression<Double>("date")
+    let date = SQLite.Expression<Double>("date")
 
     // type INTEGER NOT NULL
-    let type = Expression<Int>("type")
+    let type = SQLite.Expression<Int>("type")
 
     // duration REAL NOT NULL
-    let duration = Expression<Double>("duration")
+    let duration = SQLite.Expression<Double>("duration")
 
     // metadata BLOB
-    let metadata = Expression<Data?>("metadata")
+    let metadata = SQLite.Expression<Data?>("metadata")
 
     // session_uuid BLOB
-    let sessionUUID = Expression<Data?>("session_uuid")
+    let sessionUUID = SQLite.Expression<Data?>("session_uuid")
 
     // error BLOB
-    let error = Expression<Data?>("error")
+    let error = SQLite.Expression<Data?>("error")
 
     func events(in database: Connection) throws -> [HKWorkoutEvent] {
         try database.prepare(table).map(event)

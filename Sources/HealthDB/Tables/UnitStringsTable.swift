@@ -9,9 +9,9 @@ struct UnitStringsTable {
 
     let table = Table("unit_strings")
 
-    let rowId = Expression<Int>("ROWID")
+    let rowId = SQLite.Expression<Int>("ROWID")
 
-    let unitString = Expression<String?>("unit_string")
+    let unitString = SQLite.Expression<String?>("unit_string")
 
     func unit(for id: Int, database: Connection) throws -> String? {
         guard let row = try database.pluck(table.filter(rowId == id)) else {

@@ -1,7 +1,7 @@
 import Foundation
 import HealthKit
 
-extension HKBiologicalSex: CustomStringConvertible {
+extension HKBiologicalSex: @retroactive CustomStringConvertible {
 
     public var description: String {
         switch self {

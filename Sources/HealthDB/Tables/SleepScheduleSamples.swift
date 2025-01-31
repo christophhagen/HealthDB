@@ -5,31 +5,31 @@ struct SleepScheduleSamples {
 
     let table = Table("sleep_schedule_samples")
 
-    let dataId = Expression<Int>("data_id")
+    let dataId = SQLite.Expression<Int>("data_id")
 
-    let monday = Expression<Int>("monday")
+    let monday = SQLite.Expression<Int>("monday")
 
-    let tuesday = Expression<Int>("tuesday")
+    let tuesday = SQLite.Expression<Int>("tuesday")
 
-    let wednesday = Expression<Int>("wednesday")
+    let wednesday = SQLite.Expression<Int>("wednesday")
 
-    let thursday = Expression<Int>("thursday")
+    let thursday = SQLite.Expression<Int>("thursday")
 
-    let friday = Expression<Int>("friday")
+    let friday = SQLite.Expression<Int>("friday")
 
-    let saturday = Expression<Int>("saturday")
+    let saturday = SQLite.Expression<Int>("saturday")
 
-    let sunday = Expression<Int>("sunday")
+    let sunday = SQLite.Expression<Int>("sunday")
 
-    let wakeHour = Expression<Int?>("wake_hour")
+    let wakeHour = SQLite.Expression<Int?>("wake_hour")
 
-    let wakeMinute = Expression<Int?>("wake_minute")
+    let wakeMinute = SQLite.Expression<Int?>("wake_minute")
 
-    let bedHour = Expression<Int?>("bed_hour")
+    let bedHour = SQLite.Expression<Int?>("bed_hour")
 
-    let bedMinute = Expression<Int?>("bed_minute")
+    let bedMinute = SQLite.Expression<Int?>("bed_minute")
 
-    let overrideDayIndex = Expression<Int?>("override_day_index")
+    let overrideDayIndex = SQLite.Expression<Int?>("override_day_index")
 
     func create(in database: Connection) throws {
         try database.execute("CREATE TABLE sleep_schedule_samples (data_id INTEGER PRIMARY KEY, monday INTEGER NOT NULL, tuesday INTEGER NOT NULL, wednesday INTEGER NOT NULL, thursday INTEGER NOT NULL, friday INTEGER NOT NULL, saturday INTEGER NOT NULL, sunday INTEGER NOT NULL, wake_hour INTEGER, wake_minute INTEGER, bed_hour INTEGER, bed_minute INTEGER, override_day_index INTEGER)")

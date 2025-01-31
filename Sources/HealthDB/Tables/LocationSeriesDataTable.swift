@@ -7,29 +7,29 @@ struct LocationSeriesDataTable {
     let table = Table("location_series_data")
 
     /// `location_series_data[series_identifier]` <-> `workout_activities[ROW_ID]`
-    let seriesIdentifier = Expression<Int>("series_identifier")
+    let seriesIdentifier = SQLite.Expression<Int>("series_identifier")
 
-    let timestamp = Expression<Double>("timestamp")
+    let timestamp = SQLite.Expression<Double>("timestamp")
 
-    let longitude = Expression<Double>("longitude")
+    let longitude = SQLite.Expression<Double>("longitude")
 
-    let latitude = Expression<Double>("latitude")
+    let latitude = SQLite.Expression<Double>("latitude")
 
-    let altitude = Expression<Double>("altitude")
+    let altitude = SQLite.Expression<Double>("altitude")
 
-    let speed = Expression<Double>("speed")
+    let speed = SQLite.Expression<Double>("speed")
 
-    let course = Expression<Double>("course")
+    let course = SQLite.Expression<Double>("course")
 
-    let horizontalAccuracy = Expression<Double>("horizontal_accuracy")
+    let horizontalAccuracy = SQLite.Expression<Double>("horizontal_accuracy")
 
-    let verticalAccuracy = Expression<Double>("vertical_accuracy")
+    let verticalAccuracy = SQLite.Expression<Double>("vertical_accuracy")
 
-    let speedAccuracy = Expression<Double>("speed_accuracy")
+    let speedAccuracy = SQLite.Expression<Double>("speed_accuracy")
 
-    let courseAccuracy = Expression<Double>("course_accuracy")
+    let courseAccuracy = SQLite.Expression<Double>("course_accuracy")
 
-    let signalEnvironment = Expression<Double>("signal_environment")
+    let signalEnvironment = SQLite.Expression<Double>("signal_environment")
 
     func locations(for seriesId: Int, in database: Connection) throws -> [CLLocation] {
         let query = table.filter(seriesIdentifier == seriesId)

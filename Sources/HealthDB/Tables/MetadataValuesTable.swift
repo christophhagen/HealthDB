@@ -1,4 +1,3 @@
-import Foundation
 import SQLite
 import HealthKit
 
@@ -6,21 +5,21 @@ struct MetadataValuesTable {
 
     let table = Table("metadata_values")
 
-    let rowId = Expression<Int>("ROW_ID")
+    let rowId = SQLite.Expression<Int>("ROW_ID")
 
-    let keyId = Expression<Int?>("key_id")
+    let keyId = SQLite.Expression<Int?>("key_id")
 
-    let objectId = Expression<Int?>("object_id")
+    let objectId = SQLite.Expression<Int?>("object_id")
 
-    let valueType = Expression<Int>("value_type")
+    let valueType = SQLite.Expression<Int>("value_type")
 
-    let stringValue = Expression<String?>("string_value")
+    let stringValue = SQLite.Expression<String?>("string_value")
 
-    let numericalValue = Expression<Double?>("numerical_value")
+    let numericalValue = SQLite.Expression<Double?>("numerical_value")
 
-    let dateValue = Expression<Double?>("date_value")
+    let dateValue = SQLite.Expression<Double?>("date_value")
 
-    let dataValue = Expression<Data?>("data_value")
+    let dataValue = SQLite.Expression<Data?>("data_value")
 
     func all(in database: Connection) throws -> [MetadataValue] {
         try database.prepare(table).map(from)

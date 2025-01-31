@@ -1,7 +1,7 @@
 import Foundation
 import HealthKit
 
-extension HKFitzpatrickSkinType: CustomStringConvertible {
+extension HKFitzpatrickSkinType: @retroactive CustomStringConvertible {
 
     public var description: String {
         switch self {

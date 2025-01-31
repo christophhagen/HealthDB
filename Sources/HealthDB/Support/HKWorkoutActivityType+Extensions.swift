@@ -1,7 +1,7 @@
 import Foundation
 import HealthKit
 
-extension HKWorkoutActivityType: CustomStringConvertible {
+extension HKWorkoutActivityType: @retroactive CustomStringConvertible {
 
     public var description: String {
         switch self {
@@ -179,7 +179,7 @@ extension HKWorkoutActivityType: CustomStringConvertible {
     }
 }
 
-extension HKWorkoutActivityType: Comparable {
+extension HKWorkoutActivityType: @retroactive Comparable {
 
     public static func < (lhs: HKWorkoutActivityType, rhs: HKWorkoutActivityType) -> Bool {
         lhs.rawValue < rhs.rawValue

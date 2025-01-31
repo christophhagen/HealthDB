@@ -1,7 +1,7 @@
 import Foundation
 import HealthKit
 
-extension HKWorkoutSessionLocationType: CustomStringConvertible {
+extension HKWorkoutSessionLocationType: @retroactive CustomStringConvertible {
     
     public var description: String {
         switch self {

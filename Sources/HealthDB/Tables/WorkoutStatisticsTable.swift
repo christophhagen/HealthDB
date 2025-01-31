@@ -10,15 +10,15 @@ struct WorkoutStatisticsTable {
         try database.execute("CREATE TABLE workout_statistics (ROWID INTEGER PRIMARY KEY AUTOINCREMENT, workout_activity_id INTEGER NOT NULL REFERENCES workout_activities(ROWID) ON DELETE CASCADE, data_type INTEGER NOT NULL, quantity REAL NOT NULL, min REAL, max REAL, UNIQUE(workout_activity_id, data_type))")
     }
 
-    let workoutActivityId = Expression<Int>("workout_activity_id")
+    let workoutActivityId = SQLite.Expression<Int>("workout_activity_id")
 
-    let dataType = Expression<Int>("data_type")
+    let dataType = SQLite.Expression<Int>("data_type")
 
-    let quantity = Expression<Double>("quantity")
+    let quantity = SQLite.Expression<Double>("quantity")
 
-    let min = Expression<Double?>("min")
+    let min = SQLite.Expression<Double?>("min")
 
-    let max = Expression<Double?>("max")
+    let max = SQLite.Expression<Double?>("max")
     
     func createStatistics(from row: Row, type: HKQuantityType, unit: HKUnit) -> Statistics {
         .init(quantityType: type,

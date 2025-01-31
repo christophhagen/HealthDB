@@ -1,4 +1,3 @@
-import Foundation
 import SQLite
 import HealthKit
 
@@ -10,39 +9,39 @@ struct DataProvenancesTable {
 
     let table = Table("data_provenances")
 
-    let rowId = Expression<Int>("ROWID")
+    let rowId = SQLite.Expression<Int>("ROWID")
 
-    let syncProvenance = Expression<Int>("sync_provenance")
+    let syncProvenance = SQLite.Expression<Int>("sync_provenance")
 
     /// Device that created the data (e.g. Watch)
-    let originProductType = Expression<String>("origin_product_type")
+    let originProductType = SQLite.Expression<String>("origin_product_type")
 
-    let originBuild = Expression<String>("origin_build")
+    let originBuild = SQLite.Expression<String>("origin_build")
 
     /// Device saving the data (e.g. iPhone)
-    let localProductType = Expression<String>("local_product_type")
+    let localProductType = SQLite.Expression<String>("local_product_type")
 
-    let localBuild = Expression<String>("local_build")
+    let localBuild = SQLite.Expression<String>("local_build")
 
-    let sourceId = Expression<Int>("source_id")
+    let sourceId = SQLite.Expression<Int>("source_id")
 
-    let deviceId = Expression<Int>("device_id")
+    let deviceId = SQLite.Expression<Int>("device_id")
 
-    let contributorId = Expression<Int>("contributor_id")
+    let contributorId = SQLite.Expression<Int>("contributor_id")
 
-    let sourceVersion = Expression<String>("source_version")
+    let sourceVersion = SQLite.Expression<String>("source_version")
 
-    let tzName = Expression<String>("tz_name")
+    let tzName = SQLite.Expression<String>("tz_name")
 
-    let originMajorVersion = Expression<Int>("origin_major_version")
+    let originMajorVersion = SQLite.Expression<Int>("origin_major_version")
 
-    let originMinorVersion = Expression<Int>("origin_minor_version")
+    let originMinorVersion = SQLite.Expression<Int>("origin_minor_version")
 
-    let originPatchVersion = Expression<Int>("origin_patch_version")
+    let originPatchVersion = SQLite.Expression<Int>("origin_patch_version")
 
-    let syncIdentity = Expression<Int>("sync_identity")
+    let syncIdentity = SQLite.Expression<Int>("sync_identity")
 
-    let derivedFlags = Expression<Int>("derived_flags")
+    let derivedFlags = SQLite.Expression<Int>("derived_flags")
 
     func device(for rowId: Int, in database: Connection) throws -> HKDevice? {
         try database.pluck(table.filter(self.rowId == rowId)).map { row in

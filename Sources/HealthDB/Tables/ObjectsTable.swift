@@ -9,15 +9,15 @@ struct ObjectsTable {
 
     let table = Table("objects")
 
-    let dataId = Expression<Int>("data_id")
+    let dataId = SQLite.Expression<Int>("data_id")
 
-    let uuid = Expression<Data?>("uuid")
+    let uuid = SQLite.Expression<Data?>("uuid")
 
-    let provenance = Expression<Int>("provenance")
-    
-    let type = Expression<Int?>("type")
-    
-    let creationDate = Expression<Double?>("creation_date")
+    let provenance = SQLite.Expression<Int>("provenance")
+
+    let type = SQLite.Expression<Int?>("type")
+
+    let creationDate = SQLite.Expression<Double?>("creation_date")
     
     func object(for dataId: Int, in database: Connection) throws -> (uuid: UUID, provenance: Int, type: Int, creationDate: Date)? {
         try database.pluck(table.filter(self.dataId == dataId)).map { row in

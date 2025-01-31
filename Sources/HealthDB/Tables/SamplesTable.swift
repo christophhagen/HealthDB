@@ -9,15 +9,15 @@ struct SamplesTable {
 
     let table = Table("samples")
 
-    let dataId = Expression<Int>("data_id")
+    let dataId = SQLite.Expression<Int>("data_id")
 
     // NOTE: Technically optional
-    let startDate = Expression<Double>("start_date")
+    let startDate = SQLite.Expression<Double>("start_date")
 
     // NOTE: Technically optional
-    let endDate = Expression<Double>("end_date")
+    let endDate = SQLite.Expression<Double>("end_date")
 
-    let dataType = Expression<Int>("data_type")
+    let dataType = SQLite.Expression<Int>("data_type")
 
     /// Select samples of a type overlapping with the given date interval.
     func query(type: SampleType, from start: Date, to end: Date) -> Table {

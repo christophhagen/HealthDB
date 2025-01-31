@@ -7,22 +7,22 @@ struct WorkoutsTable {
     let table = Table("workouts")
     
     // INTEGER PRIMARY KEY AUTOINCREMENT
-    let dataId = Expression<Int>("data_id")
+    let dataId = SQLite.Expression<Int>("data_id")
 
     // REAL
-    let totalDistance = Expression<Double?>("total_distance")
+    let totalDistance = SQLite.Expression<Double?>("total_distance")
 
     // INTEGER
-    let goalType = Expression<Int?>("goal_type")
+    let goalType = SQLite.Expression<Int?>("goal_type")
 
     // REAL
-    let goal = Expression<Double?>("goal")
+    let goal = SQLite.Expression<Double?>("goal")
 
     // INTEGER
-    let condenserVersion = Expression<Int?>("condenser_version")
+    let condenserVersion = SQLite.Expression<Int?>("condenser_version")
 
     // REAL
-    let condenserDate = Expression<Double?>("condenser_date")
+    let condenserDate = SQLite.Expression<Double?>("condenser_date")
 
     func create(in database: Connection) throws {
         try database.run(table.create { t in

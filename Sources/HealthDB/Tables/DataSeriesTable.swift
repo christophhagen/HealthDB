@@ -1,4 +1,3 @@
-import Foundation
 import SQLite
 
 struct DataSeriesTable {
@@ -9,15 +8,15 @@ struct DataSeriesTable {
         try database.execute("CREATE TABLE data_series (data_id INTEGER PRIMARY KEY REFERENCES samples(data_id) ON DELETE CASCADE, frozen INTEGER NOT NULL DEFAULT 0, count INTEGER NOT NULL DEFAULT 0, insertion_era INTEGER NOT NULL DEFAULT 0, hfd_key INTEGER UNIQUE NOT NULL, series_location INTEGER NOT NULL)")
     }
 
-    let dataId = Expression<Int>("data_id")
+    let dataId = SQLite.Expression<Int>("data_id")
 
-    let frozen = Expression<Int>("frozen")
+    let frozen = SQLite.Expression<Int>("frozen")
 
-    let count = Expression<Int>("count")
+    let count = SQLite.Expression<Int>("count")
 
-    let insertionEra = Expression<Int>("insertion_era")
+    let insertionEra = SQLite.Expression<Int>("insertion_era")
 
-    let hfdKey = Expression<Int>("hfd_key")
+    let hfdKey = SQLite.Expression<Int>("hfd_key")
 
-    let seriesLocation = Expression<Int>("series_location")
+    let seriesLocation = SQLite.Expression<Int>("series_location")
 }

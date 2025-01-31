@@ -1,17 +1,16 @@
-import Foundation
 import SQLite
 
 struct AssociationsTable {
 
     let table = Table("associations")
 
-    let parentId = Expression<Int>("parent_id")
+    let parentId = SQLite.Expression<Int>("parent_id")
 
-    let childId = Expression<Int>("child_id")
+    let childId = SQLite.Expression<Int>("child_id")
 
-    let syncProvenance = Expression<Int>("sync_provenance")
+    let syncProvenance = SQLite.Expression<Int>("sync_provenance")
 
-    let syncIdentity = Expression<Int>("sync_identity")
+    let syncIdentity = SQLite.Expression<Int>("sync_identity")
 
     func create(in database: Connection) throws {
         try database.run("CREATE TABLE associations (ROWID INTEGER PRIMARY KEY AUTOINCREMENT, parent_id INTEGER, child_id INTEGER, sync_provenance INTEGER, sync_identity INTEGER NOT NULL, UNIQUE(parent_id, child_id))")

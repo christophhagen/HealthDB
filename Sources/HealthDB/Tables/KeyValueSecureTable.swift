@@ -9,20 +9,20 @@ struct KeyValueSecureTable {
         try database.execute("CREATE TABLE key_value_secure (ROWID INTEGER PRIMARY KEY AUTOINCREMENT, category INTEGER NOT NULL, domain TEXT NOT NULL, key TEXT NOT NULL, value, provenance INTEGER NOT NULL, mod_date REAL NOT NULL, sync_identity INTEGER NOT NULL, UNIQUE(category, domain, key))")
     }
 
-    let category = Expression<Int>("category")
+    let category = SQLite.Expression<Int>("category")
 
-    let domain = Expression<String>("domain")
+    let domain = SQLite.Expression<String>("domain")
 
-    let key = Expression<String>("key")
+    let key = SQLite.Expression<String>("key")
 
-    let dataValue = Expression<Data?>("value")
-    let intValue = Expression<Int?>("value")
+    let dataValue = SQLite.Expression<Data?>("value")
+    let intValue = SQLite.Expression<Int?>("value")
 
-    let provenance = Expression<Int>("provenance")
+    let provenance = SQLite.Expression<Int>("provenance")
 
-    let modificationDate = Expression<Double>("mod_date")
+    let modificationDate = SQLite.Expression<Double>("mod_date")
 
-    let syncIdentity = Expression<Int>("sync_identity")
+    let syncIdentity = SQLite.Expression<Int>("sync_identity")
 
     func value<T>(for key: String, in database: Connection) throws -> T? where T: Value {
         try database.pluck(table.filter(self.key == key)).map {
